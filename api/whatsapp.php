@@ -15,6 +15,18 @@ $action = $_GET['action'] ?? '';
 if (in_array($action, ['webhook', 'status'])) {
     handleWebhook($action);
     exit;
+
+// Helper: get company_id from session
+function getWhatsAppCompanyId() {
+    return $_SESSION['company_id'] ?? null;
+}
+
+// Helper: add company_id to leads WHERE clause
+function getCompanyFilter($table = 'l') {
+    $companyId = getWhatsAppCompanyId();
+    if (!$companyId) return ['sql' => '', 'params' => []];
+    return ['sql' => " AND {$table}.company_id = ?", 'params' => [$companyId]];
+}
 }
 
 // ─── Authenticated endpoints ───
@@ -336,9 +348,14 @@ function getLeadChats() {
         $params = [];
         $extraWhere = '';
 
+        // Tenant isolation
+        $companyFilter = getCompanyFilter('l');
+        $extraWhere .= $companyFilter['sql'];
+        $params = array_merge($params, $companyFilter['params']);
+
         // Sales reps only see chats for their assigned leads
         if ($_isSalesRep) {
-            $extraWhere = ' AND l.assigned_to = ?';
+            $extraWhere .= ' AND l.assigned_to = ?';
             $params[] = getCurrentUserId();
         }
 
@@ -384,11 +401,16 @@ function getWhatsAppStats() {
                 'delivered'     => $db->query("SELECT COUNT(*) FROM whatsapp_messages wm WHERE status IN ('Delivered','Read') $userFilter")->fetchColumn(),
             ];
         } else {
+            // Admin / Manager: scope by company_id
+            $companyFilter = getCompanyFilter();
+            $companySql = $companyFilter['sql'];
+            $companyParams = $companyFilter['params'];
+            
             $stats = [
-                'total_sent'    => $db->query("SELECT COUNT(*) FROM whatsapp_messages WHERE direction = 'Outbound'")->fetchColumn(),
-                'total_received'=> $db->query("SELECT COUNT(*) FROM whatsapp_messages WHERE direction = 'Inbound'")->fetchColumn(),
-                'today_sent'    => $db->query("SELECT COUNT(*) FROM whatsapp_messages WHERE direction = 'Outbound' AND DATE(created_at) = CURDATE()")->fetchColumn(),
-                'delivered'     => $db->query("SELECT COUNT(*) FROM whatsapp_messages WHERE status IN ('Delivered','Read')")->fetchColumn(),
+                'total_sent'    => $db->query("SELECT COUNT(*) FROM whatsapp_messages wm WHERE direction = 'Outbound' $companySql", $companyParams)->fetchColumn(),
+                'total_received'=> $db->query("SELECT COUNT(*) FROM whatsapp_messages wm WHERE direction = 'Inbound' $companySql", $companyParams)->fetchColumn(),
+                'today_sent'    => $db->query("SELECT COUNT(*) FROM whatsapp_messages wm WHERE direction = 'Outbound' AND DATE(created_at) = CURDATE() $companySql", $companyParams)->fetchColumn(),
+                'delivered'     => $db->query("SELECT COUNT(*) FROM whatsapp_messages wm WHERE status IN ('Delivered','Read') $companySql", $companyParams)->fetchColumn(),
             ];
         }
         echo json_encode(['success' => true, 'data' => $stats]);
