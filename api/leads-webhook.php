@@ -68,11 +68,18 @@ if (!checkRateLimit($clientIp, 120)) {
     exit;
 }
 
-// ─── Extract API key ──────────────────────────────────────────
-$apiKey = $_GET['key'] ?? $_SERVER['HTTP_X_API_KEY'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+// ─── Extract API key (header-only) ────────────────────────────
+$apiKey = $_SERVER['HTTP_X_API_KEY'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? null;
 // Strip "Bearer " prefix if present
 if ($apiKey && stripos($apiKey, 'Bearer ') === 0) {
     $apiKey = substr($apiKey, 7);
+}
+
+// Reject URL-based keys (security: they end up in access logs)
+if (isset($_GET['key'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'API key in URL is not allowed. Use X-API-Key or Authorization: Bearer header.']);
+    exit;
 }
 
 if (!$apiKey || strlen($apiKey) < 16) {

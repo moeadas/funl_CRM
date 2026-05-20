@@ -270,10 +270,52 @@ function validateEmail($email) {
  * Generate CSRF token (per-session, rotated on login)
  */
 function generateCSRFToken() {
-    if (empty($_SESSION['csrf_token'])) {
+    // Rotate CSRF token every 2 hours or on every request
+    $rotate = true;
+    if (!empty($_SESSION['csrf_token_time']) && (time() - $_SESSION['csrf_token_time']) < 7200) {
+        $rotate = false;
+    }
+    if (empty($_SESSION['csrf_token']) || $rotate) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $_SESSION['csrf_token_time'] = time();
     }
     return $_SESSION['csrf_token'];
+}
+
+/**
+ * Verify CSRF token with expiry check (2 hour max)
+ */
+function verifyCSRFTokenWithExpiry($token = null) {
+    if ($token === null) {
+        $token = $_POST['csrf_token'] ?? null;
+        if ($token === null) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $token = $data['csrf_token'] ?? null;
+        }
+    }
+    if (!isset($_SESSION['csrf_token']) || $token === null) return false;
+    
+    // Check expiry
+    if (!empty($_SESSION['csrf_token_time']) && (time() - $_SESSION['csrf_token_time']) > 7200) {
+        return false;
+    }
+    
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
+ * Require valid CSRF — die if invalid
+ */
+function requireCSRF() {
+    if (!verifyCSRFTokenWithExpiry()) {
+        if (isApiRequest()) {
+            http_response_code(403);
+            die(json_encode(['success' => false, 'message' => 'Invalid or expired request token. Please refresh the page.']));
+        }
+        http_response_code(403);
+        die('Invalid request token. Please go back and try again.');
+    }
 }
 
 /**
@@ -369,6 +411,8 @@ function switchToUser($targetUserId) {
         $_SESSION['impersonate_original_email']      = $_SESSION['email'];
         $_SESSION['impersonate_original_full_name']  = $_SESSION['full_name'];
         $_SESSION['impersonate_original_role']       = $_SESSION['role'];
+        $_SESSION['impersonate_original_company_id'] = $_SESSION['company_id'] ?? null;
+        $_SESSION['impersonate_original_is_super_admin'] = $_SESSION['is_super_admin'] ?? false;
     }
 
     // Switch session to target user
@@ -377,6 +421,11 @@ function switchToUser($targetUserId) {
     $_SESSION['email']     = $target['email'];
     $_SESSION['full_name'] = $target['full_name'];
     $_SESSION['role']      = $target['role'];
+    $_SESSION['company_id'] = $target['company_id'] ?? null;
+    // Preserve super_admin status only for actual super admins
+    if (empty($target['is_super_admin'])) {
+        $_SESSION['is_super_admin'] = false;
+    }
 
     logActivity($_SESSION['impersonate_original_user_id'], 'Switch User', 'User', $target['user_id'],
         "Admin switched to user: {$target['full_name']} ({$target['username']})");
@@ -400,6 +449,8 @@ function switchBack() {
     $_SESSION['email']     = $_SESSION['impersonate_original_email'];
     $_SESSION['full_name'] = $_SESSION['impersonate_original_full_name'];
     $_SESSION['role']      = $_SESSION['impersonate_original_role'];
+    $_SESSION['company_id'] = $_SESSION['impersonate_original_company_id'] ?? null;
+    $_SESSION['is_super_admin'] = $_SESSION['impersonate_original_is_super_admin'] ?? false;
 
     // Clear impersonation data
     unset(
@@ -407,7 +458,9 @@ function switchBack() {
         $_SESSION['impersonate_original_username'],
         $_SESSION['impersonate_original_email'],
         $_SESSION['impersonate_original_full_name'],
-        $_SESSION['impersonate_original_role']
+        $_SESSION['impersonate_original_role'],
+        $_SESSION['impersonate_original_company_id'],
+        $_SESSION['impersonate_original_is_super_admin']
     );
 
     logActivity($_SESSION['user_id'], 'Switch Back', 'User', null,
