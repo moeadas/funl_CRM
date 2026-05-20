@@ -19,6 +19,7 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/security.php'; // For centralized rate limiting
 // We need TwilioHelper for WhatsApp notifications on new lead assignment
 require_once __DIR__ . '/../includes/twilio.php';
 
@@ -41,35 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// ─── Rate limiting (simple in-memory per-IP) ─────────────────
-// Shared hosting doesn't have Redis, so we use a temp file approach
-$rateLimitDir = sys_get_temp_dir() . '/vgcrm_webhook_rl';
-if (!is_dir($rateLimitDir)) @mkdir($rateLimitDir, 0700, true);
-
-function checkRateLimit($ip, $maxPerMinute = 60) {
-    global $rateLimitDir;
-    $file = $rateLimitDir . '/' . md5($ip) . '.json';
-    $now = time();
-    $window = 60; // 1 minute window
-
-    $data = [];
-    if (file_exists($file)) {
-        $data = json_decode(file_get_contents($file), true) ?: [];
-    }
-    // Remove entries older than window
-    $data = array_filter($data, function($ts) use ($now, $window) {
-        return ($now - $ts) < $window;
-    });
-    if (count($data) >= $maxPerMinute) {
-        return false;
-    }
-    $data[] = $now;
-    file_put_contents($file, json_encode(array_values($data)));
-    return true;
-}
+// ─── Rate limiting (centralized from security.php) ─────────────────
+// Uses IP-based file locking from includes/security.php
 
 $clientIp = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-if (!checkRateLimit($clientIp, 120)) {
+if (!rateLimit('webhook_' . $clientIp, 120, 60, $clientIp)) {
     http_response_code(429);
     echo json_encode(['success' => false, 'error' => 'Rate limit exceeded. Max 120 requests per minute.']);
     exit;

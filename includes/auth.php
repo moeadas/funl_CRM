@@ -119,15 +119,9 @@ function getCurrentUserId() {
  * Authenticate user with rate limiting
  */
 function authenticateUser($username, $password) {
-    // Simple rate limiting via session
-    $now = time();
-    $attempts = $_SESSION['login_attempts'] ?? [];
-    // Clean old attempts (older than 15 min)
-    $attempts = array_filter($attempts, function($ts) use ($now) {
-        return ($now - $ts) < 900;
-    });
-
-    if (count($attempts) >= 5) {
+    // Use IP-based rate limiting (from security.php) instead of session-based
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    if (!rateLimit('login_' . $clientIp, 5, 900, $clientIp)) {
         return false; // Too many attempts
     }
 
@@ -162,16 +156,10 @@ function authenticateUser($username, $password) {
             $_SESSION['company_id'] = $user['company_id'];
         }
 
-        // Clear login attempts
-        unset($_SESSION['login_attempts']);
-
         logActivity($user['user_id'], 'Login', 'System', null, 'User logged in');
         return true;
     }
 
-    // Record failed attempt
-    $attempts[] = $now;
-    $_SESSION['login_attempts'] = $attempts;
     return false;
 }
 
