@@ -15,17 +15,6 @@ $action = $_GET['action'] ?? '';
 $currentUser = getCurrentUser();
 $companyId = $_SESSION['company_id'] ?? 0;
 
-function jsonSuccess($msg = 'Success', $data = []) {
-    echo json_encode(array_merge(['success' => true, 'message' => $msg], $data));
-    exit;
-}
-
-function jsonError($msg = 'Error', $code = 400) {
-    http_response_code($code);
-    echo json_encode(['success' => false, 'message' => $msg]);
-    exit;
-}
-
 try {
     switch ($action) {
         case 'list':
