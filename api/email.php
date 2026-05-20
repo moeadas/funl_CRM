@@ -86,8 +86,8 @@ function jsonResponse($success, $message = '', $data = null, $code = 200) {
     echo json_encode(['success' => $success, 'message' => $message, 'data' => $data]);
     exit;
 }
-function jsonSuccess($message, $data = null) { jsonResponse(true, $message, $data); }
-function jsonError($message, $code = 400) { jsonResponse(false, $message, null, $code); }
+
+
 
 $action = $_GET['action'] ?? '';
 
@@ -409,7 +409,7 @@ if ($action === 'template_detail' && isset($_GET['id'])) {
     jsonSuccess('Template loaded', $stmt->fetch());
 }
 
-if ($action === 'create_template' && $method === 'POST') {
+if (($action === 'create_template' || $action === 'template_save') && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     $stmt = $db->prepare("INSERT INTO email_templates (name, subject, content_html, created_by) VALUES (?, ?, ?, ?)");

@@ -302,6 +302,7 @@ function requireApiAuth() {
  * Password strength validator
  * Returns array of errors
  */
+if (!function_exists('validatePasswordStrength')) {
 function validatePasswordStrength($password) {
     $errors = [];
     if (strlen($password) < 8) {
@@ -317,6 +318,8 @@ function validatePasswordStrength($password) {
         $errors[] = 'Password must contain at least one number';
     }
     return $errors;
+}
+
 }
 
 /**

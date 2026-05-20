@@ -205,22 +205,7 @@ function hashPassword($password) {
 /**
  * Validate password strength
  */
-function validatePasswordStrength($password) {
-    $errors = [];
-    if (strlen($password) < PASSWORD_MIN_LENGTH) {
-        $errors[] = 'Password must be at least ' . PASSWORD_MIN_LENGTH . ' characters';
-    }
-    if (!preg_match('/[A-Z]/', $password)) {
-        $errors[] = 'Password must contain at least one uppercase letter';
-    }
-    if (!preg_match('/[a-z]/', $password)) {
-        $errors[] = 'Password must contain at least one lowercase letter';
-    }
-    if (!preg_match('/[0-9]/', $password)) {
-        $errors[] = 'Password must contain at least one number';
-    }
-    return $errors;
-}
+
 
 /**
  * Log activity

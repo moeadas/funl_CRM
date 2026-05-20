@@ -302,21 +302,22 @@ function createLead($db, $data, $currentUser) {
 
     $stmt = $db->prepare("
         INSERT INTO leads (
-            lead_type, company_name, contact_person, title_position, country, city,
+            lead_type, company_name, contact_person, title_position, region, country, city,
             address, phone, mobile, email, website, facebook_url, instagram_url, linkedin_url,
-            twitter_url, youtube_url, specialization, notes,
+            twitter_url, youtube_url, industry, company_size, annual_revenue, notes,
             lead_status, lead_source, priority, assigned_to, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
-        $data['lead_type'] ?? 'Other', emptyToNull($data['company_name'] ?? null),
+        $data['lead_type'] ?? 'Other', emptyToNull($data['company_name'] ?? null) ?: 'Unknown Company',
         $contactPerson, emptyToNull($data['title_position'] ?? null),
-        emptyToNull($data['country'] ?? null), emptyToNull($data['city'] ?? null),
+        $data['region'] ?? 'Other', emptyToNull($data['country'] ?? null) ?: 'Unknown', emptyToNull($data['city'] ?? null),
         emptyToNull($data['address'] ?? null), emptyToNull($data['phone'] ?? null), emptyToNull($data['mobile'] ?? null),
         emptyToNull($data['email'] ?? null), emptyToNull($data['website'] ?? null),
         emptyToNull($data['facebook_url'] ?? null), emptyToNull($data['instagram_url'] ?? null),
         emptyToNull($data['linkedin_url'] ?? null), emptyToNull($data['twitter_url'] ?? null),
-        emptyToNull($data['youtube_url'] ?? null), emptyToNull($data['specialization'] ?? null),
+        emptyToNull($data['youtube_url'] ?? null), emptyToNull($data['industry'] ?? null),
+        emptyToNull($data['company_size'] ?? null), emptyToNull($data['annual_revenue'] ?? null),
         emptyToNull($data['notes'] ?? null), $data['lead_status'] ?? 'New Lead',
         $data['lead_source'] ?? 'Other', $data['priority'] ?? 'Medium',
         $assignedTo, $currentUser['user_id'],
@@ -364,21 +365,22 @@ function updateLead($db, $data, $currentUser) {
     $stmt = $db->prepare("
         UPDATE leads SET
             lead_type = ?, company_name = ?, contact_person = ?, title_position = ?,
-            country = ?, city = ?, address = ?, phone = ?, mobile = ?,
+            region = ?, country = ?, city = ?, address = ?, phone = ?, mobile = ?,
             email = ?, website = ?, facebook_url = ?, instagram_url = ?, linkedin_url = ?,
-            twitter_url = ?, youtube_url = ?, specialization = ?, notes = ?, lead_status = ?, lead_source = ?,
+            twitter_url = ?, youtube_url = ?, industry = ?, company_size = ?, annual_revenue = ?, notes = ?, lead_status = ?, lead_source = ?,
             priority = ?, assigned_to = ?
         WHERE lead_id = ?
     ");
     $stmt->execute([
-        $data['lead_type'] ?? 'Other', emptyToNull($data['company_name'] ?? null),
+        $data['lead_type'] ?? 'Other', emptyToNull($data['company_name'] ?? null) ?: 'Unknown Company',
         $contactPerson, emptyToNull($data['title_position'] ?? null),
-        emptyToNull($data['country'] ?? null), emptyToNull($data['city'] ?? null),
+        $data['region'] ?? 'Other', emptyToNull($data['country'] ?? null) ?: 'Unknown', emptyToNull($data['city'] ?? null),
         emptyToNull($data['address'] ?? null), emptyToNull($data['phone'] ?? null), emptyToNull($data['mobile'] ?? null),
         emptyToNull($data['email'] ?? null), emptyToNull($data['website'] ?? null),
         emptyToNull($data['facebook_url'] ?? null), emptyToNull($data['instagram_url'] ?? null),
         emptyToNull($data['linkedin_url'] ?? null), emptyToNull($data['twitter_url'] ?? null),
-        emptyToNull($data['youtube_url'] ?? null), emptyToNull($data['specialization'] ?? null),
+        emptyToNull($data['youtube_url'] ?? null), emptyToNull($data['industry'] ?? null),
+        emptyToNull($data['company_size'] ?? null), emptyToNull($data['annual_revenue'] ?? null),
         emptyToNull($data['notes'] ?? null), $data['lead_status'] ?? 'New Lead', $data['lead_source'] ?? 'Other',
         $data['priority'] ?? 'Medium', $newAssignedTo, $data['lead_id'],
     ]);

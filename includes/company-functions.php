@@ -162,39 +162,6 @@ function isEmailVerified($userId = null) {
     }
 }
 
-// Send verification email (placeholder - implement with actual email service)
-function sendVerificationEmail($userId, $email) {
-    $token = bin2hex(random_bytes(32));
-    $expires = date('Y-m-d H:i:s', strtotime('+24 hours'));
-    
-    try {
-        $db = Database::getInstance();
-        
-        // Delete any existing verification for this user
-        $db->query("DELETE FROM email_verifications WHERE user_id = ?", [$userId]);
-        
-        // Insert new verification
-        $db->insert('email_verifications', [
-            'user_id' => $userId,
-            'email' => $email,
-            'token' => $token,
-            'expires_at' => $expires,
-        ]);
-        
-        // Build verification URL
-        $verifyUrl = APP_URL . '/verify-email.php?token=' . urlencode($token);
-        
-        // TODO: Integrate with your email service (SendGrid, Mailgun, SMTP, etc.)
-        // For now, log the verification URL
-        error_log("Verification email for $email: $verifyUrl");
-        
-        return ['success' => true, 'token' => $token, 'url' => $verifyUrl];
-        
-    } catch (Exception $e) {
-        error_log("sendVerificationEmail error: " . $e->getMessage());
-        return ['success' => false, 'error' => $e->getMessage()];
-    }
-}
 
 // Verify email token
 function verifyEmailToken($token) {

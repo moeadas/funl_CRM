@@ -116,10 +116,11 @@ document.getElementById('newTemplateForm').addEventListener('submit', function(e
     const data = { csrf_token: '<?php echo $csrfToken; ?>' };
     fd.forEach((v, k) => data[k] = v);
 
+    console.log('Submitting template with data:', data);
     fetch('/api/email.php?action=template_save', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
-    }).then(r => r.json()).then(d => {
+    }).then(r => { console.log('Template save response status:', r.status); return r.json(); }).then(d => { console.log('Template save response:', d);
         if (d.success) {
             window.location.href = 'email-builder.php?mode=template&id=' + d.data.template_id;
         } else {
@@ -133,7 +134,7 @@ function deleteTemplate(id) {
     fetch('/api/email.php?action=template_delete', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ template_id: id, csrf_token: '<?php echo $csrfToken; ?>' })
-    }).then(r => r.json()).then(d => {
+    }).then(r => { console.log('Template save response status:', r.status); return r.json(); }).then(d => { console.log('Template save response:', d);
         if (d.success) location.reload();
         else showNotification(d.message, 'error');
     });
