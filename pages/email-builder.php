@@ -13,18 +13,19 @@ $pageTitle = 'Email Builder';
 $currentPage = 'email-campaigns';
 
 // Get campaign/template data
+$db = Database::getInstance()->getConnection();
 $existingJson = '{}';
 $campaignId = isset($_GET['campaign_id']) ? intval($_GET['campaign_id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
 $templateId = isset($_GET['template_id']) ? intval($_GET['template_id']) : 0;
 $isTemplate = isset($_GET['is_template']) || isset($_GET['template_id']);
 
 if ($campaignId > 0) {
-    $stmt = $pdo->prepare("SELECT content_json FROM email_campaigns WHERE campaign_id = ? AND company_id = ?");
+    $stmt = $db->prepare("SELECT content_json FROM email_campaigns WHERE campaign_id = ? AND company_id = ?");
     $stmt->execute([$campaignId, $_SESSION['company_id']]);
     $row = $stmt->fetch();
     if ($row && $row['content_json']) $existingJson = $row['content_json'];
 } elseif ($templateId > 0) {
-    $stmt = $pdo->prepare("SELECT content_json FROM email_templates WHERE template_id = ? AND company_id = ?");
+    $stmt = $db->prepare("SELECT content_json FROM email_templates WHERE template_id = ? AND company_id = ?");
     $stmt->execute([$templateId, $_SESSION['company_id']]);
     $row = $stmt->fetch();
     if ($row && $row['content_json']) $existingJson = $row['content_json'];
