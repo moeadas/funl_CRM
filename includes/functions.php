@@ -400,3 +400,56 @@ function formatPhone($phone) {
     return $phone;
 }
 ?>
+
+// Encryption helpers for sensitive data (OAuth tokens, SMTP passwords)
+// Uses libsodium if available, falls back to OpenSSL AES-256-GCM
+function encryptToken($plaintext, $key = null) {
+    if ($key === null) {
+        $key = getenv('APP_ENCRYPTION_KEY');
+    }
+    if (empty($key)) {
+        error_log('encryptToken: No encryption key configured');
+        return base64_encode($plaintext); // Fallback (not encrypted!)
+    }
+    
+    if (extension_loaded('sodium')) {
+        $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+        $ciphertext = sodium_crypto_secretbox($plaintext, $nonce, hash('sha256', $key, true));
+        return base64_encode($nonce . $ciphertext);
+    } else {
+        // OpenSSL fallback
+        $iv = openssl_random_pseudo_bytes(16);
+        $encrypted = openssl_encrypt($plaintext, 'AES-256-GCM', hash('sha256', $key, true), OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+        return base64_encode($iv . $tag . $encrypted);
+    }
+}
+
+function decryptToken($encrypted, $key = null) {
+    if ($key === null) {
+        $key = getenv('APP_ENCRYPTION_KEY');
+    }
+    if (empty($key)) {
+        // Try base64 decode as fallback
+        $decoded = base64_decode($encrypted, true);
+        return $decoded !== false ? $decoded : '';
+    }
+    
+    $data = base64_decode($encrypted, true);
+    if ($data === false) return '';
+    
+    if (extension_loaded('sodium')) {
+        $nonceLen = SODIUM_CRYPTO_SECRETBOX_NONCEBYTES;
+        if (strlen($data) < $nonceLen) return '';
+        $nonce = substr($data, 0, $nonceLen);
+        $ciphertext = substr($data, $nonceLen);
+        $decrypted = sodium_crypto_secretbox_open($ciphertext, $nonce, hash('sha256', $key, true));
+        return $decrypted !== false ? $decrypted : '';
+    } else {
+        // OpenSSL fallback
+        $iv = substr($data, 0, 16);
+        $tag = substr($data, 16, 16);
+        $ciphertext = substr($data, 32);
+        $decrypted = openssl_decrypt($ciphertext, 'AES-256-GCM', hash('sha256', $key, true), OPENSSL_RAW_DATA, $iv, $tag);
+        return $decrypted !== false ? $decrypted : '';
+    }
+}
