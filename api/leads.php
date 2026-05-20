@@ -330,7 +330,7 @@ function createLead($db, $data, $currentUser) {
             address, phone, mobile, email, website, facebook_url, instagram_url, linkedin_url,
             twitter_url, youtube_url, industry, company_size, annual_revenue, notes,
             lead_status, lead_source, priority, assigned_to, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $currentUser['company_id'] ?? null,

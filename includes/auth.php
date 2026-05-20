@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/company-functions.php';
 
@@ -128,7 +129,7 @@ function authenticateUser($username, $password) {
     $db = Database::getInstance()->getConnection();
 
     $stmt = $db->prepare("
-        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified_at
+        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified
         FROM users 
         WHERE (username = :username OR email = :email) AND status = 'Active'
     ");
@@ -150,7 +151,7 @@ function authenticateUser($username, $password) {
         $_SESSION['full_name']      = $user['full_name'];
         $_SESSION['role']           = $user['role'];
         $_SESSION['is_super_admin']  = !empty($user['is_super_admin']);
-        $_SESSION['email_verified'] = !empty($user['email_verified_at']);
+        $_SESSION['email_verified'] = !empty($user['email_verified']);
         
         // Set company_id for multi-tenant support
         if (!empty($user['company_id'])) {
@@ -291,7 +292,25 @@ function verifyCSRFTokenWithExpiry($token = null) {
 }
 
 /**
+ * Verify CSRF token — works for both POST forms and JSON API requests
+ * (backward-compatible: does NOT check expiry)
+ */
+function verifyCSRFToken($token = null) {
+    if ($token === null) {
+        // Try POST, then JSON body
+        $token = $_POST['csrf_token'] ?? null;
+        if ($token === null) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $token = $data['csrf_token'] ?? null;
+        }
+    }
+    return isset($_SESSION['csrf_token']) && $token !== null && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
  * Require valid CSRF — die if invalid
+ * Uses expiry-check version
  */
 function requireCSRF() {
     if (!verifyCSRFTokenWithExpiry()) {
