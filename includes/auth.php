@@ -239,11 +239,13 @@ function logActivity($userId, $action, $entityType, $entityId = null, $details =
 function getCurrentUser() {
     if (!isLoggedIn()) return null;
     return [
-        'user_id'   => $_SESSION['user_id'],
-        'username'  => $_SESSION['username'],
-        'email'     => $_SESSION['email'],
-        'full_name' => $_SESSION['full_name'],
-        'role'      => $_SESSION['role'],
+        'user_id'    => $_SESSION['user_id'],
+        'username'   => $_SESSION['username'],
+        'email'      => $_SESSION['email'],
+        'full_name'  => $_SESSION['full_name'],
+        'role'       => $_SESSION['role'],
+        'company_id' => $_SESSION['company_id'] ?? null,
+        'is_super_admin' => !empty($_SESSION['is_super_admin']),
     ];
 }
 
@@ -414,3 +416,19 @@ function switchBack() {
     return ['success' => true, 'message' => "Switched back to {$_SESSION['full_name']}"];
 }
 ?>
+
+/**
+ * Scope a query by company_id for tenant isolation
+ * @param string $table
+ * @param int|null $companyId
+ * @return string SQL snippet
+ */
+function scopeByCompany($table, $companyId = null) {
+    if ($companyId === null) {
+        $companyId = $_SESSION['company_id'] ?? null;
+    }
+    if ($companyId === null) {
+        return ''; // No scoping if not multi-tenant
+    }
+    return " AND {$table}.company_id = " . (int)$companyId;
+}

@@ -29,11 +29,20 @@ if (empty($payload)) {
 
 // Verify signature if webhook secret is configured
 if (!empty($webhookSecret)) {
-    $event = json_decode($payload, true);
-    // In production, verify with \Stripe\Webhook::constructEvent()
-    // For now, parse the event directly
+    try {
+        $stripeEvent = \Stripe\Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
+        $event = json_decode($payload, true);
+    } catch (\Exception $e) {
+        http_response_code(400);
+        error_log('Stripe webhook verification failed: ' . $e->getMessage());
+        echo json_encode(['error' => 'Invalid signature']);
+        exit;
+    }
 } else {
-    $event = json_decode($payload, true);
+    http_response_code(500);
+    error_log('Stripe webhook: STRIPE_WEBHOOK_SECRET not configured');
+    echo json_encode(['error' => 'Webhook secret not configured']);
+    exit;
 }
 
 if (!$event || !isset($event['type'])) {

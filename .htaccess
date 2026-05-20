@@ -1,0 +1,16 @@
+# Deny access to setup and admin scripts
+<FilesMatch "^(setup\.php|_finish_setup\.php|_fix_plans\.php|_test_plan\.php|_check\.php|check_indexes\.php|check_tables\.php|migrate_.*\.php)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to dotfiles
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# PHP settings
+php_value upload_max_filesize 64M
+php_value post_max_size 64M
+php_value max_execution_time 300

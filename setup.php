@@ -188,26 +188,55 @@ foreach ($plans as $p) {
     echo "   ✓ {$p[1]}\n";
 }
 
-// Create super admin
+// Create super admin (prompt for password)
 echo "\n13. Creating super admin...\n";
-$companyId = null;
-try {
-    $stmt = $pdo->prepare("INSERT IGNORE INTO companies (company_name, company_slug, email, status, trial_ends_at, subscription_status, plan_id, plan_name, plan_user_limit, plan_price_monthly, extra_user_price) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-    $stmt->execute(['Pinpoint', 'pinpoint', 'admin@pinpoint.online', 'active', date('Y-m-d H:i:s', strtotime('+365 days')), 'active', 'enterprise', 'Enterprise', 999, 0, 0]);
-    $companyId = $pdo->lastInsertId() ?: $pdo->query("SELECT company_id FROM companies WHERE company_slug='pinpoint'")->fetchColumn();
-} catch (Exception $e) {}
+echo "   ⚠️  You must set a secure password for the super admin.\n";
 
-if (!$companyId) {
-    $companyId = $pdo->query("SELECT company_id FROM companies WHERE company_slug='pinpoint'")->fetchColumn();
+// Check if running in CLI or web
+$isCli = php_sapi_name() === 'cli';
+
+$adminEmail = '';
+$adminPassword = '';
+
+if ($isCli) {
+    echo "   Enter super admin email: ";
+    $adminEmail = trim(fgets(STDIN));
+    echo "   Enter super admin password (min 12 chars): ";
+    $adminPassword = trim(fgets(STDIN));
+} else {
+    // Web: read from POST if this is a form submission
+    $adminEmail = $_POST['admin_email'] ?? '';
+    $adminPassword = $_POST['admin_password'] ?? '';
 }
 
-if ($companyId) {
+$companyId = null;
+if ($adminEmail && $adminPassword && strlen($adminPassword) >= 8) {
+    $companySlug = preg_replace('/[^a-z0-9]/', '', strtolower(explode('@', $adminEmail)[0]));
+    
     try {
-        $hash = password_hash('Pinpoint2024!', PASSWORD_BCRYPT);
-        $pdo->prepare("INSERT IGNORE INTO users (company_id, username, email, password_hash, full_name, role, status, is_super_admin) VALUES (?,?,?,?,?,?,?,1)")->execute([$companyId, 'admin', 'admin@pinpoint.online', $hash, 'Pinpoint Admin', 'Admin', 'Active']);
-        echo "   ✓ Super admin: admin@pinpoint.online / Pinpoint2024!\n";
-    } catch (Exception $e) {
-        echo "   - Super admin: " . $e->getMessage() . "\n";
+        $stmt = $pdo->prepare("INSERT IGNORE INTO companies (company_name, company_slug, email, status, trial_ends_at, subscription_status, plan_id, plan_name, plan_user_limit, plan_price_monthly, extra_user_price) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->execute(['Admin Company', $companySlug, $adminEmail, 'active', date('Y-m-d H:i:s', strtotime('+365 days')), 'active', 'enterprise', 'Enterprise', 999, 0, 0]);
+        $companyId = $pdo->lastInsertId() ?: $pdo->query("SELECT company_id FROM companies WHERE company_slug=?", [$companySlug])->fetchColumn();
+    } catch (Exception $e) {}
+
+    if (!$companyId) {
+        $companyId = $pdo->query("SELECT company_id FROM companies WHERE company_slug='$companySlug'")->fetchColumn();
+    }
+
+    if ($companyId) {
+        try {
+            $hash = password_hash($adminPassword, PASSWORD_BCRYPT);
+            $pdo->prepare("INSERT IGNORE INTO users (company_id, username, email, password_hash, full_name, role, status, is_super_admin) VALUES (?,?,?,?,?,?,?,1)")
+                ->execute([$companyId, 'admin', $adminEmail, $hash, 'System Administrator', 'Admin', 'Active']);
+            echo "   ✓ Super admin created: $adminEmail\n";
+        } catch (Exception $e) {
+            echo "   - Error: " . $e->getMessage() . "\n";
+        }
+    }
+} else {
+    echo "   ⚠️  No admin created. Please provide email + password (min 8 chars).\n";
+    if (!$isCli) {
+        echo "   Submit this form with admin_email and admin_password fields.\n";
     }
 }
 

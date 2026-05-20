@@ -134,6 +134,12 @@ function getLeadsList($db, $currentUser) {
     $where  = ['1=1'];
     $params = [];
 
+    // Tenant isolation: scope by company_id
+    if (!empty($currentUser['company_id'])) {
+        $where[]  = 'l.company_id = ?';
+        $params[] = $currentUser['company_id'];
+    }
+
     if (!empty($_GET['status'])) {
         $where[]  = 'l.lead_status = ?';
         $params[] = $_GET['status'];
