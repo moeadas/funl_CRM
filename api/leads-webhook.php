@@ -24,7 +24,14 @@ require_once __DIR__ . '/../includes/twilio.php';
 
 // ─── CORS headers for Apps Script / external callers ──────────
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+// Only allow CORS from known webhook origins
+$allowedOrigins = ['https://graph.facebook.com', 'https://graph.instagram.com', 'https://sheets.googleapis.com'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin && in_array($origin, $allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header('Access-Control-Allow-Origin: none');
+}
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-API-Key');
 
