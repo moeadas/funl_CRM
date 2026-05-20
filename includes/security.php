@@ -204,16 +204,18 @@ function logSecurityEvent($type, $description, $userId = null, $ip = null) {
  * Require HTTPS - redirect if not on HTTPS
  */
 function requireHTTPS() {
+    if (php_sapi_name() === 'cli') {
+        return; // Allow CLI
+    }
     if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
         if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
             return; // Proxied HTTPS is OK
         }
-        if (php_sapi_name() === 'cli') {
-            return; // Allow CLI
+        // Redirect to HTTPS in production
+        if (getenv('APP_ENV') !== 'development') {
+            header('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+            exit;
         }
-        // In production, uncomment this:
-        // header('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-        // exit;
     }
 }
 

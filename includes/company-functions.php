@@ -216,7 +216,9 @@ function createPasswordReset($email) {
         ]);
         
         $resetUrl = APP_URL . '/reset-password.php?token=' . urlencode($token);
-        error_log("Password reset for $email: $resetUrl");
+        
+        // NEVER log password reset URLs with tokens — they could be stolen from logs
+        // error_log("Password reset requested for: $email"); // OK to log email only
         
         return ['success' => true, 'token' => $token, 'url' => $resetUrl];
         
