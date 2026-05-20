@@ -1,0 +1,5 @@
+\u003cFilesMatch "\.(php|phtml|phps|php3|php4|php5|php7|phar)$"\u003e
+    Require all denied
+\u003c/FilesMatch\u003e
+Options -ExecCGI
+AddHandler cgi-script .php .phtml .pl .py .jsp .asp .sh .cgi

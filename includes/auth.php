@@ -128,7 +128,7 @@ function authenticateUser($username, $password) {
     $db = Database::getInstance()->getConnection();
 
     $stmt = $db->prepare("
-        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin 
+        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified_at
         FROM users 
         WHERE (username = :username OR email = :email) AND status = 'Active'
     ");
@@ -150,6 +150,7 @@ function authenticateUser($username, $password) {
         $_SESSION['full_name']      = $user['full_name'];
         $_SESSION['role']           = $user['role'];
         $_SESSION['is_super_admin']  = !empty($user['is_super_admin']);
+        $_SESSION['email_verified'] = !empty($user['email_verified_at']);
         
         // Set company_id for multi-tenant support
         if (!empty($user['company_id'])) {
@@ -189,11 +190,6 @@ function logoutUser() {
 function hashPassword($password) {
     return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 }
-
-/**
- * Validate password strength
- */
-
 
 /**
  * Log activity
@@ -317,36 +313,6 @@ function csrfField() {
 }
 
 /**
- * Verify CSRF token — works for both POST forms and JSON API requests
- */
-function verifyCSRFToken($token = null) {
-    if ($token === null) {
-        // Try POST, then JSON body
-        $token = $_POST['csrf_token'] ?? null;
-        if ($token === null) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true);
-            $token = $data['csrf_token'] ?? null;
-        }
-    }
-    return isset($_SESSION['csrf_token']) && $token !== null && hash_equals($_SESSION['csrf_token'], $token);
-}
-
-/**
- * Require valid CSRF — die if invalid
- */
-function requireCSRF() {
-    if (!verifyCSRFToken()) {
-        if (isApiRequest()) {
-            http_response_code(403);
-            die(json_encode(['success' => false, 'message' => 'Invalid or expired request token. Please refresh and try again.']));
-        }
-        http_response_code(403);
-        die('Invalid request token. Please go back and try again.');
-    }
-}
-
-/**
  * Check if current request is an API/JSON request
  */
 function isApiRequest() {
@@ -386,7 +352,7 @@ function switchToUser($targetUserId) {
     }
 
     $db = Database::getInstance()->getConnection();
-    $stmt = $db->prepare("SELECT user_id, username, email, full_name, role FROM users WHERE user_id = ? AND status = 'Active'");
+    $stmt = $db->prepare("SELECT user_id, username, email, full_name, role, company_id, is_super_admin FROM users WHERE user_id = ? AND status = 'Active'");
     $stmt->execute([$targetUserId]);
     $target = $stmt->fetch();
 
@@ -458,7 +424,6 @@ function switchBack() {
 
     return ['success' => true, 'message' => "Switched back to {$_SESSION['full_name']}"];
 }
-?>
 
 /**
  * Scope a query by company_id for tenant isolation

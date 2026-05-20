@@ -9,6 +9,7 @@ php_errorlog
 # Uploads directory (user content)
 uploads/*
 !uploads/.gitkeep
+!uploads/.htaccess
 
 # Cache
 *.cache

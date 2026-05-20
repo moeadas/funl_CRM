@@ -44,9 +44,9 @@ try {
 function handleGetRequest($db, $action, $currentUser) {
     switch ($action) {
         case 'list':   getLeadsList($db, $currentUser); break;
-        case 'detail': getLeadDetail($db); break;
+        case 'detail': getLeadDetail($db, $currentUser); break;
         case 'stats':  getLeadStats($db, $currentUser); break;
-        case 'search': searchLeads($db); break;
+        case 'search': searchLeads($db, $currentUser); break;
         default:       getLeadsList($db, $currentUser);
     }
 }
@@ -54,7 +54,7 @@ function handleGetRequest($db, $action, $currentUser) {
 /**
  * Quick search leads by name, company, phone — used by link-to-lead in WhatsApp unmatched
  */
-function searchLeads($db) {
+function searchLeads($db, $currentUser) {
     $q = trim($_GET['q'] ?? '');
     if (strlen($q) < 2) {
         echo json_encode(['success' => true, 'data' => []]);
@@ -64,7 +64,7 @@ function searchLeads($db) {
     $stmt = $db->prepare("
         SELECT lead_id, contact_person, company_name, phone, mobile, email, status
         FROM leads
-        WHERE contact_person LIKE ? OR company_name LIKE ? OR phone LIKE ? OR mobile LIKE ? OR email LIKE ?
+        WHERE (contact_person LIKE ? OR company_name LIKE ? OR phone LIKE ? OR mobile LIKE ? OR email LIKE ?) AND company_id = ?
         ORDER BY contact_person ASC
         LIMIT 15
     ");
@@ -234,20 +234,35 @@ function getLeadsList($db, $currentUser) {
     ]);
 }
 
-function getLeadDetail($db) {
+function getLeadDetail($db, $currentUser) {
     $leadId = intval($_GET['id'] ?? 0);
     if (!$leadId) jsonError('Lead ID required', 400);
 
-    $stmt = $db->prepare("
-        SELECT l.*, 
-               u1.full_name as assigned_name,
-               u2.full_name as created_name
-        FROM leads l
-        LEFT JOIN users u1 ON l.assigned_to = u1.user_id
-        LEFT JOIN users u2 ON l.created_by = u2.user_id
-        WHERE l.lead_id = ?
-    ");
-    $stmt->execute([$leadId]);
+    $companyId = $currentUser['company_id'] ?? null;
+    
+    if ($companyId) {
+        $stmt = $db->prepare("
+            SELECT l.*, 
+                   u1.full_name as assigned_name,
+                   u2.full_name as created_name
+            FROM leads l
+            LEFT JOIN users u1 ON l.assigned_to = u1.user_id
+            LEFT JOIN users u2 ON l.created_by = u2.user_id
+            WHERE l.lead_id = ? AND l.company_id = ?
+        ");
+        $stmt->execute([$leadId, $companyId]);
+    } else {
+        $stmt = $db->prepare("
+            SELECT l.*, 
+                   u1.full_name as assigned_name,
+                   u2.full_name as created_name
+            FROM leads l
+            LEFT JOIN users u1 ON l.assigned_to = u1.user_id
+            LEFT JOIN users u2 ON l.created_by = u2.user_id
+            WHERE l.lead_id = ?
+        ");
+        $stmt->execute([$leadId]);
+    }
     $lead = $stmt->fetch();
     if (!$lead) jsonError('Lead not found', 404);
 
@@ -276,11 +291,14 @@ function getLeadDetail($db) {
 }
 
 function getLeadStats($db, $currentUser) {
+    $companyId = $currentUser['company_id'] ?? null;
+    $companyFilter = $companyId ? "WHERE company_id = $companyId" : '';
+    
     $stats = [];
-    $stats['total']      = $db->query("SELECT COUNT(*) as c FROM leads")->fetch()['c'];
-    $stats['by_status']  = $db->query("SELECT lead_status, COUNT(*) as count FROM leads GROUP BY lead_status")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $stats['by_country'] = $db->query("SELECT country, COUNT(*) as count FROM leads WHERE country IS NOT NULL AND country != '' GROUP BY country ORDER BY count DESC")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $stats['this_month'] = $db->query("SELECT COUNT(*) as c FROM leads WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())")->fetch()['c'];
+    $stats['total']      = $db->query("SELECT COUNT(*) as c FROM leads $companyFilter")->fetch()['c'];
+    $stats['by_status']  = $db->query("SELECT lead_status, COUNT(*) as count FROM leads $companyFilter GROUP BY lead_status")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stats['by_country'] = $db->query("SELECT country, COUNT(*) as count FROM leads WHERE country IS NOT NULL AND country != '' $companyFilter GROUP BY country ORDER BY count DESC")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stats['this_month'] = $db->query("SELECT COUNT(*) as c FROM leads $companyFilter AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())")->fetch()['c'];
     jsonSuccess('Stats retrieved', $stats);
 }
 
@@ -308,13 +326,14 @@ function createLead($db, $data, $currentUser) {
 
     $stmt = $db->prepare("
         INSERT INTO leads (
-            lead_type, company_name, contact_person, title_position, region, country, city,
+            company_id, lead_type, company_name, contact_person, title_position, region, country, city,
             address, phone, mobile, email, website, facebook_url, instagram_url, linkedin_url,
             twitter_url, youtube_url, industry, company_size, annual_revenue, notes,
             lead_status, lead_source, priority, assigned_to, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
+        $currentUser['company_id'] ?? null,
         $data['lead_type'] ?? 'Other', emptyToNull($data['company_name'] ?? null) ?: 'Unknown Company',
         $contactPerson, emptyToNull($data['title_position'] ?? null),
         $data['region'] ?? 'Other', emptyToNull($data['country'] ?? null) ?: 'Unknown', emptyToNull($data['city'] ?? null),
