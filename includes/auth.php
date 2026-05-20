@@ -256,7 +256,9 @@ function sanitizeInput($data) {
     if (is_array($data)) {
         return array_map('sanitizeInput', $data);
     }
-    return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+    // Only strip tags and trim — DO NOT apply htmlspecialchars here
+    // htmlspecialchars should only be used on OUTPUT, not on storage
+    return strip_tags(trim($data));
 }
 
 /**
