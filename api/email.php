@@ -79,6 +79,7 @@ requireRole(['Admin', 'Sales Manager']);
 
 $db = Database::getInstance()->getConnection();
 $currentUser = getCurrentUser();
+$companyId = $currentUser['company_id'] ?? null;
 
 function jsonResponse($success, $message = '', $data = null, $code = 200) {
     http_response_code($code);
