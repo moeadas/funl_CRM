@@ -14,11 +14,18 @@ requireRole(['Admin']);
 
 $action = $_GET['action'] ?? '';
 $db = Database::getInstance()->getConnection();
+$currentUser = getCurrentUser();
+$companyId = $currentUser['company_id'] ?? null;
 
 switch ($action) {
     case 'list':
         try {
-            $stmt = $db->query("SELECT * FROM custom_fields ORDER BY sort_order ASC, field_id ASC");
+            if ($companyId) {
+                $stmt = $db->prepare("SELECT * FROM custom_fields WHERE company_id = ? OR company_id IS NULL ORDER BY sort_order ASC, field_id ASC");
+                $stmt->execute([$companyId]);
+            } else {
+                $stmt = $db->query("SELECT * FROM custom_fields ORDER BY sort_order ASC, field_id ASC");
+            }
             $fields = $stmt->fetchAll(PDO::FETCH_ASSOC);
             jsonSuccess('Custom fields loaded', $fields);
         } catch (Exception $e) {
@@ -32,10 +39,11 @@ switch ($action) {
         
         try {
             $stmt = $db->prepare("
-                INSERT INTO custom_fields (field_name, field_label, field_type, field_options, is_required, sort_order)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO custom_fields (company_id, field_name, field_label, field_type, field_options, is_required, sort_order)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
+                $companyId,
                 $data['field_name'],
                 $data['field_label'],
                 $data['field_type'] ?? 'text',
@@ -55,12 +63,8 @@ switch ($action) {
         $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         
         try {
-            $stmt = $db->prepare("
-                UPDATE custom_fields 
-                SET field_name = ?, field_label = ?, field_type = ?, field_options = ?, is_required = ?, sort_order = ?, is_active = ?
-                WHERE field_id = ?
-            ");
-            $stmt->execute([
+            $where = 'WHERE field_id = ?';
+            $params = [
                 $data['field_name'],
                 $data['field_label'],
                 $data['field_type'],
@@ -69,7 +73,19 @@ switch ($action) {
                 $data['sort_order'] ?? 0,
                 ($data['is_active'] ?? true) ? 1 : 0,
                 $data['field_id']
-            ]);
+            ];
+            
+            if ($companyId) {
+                $where = 'WHERE field_id = ? AND (company_id = ? OR company_id IS NULL)';
+                $params[] = $companyId;
+            }
+            
+            $stmt = $db->prepare("
+                UPDATE custom_fields 
+                SET field_name = ?, field_label = ?, field_type = ?, field_options = ?, is_required = ?, sort_order = ?, is_active = ?
+                $where
+            ");
+            $stmt->execute($params);
             logActivity(getCurrentUserId(), 'Update Custom Field', 'CustomField', $data['field_id'], "Updated field: {$data['field_label']}");
             jsonSuccess('Custom field updated');
         } catch (Exception $e) {
@@ -82,13 +98,21 @@ switch ($action) {
         $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         
         try {
+            $where = 'WHERE field_id = ?';
+            $params = [$data['field_id']];
+            
+            if ($companyId) {
+                $where = 'WHERE field_id = ? AND (company_id = ? OR company_id IS NULL)';
+                $params[] = $companyId;
+            }
+            
             // Delete values first (FK constraint)
             $stmt = $db->prepare("DELETE FROM lead_custom_values WHERE field_id = ?");
             $stmt->execute([$data['field_id']]);
             
             // Delete field
-            $stmt = $db->prepare("DELETE FROM custom_fields WHERE field_id = ?");
-            $stmt->execute([$data['field_id']]);
+            $stmt = $db->prepare("DELETE FROM custom_fields $where");
+            $stmt->execute($params);
             
             logActivity(getCurrentUserId(), 'Delete Custom Field', 'CustomField', $data['field_id'], "Deleted field #{$data['field_id']}");
             jsonSuccess('Custom field deleted');
