@@ -61,14 +61,26 @@ function searchLeads($db, $currentUser) {
         return;
     }
     $like = '%' . $q . '%';
-    $stmt = $db->prepare("
-        SELECT lead_id, contact_person, company_name, phone, mobile, email, status
-        FROM leads
-        WHERE (contact_person LIKE ? OR company_name LIKE ? OR phone LIKE ? OR mobile LIKE ? OR email LIKE ?) AND company_id = ?
-        ORDER BY contact_person ASC
-        LIMIT 15
-    ");
-    $stmt->execute([$like, $like, $like, $like, $like]);
+    $companyId = $currentUser['company_id'] ?? null;
+    if ($companyId) {
+        $stmt = $db->prepare("
+            SELECT lead_id, contact_person, company_name, phone, mobile, email, lead_status
+            FROM leads
+            WHERE (contact_person LIKE ? OR company_name LIKE ? OR phone LIKE ? OR mobile LIKE ? OR email LIKE ?) AND company_id = ?
+            ORDER BY contact_person ASC
+            LIMIT 15
+        ");
+        $stmt->execute([$like, $like, $like, $like, $like, $companyId]);
+    } else {
+        $stmt = $db->prepare("
+            SELECT lead_id, contact_person, company_name, phone, mobile, email, lead_status
+            FROM leads
+            WHERE (contact_person LIKE ? OR company_name LIKE ? OR phone LIKE ? OR mobile LIKE ? OR email LIKE ?)
+            ORDER BY contact_person ASC
+            LIMIT 15
+        ");
+        $stmt->execute([$like, $like, $like, $like, $like]);
+    }
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode(['success' => true, 'data' => $results]);
 }
@@ -292,13 +304,22 @@ function getLeadDetail($db, $currentUser) {
 
 function getLeadStats($db, $currentUser) {
     $companyId = $currentUser['company_id'] ?? null;
-    $companyFilter = $companyId ? "WHERE company_id = $companyId" : '';
+    
+    $where = [];
+    $params = [];
+    if ($companyId) {
+        $where[] = 'company_id = ?';
+        $params[] = $companyId;
+    }
+    
+    $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    $andClause = $where ? 'AND ' . implode(' AND ', $where) : '';
     
     $stats = [];
-    $stats['total']      = $db->query("SELECT COUNT(*) as c FROM leads $companyFilter")->fetch()['c'];
-    $stats['by_status']  = $db->query("SELECT lead_status, COUNT(*) as count FROM leads $companyFilter GROUP BY lead_status")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $stats['by_country'] = $db->query("SELECT country, COUNT(*) as count FROM leads WHERE country IS NOT NULL AND country != '' $companyFilter GROUP BY country ORDER BY count DESC")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $stats['this_month'] = $db->query("SELECT COUNT(*) as c FROM leads $companyFilter AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())")->fetch()['c'];
+    $stats['total']      = $db->prepare("SELECT COUNT(*) as c FROM leads $whereClause")->execute($params)->fetch()['c'];
+    $stats['by_status']  = $db->prepare("SELECT lead_status, COUNT(*) as count FROM leads $whereClause GROUP BY lead_status")->execute($params)->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stats['by_country'] = $db->prepare("SELECT country, COUNT(*) as count FROM leads WHERE country IS NOT NULL AND country != '' $andClause GROUP BY country ORDER BY count DESC")->execute($params)->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stats['this_month'] = $db->prepare("SELECT COUNT(*) as c FROM leads WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW()) $andClause")->execute($params)->fetch()['c'];
     jsonSuccess('Stats retrieved', $stats);
 }
 
@@ -434,20 +455,38 @@ function updateLeadStatusAPI($db, $data, $currentUser) {
     $status = $data['status'] ?? $data['lead_status'] ?? null;
     if (empty($leadId) || empty($status)) jsonError('Lead ID and status required', 400);
 
-    $stmt = $db->prepare("UPDATE leads SET lead_status = ? WHERE lead_id = ?");
-    $stmt->execute([$status, $leadId]);
+    $companyId = $currentUser['company_id'] ?? null;
+    if ($companyId) {
+        $stmt = $db->prepare("UPDATE leads SET lead_status = ? WHERE lead_id = ? AND company_id = ?");
+        $stmt->execute([$status, $leadId, $companyId]);
+    } else {
+        $stmt = $db->prepare("UPDATE leads SET lead_status = ? WHERE lead_id = ?");
+        $stmt->execute([$status, $leadId]);
+    }
+    if (!$stmt->rowCount()) jsonError('Lead not found or access denied', 404);
     logActivity($currentUser['user_id'], 'Status Change', 'Lead', $leadId, 'Changed status to: ' . $status);
     jsonSuccess('Status updated successfully');
 }
 
 function deleteLead($db, $leadId, $currentUser) {
-    $stmt = $db->prepare("SELECT contact_person, company_name FROM leads WHERE lead_id = ?");
-    $stmt->execute([$leadId]);
+    $companyId = $currentUser['company_id'] ?? null;
+    if ($companyId) {
+        $stmt = $db->prepare("SELECT contact_person, company_name FROM leads WHERE lead_id = ? AND company_id = ?");
+        $stmt->execute([$leadId, $companyId]);
+    } else {
+        $stmt = $db->prepare("SELECT contact_person, company_name FROM leads WHERE lead_id = ?");
+        $stmt->execute([$leadId]);
+    }
     $lead = $stmt->fetch();
-    if (!$lead) jsonError('Lead not found', 404);
+    if (!$lead) jsonError('Lead not found or access denied', 404);
 
-    $stmt = $db->prepare("DELETE FROM leads WHERE lead_id = ?");
-    $stmt->execute([$leadId]);
+    if ($companyId) {
+        $stmt = $db->prepare("DELETE FROM leads WHERE lead_id = ? AND company_id = ?");
+        $stmt->execute([$leadId, $companyId]);
+    } else {
+        $stmt = $db->prepare("DELETE FROM leads WHERE lead_id = ?");
+        $stmt->execute([$leadId]);
+    }
     $leadName = $lead['contact_person'] ?: $lead['company_name'] ?: 'Lead #' . $leadId;
     logActivity($currentUser['user_id'], 'Deleted', 'Lead', $leadId, 'Deleted lead: ' . $leadName);
     jsonSuccess('Lead deleted successfully');
@@ -493,18 +532,30 @@ function bulkDeleteLeads($db, $data, $currentUser) {
     if (!hasRole('Sales Manager')) jsonError('Permission denied', 403);
     if (empty($data['lead_ids']) || !is_array($data['lead_ids'])) jsonError('Lead IDs required', 400);
 
+    $companyId = $currentUser['company_id'] ?? null;
     $ids = array_map('intval', $data['lead_ids']);
     $in  = Database::buildInClause($ids);
 
-    // Delete related records first (parameterized)
-    $stmt = $db->prepare("DELETE FROM interactions WHERE lead_id IN ({$in['placeholders']})");
-    $stmt->execute($in['params']);
+    if ($companyId) {
+        // Delete related records first (parameterized)
+        $stmt = $db->prepare("DELETE FROM interactions WHERE lead_id IN ({$in['placeholders']}) AND EXISTS (SELECT 1 FROM leads WHERE leads.lead_id = interactions.lead_id AND company_id = ?)");
+        $stmt->execute(array_merge($in['params'], [$companyId]));
 
-    $stmt = $db->prepare("DELETE FROM documents WHERE lead_id IN ({$in['placeholders']})");
-    $stmt->execute($in['params']);
+        $stmt = $db->prepare("DELETE FROM documents WHERE lead_id IN ({$in['placeholders']}) AND EXISTS (SELECT 1 FROM leads WHERE leads.lead_id = documents.lead_id AND company_id = ?)");
+        $stmt->execute(array_merge($in['params'], [$companyId]));
 
-    $stmt = $db->prepare("DELETE FROM leads WHERE lead_id IN ({$in['placeholders']})");
-    $stmt->execute($in['params']);
+        $stmt = $db->prepare("DELETE FROM leads WHERE lead_id IN ({$in['placeholders']}) AND company_id = ?");
+        $stmt->execute(array_merge($in['params'], [$companyId]));
+    } else {
+        $stmt = $db->prepare("DELETE FROM interactions WHERE lead_id IN ({$in['placeholders']})");
+        $stmt->execute($in['params']);
+
+        $stmt = $db->prepare("DELETE FROM documents WHERE lead_id IN ({$in['placeholders']})");
+        $stmt->execute($in['params']);
+
+        $stmt = $db->prepare("DELETE FROM leads WHERE lead_id IN ({$in['placeholders']})");
+        $stmt->execute($in['params']);
+    }
 
     $count = count($ids);
     logActivity($currentUser['user_id'], 'Bulk Delete', 'Lead', 0, "Deleted $count leads");

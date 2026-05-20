@@ -399,7 +399,6 @@ function formatPhone($phone) {
     
     return $phone;
 }
-?>
 
 // Encryption helpers for sensitive data (OAuth tokens, SMTP passwords)
 // Uses libsodium if available, falls back to OpenSSL AES-256-GCM

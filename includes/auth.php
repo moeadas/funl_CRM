@@ -129,7 +129,7 @@ function authenticateUser($username, $password) {
     $db = Database::getInstance()->getConnection();
 
     $stmt = $db->prepare("
-        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified
+        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified_at
         FROM users 
         WHERE (username = :username OR email = :email) AND status = 'Active'
     ");
@@ -151,7 +151,7 @@ function authenticateUser($username, $password) {
         $_SESSION['full_name']      = $user['full_name'];
         $_SESSION['role']           = $user['role'];
         $_SESSION['is_super_admin']  = !empty($user['is_super_admin']);
-        $_SESSION['email_verified'] = !empty($user['email_verified']);
+        $_SESSION['email_verified'] = !empty($user['email_verified_at']);
         
         // Set company_id for multi-tenant support
         if (!empty($user['company_id'])) {

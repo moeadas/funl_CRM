@@ -412,7 +412,7 @@ function loadLeads(page) {
         document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;" class="text-muted">Loading...</div>';
     }
     
-    fetch('/api/leads.php?action=list&' + params.toString())
+    fetch('/api/leads.php?action=list&_cb=' + Date.now() + '&' + params.toString())
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
@@ -573,7 +573,7 @@ function bulkAssign() {
     if (!userId) { alert('Please select a user to assign to.'); return; }
     if (!confirm('Assign ' + ids.length + ' leads to selected user?')) return;
     
-    fetch('/api/leads.php?action=bulk_assign', {
+    fetch('/api/leads.php?action=bulk_assign&_cb=' + Date.now(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csrf_token: '<?php echo $csrf_token; ?>', lead_ids: ids, assigned_to: userId })
@@ -595,7 +595,7 @@ function bulkDelete() {
     if (ids.length === 0) return;
     if (!confirm('Are you sure you want to PERMANENTLY delete ' + ids.length + ' leads? This cannot be undone.')) return;
     
-    fetch('/api/leads.php?action=bulk_delete', {
+    fetch('/api/leads.php?action=bulk_delete&_cb=' + Date.now(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csrf_token: '<?php echo $csrf_token; ?>', lead_ids: ids })
@@ -646,7 +646,7 @@ function closeModal() {
 }
 
 function editLead(id) {
-    fetch('/api/leads.php?action=detail&id=' + id)
+    fetch('/api/leads.php?action=detail&_cb=' + Date.now() + '&id=' + id)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
@@ -774,7 +774,7 @@ function saveLead(e) {
     }
 
     var isEdit = !!data.lead_id;
-    var url = '/api/leads.php?action=' + (isEdit ? 'update' : 'create');
+    var url = '/api/leads.php?action=' + (isEdit ? 'update' : 'create') + '&_cb=' + Date.now();
     var method = isEdit ? 'PUT' : 'POST';
     
     fetch(url, {

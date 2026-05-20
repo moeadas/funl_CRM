@@ -16,9 +16,6 @@ $csrf_token = generateCSRFToken();
 // Get campaign/template data
 $db = Database::getInstance()->getConnection();
 $existingJson = '{}';
-$campaignId = isset($_GET['campaign_id']) ? intval($_GET['campaign_id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
-$templateId = isset($_GET['template_id']) ? intval($_GET['template_id']) : 0;
-
 
 $mode = $_GET['mode'] ?? '';
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -37,7 +34,6 @@ if ($campaignId > 0) {
         $stmt = $db->prepare("SELECT content_json FROM email_campaigns WHERE campaign_id = ?");
         $stmt->execute([$campaignId]);
     }
-    $stmt->execute([$campaignId, $_SESSION['company_id']]);
     $row = $stmt->fetch();
     if ($row && $row['content_json']) $existingJson = $row['content_json'];
 } elseif ($templateId > 0) {
@@ -48,7 +44,6 @@ if ($campaignId > 0) {
         $stmt = $db->prepare("SELECT content_json FROM email_templates WHERE template_id = ?");
         $stmt->execute([$templateId]);
     }
-    $stmt->execute([$templateId, $_SESSION['company_id']]);
     $row = $stmt->fetch();
     if ($row && $row['content_json']) $existingJson = $row['content_json'];
 }
@@ -230,13 +225,13 @@ require_once '../includes/header.php';
       html_content: htmlOutput
     };
 
-    var url = '/api/email-campaigns.php';
+    var url = '/api/email-campaigns.php?_cb=' + Date.now();
     if (CAMPAIGN_ID) {
       data.campaign_id = CAMPAIGN_ID;
       data.action = 'update_content';
     } else if (TEMPLATE_ID) {
       data.template_id = TEMPLATE_ID;
-      url = '/api/email-templates.php';
+      url = '/api/email-templates.php?_cb=' + Date.now();
     }
 
     fetch(url, {

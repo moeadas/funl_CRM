@@ -47,19 +47,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch all users
+// Fetch all users (scoped by company)
+$companyId = $_SESSION['company_id'] ?? null;
 try {
     $db = Database::getInstance();
-    $users = $db->query("
-        SELECT u.*, 
-               COUNT(DISTINCT l.lead_id) as assigned_leads,
-               COUNT(DISTINCT i.interaction_id) as total_interactions
-        FROM users u
-        LEFT JOIN leads l ON u.user_id = l.assigned_to
-        LEFT JOIN interactions i ON u.user_id = i.user_id
-        GROUP BY u.user_id
-        ORDER BY u.created_at DESC
-    ")->fetchAll();
+    if ($companyId) {
+        $users = $db->query("
+            SELECT u.*, 
+                   COUNT(DISTINCT l.lead_id) as assigned_leads,
+                   COUNT(DISTINCT i.interaction_id) as total_interactions
+            FROM users u
+            LEFT JOIN leads l ON u.user_id = l.assigned_to AND l.company_id = ?
+            LEFT JOIN interactions i ON u.user_id = i.user_id
+            WHERE u.company_id = ?
+            GROUP BY u.user_id
+            ORDER BY u.created_at DESC
+        ", [$companyId, $companyId])->fetchAll();
+    } else {
+        $users = $db->query("
+            SELECT u.*, 
+                   COUNT(DISTINCT l.lead_id) as assigned_leads,
+                   COUNT(DISTINCT i.interaction_id) as total_interactions
+            FROM users u
+            LEFT JOIN leads l ON u.user_id = l.assigned_to
+            LEFT JOIN interactions i ON u.user_id = i.user_id
+            GROUP BY u.user_id
+            ORDER BY u.created_at DESC
+        ")->fetchAll();
+    }
 } catch (Exception $e) {
     $users = [];
     $_SESSION['error'] = "Error loading users: " . $e->getMessage();
