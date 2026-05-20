@@ -370,6 +370,13 @@ function getCallHistory() {
             $params[] = $leadId;
         }
 
+        // Tenant isolation
+        $companyId = $_SESSION['company_id'] ?? null;
+        if ($companyId) {
+            $where .= ' AND l.company_id = ?';
+            $params[] = $companyId;
+        }
+
         // Role-based filtering
         $isSalesRep = !hasRole('Sales Manager');
         if ($isSalesRep) {
@@ -412,8 +419,14 @@ function getCallStats() {
             $filter = "WHERE (user_id = ? OR lead_id IN (SELECT lead_id FROM leads WHERE assigned_to = ?))";
             $params = [$userId, $userId];
         } else {
-            $filter = "WHERE 1=1";
-            $params = [];
+            $companyId = $_SESSION['company_id'] ?? null;
+            if ($companyId) {
+                $filter = "WHERE lead_id IN (SELECT lead_id FROM leads WHERE company_id = ?)";
+                $params = [$companyId];
+            } else {
+                $filter = "WHERE 1=1";
+                $params = [];
+            }
         }
 
         $stats = [

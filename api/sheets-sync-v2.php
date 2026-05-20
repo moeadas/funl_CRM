@@ -82,11 +82,19 @@ if (!defined('SHEETS_SYNC_INCLUDED')) {
 
 /**
  * Sync all enabled endpoints that have a sheet_url configured.
+ * Scoped by company_id for tenant isolation.
  */
 function syncAllEndpoints($db) {
-    $endpoints = $db->query(
-        "SELECT endpoint_id, name FROM webhook_endpoints WHERE enabled = 1 AND sheet_url IS NOT NULL AND sheet_url != ''"
-    )->fetchAll(\PDO::FETCH_ASSOC);
+    $companyId = $_SESSION['company_id'] ?? null;
+    $sql = "SELECT endpoint_id, name FROM webhook_endpoints WHERE enabled = 1 AND sheet_url IS NOT NULL AND sheet_url != ''";
+    $params = [];
+    
+    if ($companyId) {
+        $sql .= " AND company_id = ?";
+        $params[] = $companyId;
+    }
+    
+    $endpoints = $db->query($sql, $params)->fetchAll(\PDO::FETCH_ASSOC);
 
     $results = [];
     foreach ($endpoints as $ep) {
@@ -103,9 +111,16 @@ function syncAllEndpoints($db) {
  * Sync a single endpoint: fetch sheet CSV, parse, import new rows.
  */
 function syncEndpoint($db, $endpointId) {
-    $endpoint = $db->query(
-        "SELECT * FROM webhook_endpoints WHERE endpoint_id = ?", [$endpointId]
-    )->fetch(\PDO::FETCH_ASSOC);
+    $companyId = $_SESSION['company_id'] ?? null;
+    $sql = "SELECT * FROM webhook_endpoints WHERE endpoint_id = ?";
+    $params = [$endpointId];
+    
+    if ($companyId) {
+        $sql .= " AND company_id = ?";
+        $params[] = $companyId;
+    }
+    
+    $endpoint = $db->query($sql, $params)->fetch(\PDO::FETCH_ASSOC);
 
     if (!$endpoint) {
         return ['success' => false, 'message' => 'Endpoint not found.'];
