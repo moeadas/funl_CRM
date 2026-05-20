@@ -28,8 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($username) || empty($password)) {
             $error = 'Please enter both username and password.';
         } elseif (authenticateUser($username, $password)) {
-            header('Location: /dashboard.php');
-            exit;
+            // Check if email is verified (skip for super admin)
+            if (!empty($_SESSION['email_verified']) || !empty($_SESSION['is_super_admin'])) {
+                header('Location: /dashboard.php');
+                exit;
+            } else {
+                // Email not verified — redirect to verification page
+                header('Location: /verify-email.php');
+                exit;
+            }
         } else {
             $error = 'Invalid username or password.';
         }

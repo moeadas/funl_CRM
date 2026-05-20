@@ -1,7 +1,7 @@
 <?php
 /**
  * Pinpoint CRM - Registration Landing Page
- * SaaS signup with plan selection — ForceManager-inspired design
+ * SaaS signup with plan selection - ForceManager-inspired design
  */
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -21,7 +21,7 @@ $csrf_token = generateCSRFToken();
 // Registration handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     requireCSRF();
-    
+
     if ($_POST['action'] === 'register_company') {
         $companyName = sanitizeInput($_POST['company_name'] ?? '');
         $companySlug = preg_replace('/[^a-z0-9-]/', '', strtolower(str_replace(' ', '-', $companyName)));
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $fullName = sanitizeInput($_POST['full_name'] ?? '');
         $phone = sanitizeInput($_POST['phone'] ?? '');
         $planKey = sanitizeInput($_POST['plan'] ?? 'single');
-        
+
         if (empty($companyName) || empty($email) || empty($password) || empty($fullName)) {
             $error = 'All fields are required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -43,14 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             try {
                 $db = Database::getInstance();
-                
+
                 $existing = $db->query("SELECT 1 FROM companies WHERE email = ? OR company_slug = ?", [$email, $companySlug])->fetch();
                 if ($existing) {
                     $error = 'A company with this email or name already exists.';
                 } else {
                     $plan = getPlan($planKey);
                     if (!$plan) $plan = getPlan('single');
-                    
+
                     $trialEnds = date('Y-m-d H:i:s', strtotime('+14 days'));
                     $companyId = $db->insert('companies', [
                         'company_name' => $companyName,
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         'plan_price_monthly' => $plan['monthly_price'] ?? 10,
                         'extra_user_price' => $plan['extra_user_price'] ?? 0,
                     ]);
-                    
+
                     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
                     $userId = $db->insert('users', [
                         'company_id' => $companyId,
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         'phone' => $phone,
                         'status' => 'Active',
                     ]);
-                    
+
                     $defaultSettings = [
                         'company_name' => $companyName,
                         'company_email' => $email,
@@ -96,17 +96,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             'setting_type' => 'text',
                         ]);
                     }
-                    
+
                     sendVerificationEmail($userId, $email);
                     
+                    // Set email as NOT verified (must verify before full access)
+                    $db->query("UPDATE users SET email_verified = 0 WHERE user_id = ?", [$userId]);
+
+                    // Set session but mark as unverified
                     $_SESSION['user_id'] = $userId;
                     $_SESSION['username'] = $email;
                     $_SESSION['email'] = $email;
                     $_SESSION['full_name'] = $fullName;
                     $_SESSION['role'] = 'Admin';
                     $_SESSION['company_id'] = $companyId;
+                    $_SESSION['email_verified'] = false;
                     
-                    header('Location: /dashboard.php');
+                    // Redirect to verification page instead of dashboard
+                    header('Location: /verify-email.php');
                     exit;
                 }
             } catch (Exception $e) {
@@ -123,16 +129,16 @@ $plans = getActivePlans();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pinpoint CRM — Start Your Free Trial</title>
+    <title>Pinpoint CRM - Start Your Free Trial</title>
     <link rel="icon" type="image/svg+xml" href="<?php echo getCompanyFavicon(); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         :root { --color-primary: #D91C48; --color-primary-dark: #861B44; --color-primary-light: #FF6B8A; }
-        
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #1a1a2e; line-height: 1.6; }
-        
+
         /* Navigation */
         .nav { position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.06); z-index: 100; padding: 0 24px; }
         .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
@@ -144,7 +150,7 @@ $plans = getActivePlans();
         .nav-cta { background: var(--color-primary); color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; transition: all 0.2s; }
         .nav-cta:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
         .nav-signin { color: var(--color-primary); font-weight: 600; text-decoration: none; font-size: 14px; }
-        
+
         /* Hero */
         .hero { padding: 140px 24px 80px; text-align: center; max-width: 900px; margin: 0 auto; }
         .hero-badge { display: inline-block; background: rgba(217,28,72,0.08); color: var(--color-primary); padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
@@ -158,13 +164,13 @@ $plans = getActivePlans();
         .btn-hero-outline:hover { background: rgba(217,28,72,0.05); }
         .hero-trust { margin-top: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #8a8a9a; font-size: 14px; }
         .hero-trust .stars { color: #FFB800; font-size: 16px; }
-        
+
         /* Section headers */
         .section { padding: 80px 24px; }
         .section-header { text-align: center; max-width: 700px; margin: 0 auto 64px; }
         .section-header h2 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
         .section-header p { font-size: 18px; color: #6a6a7a; }
-        
+
         /* Pricing */
         .pricing-section { background: #f8f9fb; }
         .pricing-cards { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
@@ -182,7 +188,7 @@ $plans = getActivePlans();
         .pricing-card ul { list-style: none; }
         .pricing-card ul li { padding: 8px 0; font-size: 14px; color: #4a4a5a; display: flex; align-items: center; gap: 10px; }
         .pricing-card ul li::before { content: "✓"; color: var(--color-primary); font-weight: bold; flex-shrink: 0; }
-        
+
         /* Registration Form */
         .form-section { max-width: 520px; margin: 0 auto; padding: 60px 24px; }
         .form-card { background: #fff; border-radius: 16px; padding: 40px; border: 1px solid #e8e8ef; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
@@ -197,14 +203,14 @@ $plans = getActivePlans();
         .btn-submit:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
         .form-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #7a7a8a; }
         .form-footer a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
-        
+
         /* Features */
         .features-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
         .feature { text-align: center; padding: 20px; }
         .feature-icon { width: 56px; height: 56px; background: rgba(217,28,72,0.08); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
         .feature h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
         .feature p { font-size: 15px; color: #6a6a7a; }
-        
+
         /* Comparison */
         .comparison-section { background: #f8f9fb; }
         .comparison-table { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8ef; }
@@ -214,17 +220,17 @@ $plans = getActivePlans();
         .comparison-row .uncheck { color: #ccc; text-align: center; }
         .comparison-row .feature-name { font-size: 14px; color: #3a3a4a; }
         .comparison-row .plan-name { text-align: center; font-weight: 700; font-size: 14px; }
-        
+
         /* Trust */
         .trust-section { text-align: center; padding: 60px 24px; }
         .trust-badges { display: flex; justify-content: center; gap: 48px; margin-top: 32px; flex-wrap: wrap; }
         .trust-badge { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #5a5a6a; font-size: 14px; }
         .trust-badge .icon { width: 48px; height: 48px; background: #f0f0f5; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        
+
         /* Footer */
         .footer { background: #1a1a2e; color: #9a9aaa; padding: 40px 24px; text-align: center; font-size: 14px; }
         .footer a { color: #ccc; text-decoration: none; }
-        
+
         @media (max-width: 768px) {
             .hero h1 { font-size: 36px; }
             .hero p { font-size: 17px; }
@@ -257,9 +263,9 @@ $plans = getActivePlans();
 
 <!-- Hero -->
 <section class="hero">
-    <div class="hero-badge">🚀 14-Day Free Trial — No Credit Card</div>
+    <div class="hero-badge">🚀 14-Day Free Trial - No Credit Card</div>
     <h1>The CRM that <span>supercharges</span> your sales team</h1>
-    <p>Pinpoint CRM gives your team the tools to manage leads, close deals faster, and grow revenue — all in one intuitive platform.</p>
+    <p>Pinpoint CRM gives your team the tools to manage leads, close deals faster, and grow revenue - all in one intuitive platform.</p>
     <div class="hero-cta">
         <a href="#signup" class="btn-hero">Start Free Trial</a>
         <a href="#pricing" class="btn-hero-outline">See Plans</a>
@@ -399,20 +405,20 @@ $plans = getActivePlans();
         </div>
         <div class="comparison-row">
             <div class="feature-name">Extra User Pricing</div>
-            <div class="uncheck">—</div>
+            <div class="uncheck">-</div>
             <div class="check">$8/mo</div>
             <div class="check">$6/mo</div>
         </div>
         <div class="comparison-row">
             <div class="feature-name">Priority Support</div>
-            <div class="uncheck">—</div>
+            <div class="uncheck">-</div>
             <div class="check">✓</div>
             <div class="check">✓</div>
         </div>
         <div class="comparison-row">
             <div class="feature-name">Custom Integrations</div>
-            <div class="uncheck">—</div>
-            <div class="uncheck">—</div>
+            <div class="uncheck">-</div>
+            <div class="uncheck">-</div>
             <div class="check">✓</div>
         </div>
     </div>
@@ -447,16 +453,16 @@ $plans = getActivePlans();
     <div class="form-card">
         <h2>Start your free trial</h2>
         <p class="subtitle">Create your account in 60 seconds. No credit card required.</p>
-        
+
         <?php if ($error): ?>
             <div class="alert alert-error" style="margin-bottom:20px;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:14px;"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-        
+
         <form method="POST">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
             <input type="hidden" name="action" value="register_company">
             <input type="hidden" name="plan" id="selectedPlan" value="single">
-            
+
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">Company Name *</label>
@@ -483,15 +489,15 @@ $plans = getActivePlans();
                     <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
                 </div>
             </div>
-            
+
             <div style="margin-top:8px;">
                 <label class="form-label">Selected Plan</label>
-                <div id="planDisplay" style="padding:10px 14px;background:#f8f9fb;border-radius:8px;font-size:14px;font-weight:600;color:var(--color-primary);">Single User — $10/month</div>
+                <div id="planDisplay" style="padding:10px 14px;background:#f8f9fb;border-radius:8px;font-size:14px;font-weight:600;color:var(--color-primary);">Single User - $10/month</div>
             </div>
-            
+
             <button type="submit" class="btn-submit">Create Account & Start Free Trial</button>
         </form>
-        
+
         <p class="form-footer">
             Already have an account? <a href="/login.php">Sign in</a>
         </p>
@@ -509,7 +515,7 @@ $plans = getActivePlans();
 <script>
 function selectPlan(key, btn) {
     document.getElementById('selectedPlan').value = key;
-    
+
     // Update button states
     document.querySelectorAll('.pricing-card .btn-select').forEach(b => {
         b.textContent = 'Select Plan';
@@ -517,15 +523,15 @@ function selectPlan(key, btn) {
     });
     btn.textContent = 'Selected';
     btn.classList.add('active');
-    
+
     // Update plan display in form
     const plans = {
-        'single': 'Single User — $10/month',
-        'team': 'Team — $40/month',
-        'enterprise': 'Enterprise — $90/month'
+        'single': 'Single User - $10/month',
+        'team': 'Team - $40/month',
+        'enterprise': 'Enterprise - $90/month'
     };
     document.getElementById('planDisplay').textContent = plans[key] || key;
-    
+
     // Scroll to form
     document.getElementById('signup').scrollIntoView({ behavior: 'smooth' });
 }
