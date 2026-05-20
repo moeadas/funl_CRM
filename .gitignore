@@ -1,0 +1,22 @@
+# Environment variables
+config/.env
+.env
+
+# Logs
+php_errorlog
+*.log
+
+# Uploads directory (user content)
+uploads/*
+!uploads/.gitkeep
+
+# Cache
+*.cache
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Dependencies
+vendor/
