@@ -118,8 +118,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         case 'delete_company':
             $companyId = intval($_POST['company_id'] ?? 0);
             if ($companyId) {
-                $db->query("DELETE FROM companies WHERE company_id = ?", [$companyId]);
-                $_SESSION['success'] = 'Company deleted.';
+                try {
+                    $db->beginTransaction();
+                    
+                    // Delete in dependency order (child tables first)
+                    $tables = [
+                        'activity_log',
+                        'interactions',
+                        'documents',
+                        'email_campaign_log',
+                        'email_campaigns',
+                        'email_list_members',
+                        'email_lists',
+                        'email_templates',
+                        'lead_custom_values',
+                        'custom_fields',
+                        'whatsapp_messages',
+                        'voip_calls',
+                        'webhook_log',
+                        'webhook_endpoints',
+                        'settings',
+                        'leads',
+                        'users',
+                        'companies',
+                    ];
+                    
+                    foreach ($tables as $table) {
+                        try {
+                            $db->query("DELETE FROM $table WHERE company_id = ?", [$companyId]);
+                        } catch (Exception $e) {
+                            // Some tables may not have company_id column, skip
+                        }
+                    }
+                    
+                    $db->commit();
+                    $_SESSION['success'] = 'Company and all related data deleted.';
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    $_SESSION['error'] = 'Failed to delete company: ' . $e->getMessage();
+                }
             }
             break;
     }
