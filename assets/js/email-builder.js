@@ -733,15 +733,12 @@
         applyTextStyle($b, d);
         $b.addEventListener('focus', () => {
           state.lastFocusedElement = $b;
-          showInlineToolbar($b, blk);
         });
         $b.addEventListener('blur',  () => {
           d.content = $b.innerHTML;
           pushHistory();
-          hideInlineToolbar();
         });
         $b.addEventListener('input', () => { /* keep state in sync silently; snapshot on blur */ d.content = $b.innerHTML; });
-        $b.addEventListener('mouseup', () => showInlineToolbar($b, blk));
         break;
       case 'image': {
         const $imgWrap = document.createElement('div');
@@ -1178,6 +1175,44 @@
         input('range', 'Line height (×10)', Math.round(d.lineHeight * 10), v => { d.lineHeight = (+v)/10; renderCanvas(); deferred(); }, { min: 10, max: 24 }),
         input('range', 'Letter spacing', d.letterSpacing, v => { d.letterSpacing = +v; renderCanvas(); deferred(); }, { min: -2, max: 8 })
       ]);
+      // Inline formatting buttons (replaces floating toolbar)
+      const fmtButtons = document.createElement('div'); fmtButtons.className = 'eb-prop-group';
+      const fmtTitle = document.createElement('div'); fmtTitle.className = 'eb-prop-group-title'; fmtTitle.textContent = 'Format text';
+      fmtButtons.appendChild(fmtTitle);
+      const btnWrap = document.createElement('div'); btnWrap.className = 'eb-btn-row';
+      [
+        { l: 'B', t: 'Bold', cmd: 'bold' },
+        { l: 'I', t: 'Italic', cmd: 'italic' },
+        { l: 'U', t: 'Underline', cmd: 'underline' },
+        { l: 'S', t: 'Strikethrough', cmd: 'strikeThrough' },
+        { l: '•', t: 'Bullet list', cmd: 'insertUnorderedList' },
+        { l: '1.', t: 'Numbered list', cmd: 'insertOrderedList' },
+        { l: '🔗', t: 'Link', cmd: 'link' },
+        { l: '✕', t: 'Clear formatting', cmd: 'clear' }
+      ].forEach(b => {
+        const $btn = document.createElement('button'); $btn.type = 'button';
+        $btn.className = 'eb-format-btn'; $btn.title = b.t; $btn.textContent = b.l;
+        $btn.addEventListener('click', () => {
+          const el = state.lastFocusedElement || document.querySelector('.eb-block[data-blk-id="'+blk.id+'"]');
+          if (!el) return;
+          el.focus();
+          if (b.cmd === 'link') {
+            const url = prompt('Link URL', 'https://');
+            if (url) document.execCommand('createLink', false, url);
+            else document.execCommand('unlink', false, null);
+          } else if (b.cmd === 'clear') {
+            document.execCommand('removeFormat', false, null);
+            document.execCommand('unlink', false, null);
+          } else {
+            document.execCommand(b.cmd, false, null);
+          }
+          d.content = el.innerHTML;
+          deferred();
+        });
+        btnWrap.appendChild($btn);
+      });
+      fmtButtons.appendChild(btnWrap);
+      $p.appendChild(fmtButtons);
       paddingGroup($p, d);
       mergeTagPicker($p, blk);
       mobileGroup($p, d);

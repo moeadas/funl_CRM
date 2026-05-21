@@ -271,3 +271,13 @@ html.eb-dark-preview #email-canvas    { box-shadow: 0 1px 3px rgba(0,0,0,.4); }
   .eb-app { grid-template-columns: 1fr; grid-template-areas: "topbar" "canvas"; }
   .eb-palette, .eb-props { display: none; }
 }
+/* Format text buttons in properties panel */
+.eb-btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.eb-format-btn {
+  width: 32px; height: 32px; border: 1px solid var(--eb-border);
+  background: #fff; border-radius: 6px; cursor: pointer;
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+  transition: .15s; color: var(--eb-text);
+}
+.eb-format-btn:hover { border-color: var(--eb-brand); background: var(--eb-accent-soft); }
+.eb-format-btn:active { background: var(--eb-brand); color: #fff; }
