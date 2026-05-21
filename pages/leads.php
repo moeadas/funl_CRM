@@ -423,7 +423,7 @@ function loadLeads(page) {
         document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;" class="text-muted">Loading...</div>';
     }
     
-    fetch('/api/leads.php?action=list&_cb=' + Date.now() + '&' + params.toString())
+    fetch('/api/leads.php?action=list&_cb=' + Date.now() + '&' + params.toString(), { credentials: 'same-origin' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
@@ -585,6 +585,7 @@ function bulkAssign() {
     if (!confirm('Assign ' + ids.length + ' leads to selected user?')) return;
     
     fetch('/api/leads.php?action=bulk_assign&_cb=' + Date.now(), {
+        credentials: 'same-origin',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csrf_token: '<?php echo $csrf_token; ?>', lead_ids: ids, assigned_to: userId })
@@ -607,6 +608,7 @@ function bulkDelete() {
     if (!confirm('Are you sure you want to PERMANENTLY delete ' + ids.length + ' leads? This cannot be undone.')) return;
     
     fetch('/api/leads.php?action=bulk_delete&_cb=' + Date.now(), {
+        credentials: 'same-origin',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csrf_token: '<?php echo $csrf_token; ?>', lead_ids: ids })
@@ -657,7 +659,7 @@ function closeModal() {
 }
 
 function editLead(id) {
-    fetch('/api/leads.php?action=detail&_cb=' + Date.now() + '&id=' + id)
+    fetch('/api/leads.php?action=detail&_cb=' + Date.now() + '&id=' + id, { credentials: 'same-origin' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
@@ -789,6 +791,7 @@ function saveLead(e) {
     var method = isEdit ? 'PUT' : 'POST';
     
     fetch(url, {
+        credentials: 'same-origin',
         method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
