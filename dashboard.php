@@ -270,7 +270,7 @@ if (hasRole('Sales Manager')) {
             $emailStats['clicked'] = $stmt->fetchColumn();
         } else {
             $emailStats['campaigns'] = $db->query("SELECT COUNT(*) FROM email_campaigns")->fetchColumn();
-            $emailStats['sent'] = $db->query("SELECT COALESCE(SUM(total_sent),0) FROM email_campaigns WHERE status = 'Sent'")-&gt;fetchColumn();
+            $emailStats['sent'] = $db->query("SELECT COALESCE(SUM(total_sent),0) FROM email_campaigns WHERE status = 'Sent'")->fetchColumn();
             $emailStats['opened'] = $db->query("SELECT COALESCE(SUM(total_opened),0) FROM email_campaigns")->fetchColumn();
             $emailStats['clicked'] = $db->query("SELECT COALESCE(SUM(total_clicked),0) FROM email_campaigns")->fetchColumn();
         }
@@ -281,7 +281,7 @@ if (hasRole('Sales Manager')) {
 
 $pageTitle = 'Dashboard';
 include 'includes/header.php';
-?&gt;
+?>
 
 <div class="page-header">
     <h1 class="page-title">Dashboard</h1>
