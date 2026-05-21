@@ -1,1532 +1,1801 @@
 /**
- * Email Builder — Enhanced Visual Email Editor
- * Pinpoint CRM
- * Built with SortableJS for drag-and-drop
+ * Pinpoint CRM — Email Builder v2
+ * Production-grade visual email editor
+ * - SortableJS-only DnD (palette clones, canvas/columns receive)
+ * - Single source of truth: design JSON → canvas AND email-safe HTML
+ * - Table-based HTML exporter (Outlook/Gmail/Apple Mail safe)
+ * - Live iframe preview at desktop/tablet/mobile widths
+ * - Undo/redo, autosave, RTL (LTR + RTL), merge tags, image library
+ * - Floating inline text toolbar (bold/italic/link/color/size/list/align)
+ * - Pre-built section templates (hero, features, CTA, footer)
+ * - Keyboard shortcuts (Ctrl/Cmd+Z, Y, D, S; Del)
+ * - Dark-mode preview, alt-text + contrast warnings
+ *
+ * Public API (used by pages/email-builder.php):
+ *   EmailBuilder.init(opts)         — boot
+ *   EmailBuilder.getJSON()          — returns content_json string
+ *   EmailBuilder.getHTML()          — returns email-safe content_html string
+ *   EmailBuilder.setPreviewSize(s)  — 'desktop' | 'tablet' | 'mobile'
+ *   EmailBuilder.setDirection(d)    — 'ltr' | 'rtl'
+ *   EmailBuilder.setDarkMode(b)     — boolean
+ *   EmailBuilder.undo() / .redo()
+ *   EmailBuilder.sendTest(toEmail)  — POSTs current HTML to send-test endpoint
  */
-
-const EmailBuilder = (function() {
-    'use strict';
-
-    /* ─── State ─── */
-    let csrfToken = '';
-    let sections = [];
-    let body = {
-        backgroundColor: '#f4f4f4',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
-        fontSize: '16',
-        textColor: '#333333',
-        lineHeight: '1.6',
-        linkColor: '#D91C48',
-        contentWidth: '600',
-        paddingTop: '20',
-        paddingBottom: '20',
-        paddingLeft: '0',
-        paddingRight: '0'
-    };
-    let selectedId = null; // can be 'body', 'sec_xxx', or 'blk_xxx'
-    let selectedSectionId = null;
-    let sortableSections = null;
-    let sortableBlocks = {}; // keyed by column container id
-
-    /* ─── DOM refs ─── */
-    let $canvas, $propertiesPanel, $bodyTab, $previewFrame;
-
-    /* ─── Helpers ─── */
-    function generateId(prefix) {
-        return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    }
-
-    function deepClone(obj) {
-        return JSON.parse(JSON.stringify(obj));
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    function px(val) {
-        return val + 'px';
-    }
-
-    /* ─── Default block data ─── */
-    const blockDefaults = {
-        text: {
-            content: '<p>Click to edit this text...</p>',
-            fontSize: '16',
-            fontWeight: '400',
-            textAlign: 'left',
-            color: '#333333',
-            lineHeight: '1.6',
-            letterSpacing: 'normal',
-            textTransform: 'none',
-            fontStyle: 'normal',
-            textDecoration: 'none',
-            paddingTop: '0',
-            paddingBottom: '0',
-            paddingLeft: '0',
-            paddingRight: '0',
-            marginTop: '0',
-            marginBottom: '0',
-            backgroundColor: '',
-            borderRadius: '0',
-            borderWidth: '0',
-            borderColor: '#000000',
-            borderStyle: 'solid'
-        },
-        image: {
-            src: 'https://placehold.co/400x200/e2e2e2/999?text=Image',
-            alt: 'Image',
-            width: '100%',
-            height: 'auto',
-            alignment: 'center',
-            objectFit: 'cover',
-            borderRadius: '0',
-            borderWidth: '0',
-            borderColor: '#000000',
-            borderStyle: 'solid',
-            linkUrl: '',
-            paddingTop: '0',
-            paddingBottom: '0',
-            backgroundColor: ''
-        },
-        button: {
-            text: 'Click Here',
-            url: '#',
-            bgColor: '#D91C48',
-            textColor: '#ffffff',
-            fontSize: '16',
-            fontWeight: '600',
-            borderRadius: '4',
-            borderWidth: '0',
-            borderColor: '#000000',
-            borderStyle: 'solid',
-            paddingVertical: '12',
-            paddingHorizontal: '24',
-            alignment: 'center',
-            width: 'auto',
-            letterSpacing: 'normal',
-            textTransform: 'none'
-        },
-        divider: {
-            color: '#dddddd',
-            thickness: '1',
-            width: '100%',
-            style: 'solid',
-            alignment: 'center',
-            marginTop: '16',
-            marginBottom: '16'
-        },
-        spacer: {
-            height: '32',
-            backgroundColor: '',
-            borderRadius: '0',
-            borderWidth: '0',
-            borderColor: '#000000',
-            borderStyle: 'solid'
-        },
-        html: {
-            content: '<!-- Custom HTML -->',
-            paddingTop: '0',
-            paddingBottom: '0',
-            paddingLeft: '0',
-            paddingRight: '0',
-            backgroundColor: ''
-        },
-        social: {
-            alignment: 'center',
-            iconSize: '24',
-            iconColor: '#333333',
-            spacing: '8',
-            shape: 'rounded',
-            showLabels: false,
-            platforms: {
-                facebook: { url: '', active: false },
-                twitter: { url: '', active: false },
-                linkedin: { url: '', active: false },
-                instagram: { url: '', active: false },
-                youtube: { url: '', active: false }
-            }
-        }
-    };
-
-    /* ─── Default section data ─── */
-    const sectionDefaults = {
-        columns: 1,
-        bgColor: '#ffffff',
-        paddingTop: '20',
-        paddingBottom: '20',
-        paddingLeft: '24',
-        paddingRight: '24',
-        borderTopWidth: '0',
-        borderTopColor: '#000000',
-        borderTopStyle: 'solid',
-        borderBottomWidth: '0',
-        borderBottomColor: '#000000',
-        borderBottomStyle: 'solid',
-        verticalAlign: 'top',
-        gap: '24'
-    };
-
-
-    /* ─── Init ─── */
-    function init(opts) {
-        csrfToken = opts.csrfToken || '';
-        $canvas = document.getElementById('email-canvas');
-        $propertiesPanel = document.getElementById('properties-panel');
-        $bodyTab = document.getElementById('tab-body');
-        $previewFrame = document.getElementById('preview-frame');
-
-        // Parse existing JSON
-        if (opts.existingJson) {
-            try {
-                const parsed = JSON.parse(opts.existingJson);
-                if (parsed.sections) {
-                    sections = parsed.sections;
-                    if (parsed.body) Object.assign(body, parsed.body);
-                } else if (Array.isArray(parsed)) {
-                    // Legacy: flat array of blocks → convert to single-column sections
-                    sections = migrateLegacyBlocks(parsed);
-                }
-            } catch (e) {
-                console.warn('Failed to parse existing JSON, starting fresh');
-                sections = [];
-            }
-        }
-
-        renderCanvas();
-        initColumnSortables();
-        showBodyProperties();
-    }
-
-    /* ─── Legacy migration ─── */
-    function migrateLegacyBlocks(blocks) {
-        return blocks.map(function(b) {
-            const sec = deepClone(sectionDefaults);
-            sec.id = generateId('sec');
-            sec.columns = 1;
-            sec.content = [[{
-                id: generateId('blk'),
-                type: b.type || 'text',
-                data: b.data || (blockDefaults[b.type] || blockDefaults.text)
-            }]];
-            return sec;
-        });
-    }
-
-    /* ─── Section creation ─── */
-    function createSection(colCount) {
-        const sec = deepClone(sectionDefaults);
-        sec.id = generateId('sec');
-        sec.columns = colCount;
-        sec.content = [];
-        for (let i = 0; i < colCount; i++) {
-            sec.content.push([]);
-        }
-        return sec;
-    }
-
-    function createBlock(type) {
-        const defaults = blockDefaults[type] || blockDefaults.text;
-        return {
-            id: generateId('blk'),
-            type: type,
-            data: deepClone(defaults)
-        };
-    }
-
-
-    /* ─── Canvas rendering ─── */
-    function renderCanvas() {
-        if (!$canvas) return;
-        $canvas.innerHTML = '';
-
-        // Empty state
-        if (sections.length === 0) {
-            $canvas.innerHTML = '<div class="email-empty-state" style="text-align:center;padding:80px 40px;color:#999;cursor:default;" onclick="return false;" ondragover="return false;" ondrop="return false;">' +
-                '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;opacity:.5;">' +
-                '<rect x="3" y="3" width="18" height="18" rx="2"/>' +
-                '<line x1="12" y1="8" x2="12" y2="16"/>' +
-                '<line x1="8" y1="12" x2="16" y2="12"/>' +
-                '</svg>' +
-                '<h3 style="font-size:18px;font-weight:500;margin-bottom:8px;">Start Building</h3>' +
-                '<p style="font-size:14px;line-height:1.6;max-width:320px;margin:0 auto;">' +
-                'Drag a section from the left panel, then drag blocks inside it.<br><br>' +
-                '<strong>Tip:</strong> Click a section or block to edit its properties.</p>' +
-                '</div>';
-            return;
-        }
-
-        sections.forEach(function(sec) {
-            const $sec = renderSection(sec);
-            $canvas.appendChild($sec);
-        });
-
-        initDragDrop();
-    }
-
-    function renderSection(sec) {
-        const $el = document.createElement('div');
-        $el.className = 'email-section';
-        $el.dataset.sectionId = sec.id;
-        $el.style.backgroundColor = sec.bgColor || '#ffffff';
-        $el.style.paddingTop = px(sec.paddingTop || '20');
-        $el.style.paddingBottom = px(sec.paddingBottom || '20');
-        $el.style.paddingLeft = px(sec.paddingLeft || '24');
-        $el.style.paddingRight = px(sec.paddingRight || '24');
-        $el.style.borderTop = (sec.borderTopWidth || '0') + 'px ' + (sec.borderTopStyle || 'solid') + ' ' + (sec.borderTopColor || '#000');
-        $el.style.borderBottom = (sec.borderBottomWidth || '0') + 'px ' + (sec.borderBottomStyle || 'solid') + ' ' + (sec.borderBottomColor || '#000');
-        $el.style.position = 'relative';
-        $el.style.marginBottom = '8px';
-        $el.style.borderRadius = '4px';
-
-        // Section label/header
-        const $header = document.createElement('div');
-        $header.className = 'section-header';
-        $header.innerHTML = '<span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Section (' + sec.columns + ' col)</span>';
-        $header.style.padding = '4px 8px';
-        $header.style.background = '#f8f9fa';
-        $header.style.borderBottom = '1px dashed #ddd';
-        $header.style.cursor = 'pointer';
-        $header.style.userSelect = 'none';
-        $header.style.display = 'none'; // shown on hover via CSS
-        $header.addEventListener('click', function(e) {
-            e.stopPropagation();
-            selectSection(sec.id);
-        });
-        $el.appendChild($header);
-
-        // Section content wrapper
-        const $wrapper = document.createElement('div');
-        $wrapper.className = 'section-wrapper';
-        $wrapper.style.display = 'grid';
-        $wrapper.style.gridTemplateColumns = 'repeat(' + sec.columns + ', 1fr)';
-        $wrapper.style.gap = px(sec.gap || '24');
-        $wrapper.style.alignItems = sec.verticalAlign || 'top';
-        $wrapper.style.maxWidth = px(body.contentWidth || '600');
-        $wrapper.style.margin = '0 auto';
-
-        sec.content.forEach(function(colBlocks, colIdx) {
-            const $col = document.createElement('div');
-            $col.className = 'email-column';
-            $col.dataset.sectionId = sec.id;
-            $col.dataset.colIndex = colIdx;
-            $col.style.minHeight = '40px';
-            $col.style.border = '1px dashed transparent';
-            $col.style.transition = 'border-color 0.2s';
-            $col.dataset.colId = sec.id + '_col_' + colIdx;
-
-            colBlocks.forEach(function(blk) {
-                const $blk = renderBlock(blk, sec.id, colIdx);
-                $col.appendChild($blk);
-            });
-
-            $wrapper.appendChild($col);
-        });
-
-        $el.appendChild($wrapper);
-
-        // Hover show header
-        $el.addEventListener('mouseenter', function() { $header.style.display = 'block'; });
-        $el.addEventListener('mouseleave', function() { if (selectedId !== sec.id) $header.style.display = 'none'; });
-
-        // Click to select section
-        $el.addEventListener('click', function(e) {
-            if (e.target === $el || e.target === $wrapper) {
-                selectSection(sec.id);
-            }
-        });
-
-        return $el;
-    }
-
-    function renderBlock(blk, sectionId, colIdx) {
-        const $el = document.createElement('div');
-        $el.className = 'email-block email-block-' + blk.type;
-        $el.dataset.blockId = blk.id;
-        $el.dataset.sectionId = sectionId;
-        $el.dataset.colIndex = colIdx;
-        $el.style.position = 'relative';
-        $el.style.cursor = 'pointer';
-        $el.style.transition = 'box-shadow 0.2s';
-
-        const d = blk.data;
-
-        switch (blk.type) {
-            case 'text':
-                $el.innerHTML = d.content || '<p>Text</p>';
-                applyTextStyles($el, d);
-                break;
-            case 'image':
-                const $img = document.createElement('img');
-                $img.src = d.src || 'https://placehold.co/400x200/e2e2e2/999?text=Image';
-                $img.alt = d.alt || '';
-                $img.style.maxWidth = '100%';
-                $img.style.width = d.width || '100%';
-                $img.style.height = d.height || 'auto';
-                $img.style.objectFit = d.objectFit || 'cover';
-                $img.style.borderRadius = px(d.borderRadius || '0');
-                $img.style.border = (d.borderWidth || '0') + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000');
-                $img.style.display = 'block';
-                $img.style.margin = (d.alignment === 'center' ? '0 auto' : d.alignment === 'right' ? '0 0 0 auto' : '0');
-                if (d.linkUrl) {
-                    const $a = document.createElement('a');
-                    $a.href = d.linkUrl;
-                    $a.appendChild($img);
-                    $el.appendChild($a);
-                } else {
-                    $el.appendChild($img);
-                }
-                if (d.paddingTop) $el.style.paddingTop = px(d.paddingTop);
-                if (d.paddingBottom) $el.style.paddingBottom = px(d.paddingBottom);
-                break;
-            case 'button':
-                const $btn = document.createElement('a');
-                $btn.href = d.url || '#';
-                $btn.textContent = d.text || 'Button';
-                $btn.style.display = 'inline-block';
-                $btn.style.backgroundColor = d.bgColor || '#D91C48';
-                $btn.style.color = d.textColor || '#fff';
-                $btn.style.fontSize = px(d.fontSize || '16');
-                $btn.style.fontWeight = d.fontWeight || '600';
-                $btn.style.borderRadius = px(d.borderRadius || '4');
-                $btn.style.border = (d.borderWidth || '0') + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000');
-                $btn.style.padding = px(d.paddingVertical || '12') + ' ' + px(d.paddingHorizontal || '24');
-                $btn.style.textDecoration = 'none';
-                $btn.style.textTransform = d.textTransform || 'none';
-                $btn.style.letterSpacing = d.letterSpacing === 'normal' ? 'normal' : px(d.letterSpacing || '0');
-                $btn.style.textAlign = 'center';
-
-                const $btnWrap = document.createElement('div');
-                $btnWrap.style.textAlign = d.alignment || 'center';
-                if (d.width === '100%') {
-                    $btn.style.display = 'block';
-                    $btn.style.width = '100%';
-                }
-                $btnWrap.appendChild($btn);
-                $el.appendChild($btnWrap);
-                break;
-            case 'divider':
-                const $hr = document.createElement('hr');
-                $hr.style.border = 'none';
-                $hr.style.borderTop = (d.thickness || '1') + 'px ' + (d.style || 'solid') + ' ' + (d.color || '#ddd');
-                $hr.style.width = d.width || '100%';
-                $hr.style.margin = px(d.marginTop || '16') + ' auto';
-                $hr.style.marginBottom = px(d.marginBottom || '16');
-                if (d.alignment === 'left') $hr.style.marginLeft = '0';
-                if (d.alignment === 'right') $hr.style.marginRight = '0';
-                $el.appendChild($hr);
-                break;
-            case 'spacer':
-                $el.style.height = px(d.height || '32');
-                $el.style.backgroundColor = d.backgroundColor || 'transparent';
-                $el.style.borderRadius = px(d.borderRadius || '0');
-                $el.style.border = (d.borderWidth || '0') + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000');
-                break;
-            case 'html':
-                $el.innerHTML = d.content || '';
-                if (d.paddingTop) $el.style.paddingTop = px(d.paddingTop);
-                if (d.paddingBottom) $el.style.paddingBottom = px(d.paddingBottom);
-                if (d.paddingLeft) $el.style.paddingLeft = px(d.paddingLeft);
-                if (d.paddingRight) $el.style.paddingRight = px(d.paddingRight);
-                $el.style.backgroundColor = d.backgroundColor || 'transparent';
-                break;
-            case 'social':
-                renderSocialBlock($el, d);
-                break;
-            default:
-                $el.innerHTML = '<p>Unknown block: ' + escapeHtml(blk.type) + '</p>';
-        }
-
-        // Selection styling
-        $el.addEventListener('click', function(e) {
-            e.stopPropagation();
-            selectBlock(blk.id, sectionId);
-        });
-
-        // Hover delete
-        addBlockHoverActions($el, blk.id, sectionId, colIdx);
-
-        return $el;
-    }
-
-    function applyTextStyles($el, d) {
-        $el.style.fontSize = px(d.fontSize || '16');
-        $el.style.fontWeight = d.fontWeight || '400';
-        $el.style.textAlign = d.textAlign || 'left';
-        $el.style.color = d.color || '#333';
-        $el.style.lineHeight = d.lineHeight || '1.6';
-        $el.style.letterSpacing = d.letterSpacing === 'normal' ? 'normal' : px(d.letterSpacing || '0');
-        $el.style.textTransform = d.textTransform || 'none';
-        $el.style.fontStyle = d.fontStyle || 'normal';
-        $el.style.textDecoration = d.textDecoration || 'none';
-        $el.style.paddingTop = px(d.paddingTop || '0');
-        $el.style.paddingBottom = px(d.paddingBottom || '0');
-        $el.style.paddingLeft = px(d.paddingLeft || '0');
-        $el.style.paddingRight = px(d.paddingRight || '0');
-        $el.style.marginTop = px(d.marginTop || '0');
-        $el.style.marginBottom = px(d.marginBottom || '0');
-        $el.style.backgroundColor = d.backgroundColor || 'transparent';
-        $el.style.borderRadius = px(d.borderRadius || '0');
-        $el.style.border = (d.borderWidth || '0') + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000');
-        // Make content editable
-        $el.contentEditable = true;
-        $el.addEventListener('blur', function() {
-            const block = findBlock(sectionId, blk.id);
-            if (block) {
-                block.data.content = $el.innerHTML;
-            }
-        });
-    }
-
-    function renderSocialBlock($el, d) {
-        const $wrap = document.createElement('div');
-        $wrap.style.textAlign = d.alignment || 'center';
-        $wrap.style.display = 'flex';
-        $wrap.style.justifyContent = d.alignment === 'left' ? 'flex-start' : d.alignment === 'right' ? 'flex-end' : 'center';
-        $wrap.style.gap = px(d.spacing || '8');
-        $wrap.style.flexWrap = 'wrap';
-
-        const platforms = d.platforms || {};
-        const icons = {
-            facebook: 'M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z',
-            twitter: 'M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z',
-            linkedin: 'M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z',
-            instagram: 'M16 4h-8a4 4 0 00-4 4v8a4 4 0 004 4h8a4 4 0 004-4V8a4 4 0 00-4-4zm-4 12a4 4 0 110-8 4 4 0 010 8zm5-8a1 1 0 110-2 1 1 0 010 2z',
-            youtube: 'M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.94 2C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 001.94-2A29 29 0 0023 12a29 29 0 00-.46-5.58zM9.75 15V9l5.2 3z'
-        };
-
-        Object.keys(platforms).forEach(function(key) {
-            const plat = platforms[key];
-            if (!plat.active || !plat.url) return;
-
-            const $a = document.createElement('a');
-            $a.href = plat.url;
-            $a.target = '_blank';
-            $a.style.display = 'inline-flex';
-            $a.style.alignItems = 'center';
-            $a.style.justifyContent = 'center';
-            $a.style.width = px(d.iconSize || '24');
-            $a.style.height = px(d.iconSize || '24');
-            $a.style.backgroundColor = d.iconColor || '#333';
-            $a.style.borderRadius = d.shape === 'circle' ? '50%' : d.shape === 'rounded' ? '4px' : '0';
-
-            const $svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            $svg.setAttribute('viewBox', '0 0 24 24');
-            $svg.setAttribute('width', '60%');
-            $svg.setAttribute('height', '60%');
-            $svg.style.fill = '#fff';
-            if (icons[key]) {
-                const $path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                $path.setAttribute('d', icons[key]);
-                $svg.appendChild($path);
-            }
-            $a.appendChild($svg);
-            $wrap.appendChild($a);
-        });
-
-        $el.appendChild($wrap);
-    }
-
-    function addBlockHoverActions($el, blockId, sectionId, colIdx) {
-        // Add a small delete button on hover
-        const $actions = document.createElement('div');
-        $actions.className = 'block-actions';
-        $actions.style.position = 'absolute';
-        $actions.style.top = '2px';
-        $actions.style.right = '2px';
-        $actions.style.display = 'none';
-        $actions.style.gap = '4px';
-        $actions.style.zIndex = '10';
-
-        const $del = document.createElement('button');
-        $del.innerHTML = '×';
-        $del.style.background = '#D91C48';
-        $del.style.color = '#fff';
-        $del.style.border = 'none';
-        $del.style.borderRadius = '3px';
-        $del.style.width = '20px';
-        $del.style.height = '20px';
-        $del.style.fontSize = '14px';
-        $del.style.cursor = 'pointer';
-        $del.style.lineHeight = '1';
-        $del.title = 'Delete block';
-        $del.addEventListener('click', function(e) {
-            e.stopPropagation();
-            removeBlock(blockId);
-        });
-        $actions.appendChild($del);
-
-        const $dup = document.createElement('button');
-        $dup.innerHTML = '⎘';
-        $dup.style.background = '#28a745';
-        $dup.style.color = '#fff';
-        $dup.style.border = 'none';
-        $dup.style.borderRadius = '3px';
-        $dup.style.width = '20px';
-        $dup.style.height = '20px';
-        $dup.style.fontSize = '12px';
-        $dup.style.cursor = 'pointer';
-        $dup.style.lineHeight = '1';
-        $dup.title = 'Duplicate';
-        $dup.addEventListener('click', function(e) {
-            e.stopPropagation();
-            duplicateBlock(sectionId, blockId);
-        });
-        $actions.appendChild($dup);
-
-        $el.appendChild($actions);
-        $el.addEventListener('mouseenter', function() { $actions.style.display = 'flex'; });
-        $el.addEventListener('mouseleave', function() { $actions.style.display = 'none'; });
-    }
-
-
-    /* ─── Selection ─── */
-    function selectSection(id) {
-        selectedId = id;
-        selectedSectionId = id;
-        highlightSelection();
-        showSectionProperties(id);
-    }
-
-    function selectBlock(id, sectionId) {
-        selectedId = id;
-        selectedSectionId = sectionId;
-        highlightSelection();
-        showBlockProperties(id, sectionId);
-    }
-
-    function selectBody() {
-        selectedId = 'body';
-        selectedSectionId = null;
-        highlightSelection();
-        showBodyProperties();
-    }
-
-    function highlightSelection() {
-        document.querySelectorAll('.email-section').forEach(function(s) {
-            s.style.outline = s.dataset.sectionId === selectedId ? '2px solid #D91C48' : 'none';
-            s.querySelector('.section-header').style.display = s.dataset.sectionId === selectedId ? 'block' : 'none';
-        });
-        document.querySelectorAll('.email-block').forEach(function(b) {
-            b.style.outline = b.dataset.blockId === selectedId ? '2px solid #D91C48' : 'none';
-        });
-    }
-
-    /* ─── Drag & Drop (SortableJS) ─── */
-    let dragDropInited = false;
-
-    function initDragDrop() {
-        if (!window.Sortable || dragDropInited) return;
-        dragDropInited = true;
-
-        // Section palette → clone to canvas
-        const $paletteItems = document.getElementById('palette-items');
-        if ($paletteItems) {
-            const $sectionPalette = $paletteItems.querySelector('.palette-section:first-child');
-            if ($sectionPalette) {
-                new Sortable($sectionPalette, {
-                    group: { name: 'paletteSections', pull: 'clone', put: false },
-                    sort: false,
-                    animation: 150,
-                    onClone: function(evt) {
-                        const orig = evt.item;
-                        const clone = evt.clone;
-                        clone.classList.add('palette-section-clone');
-                        clone.dataset.section = orig.dataset.section;
-                    }
-                });
-            }
-
-            const $blockPalette = $paletteItems.querySelector('.palette-section:last-child');
-            if ($blockPalette) {
-                new Sortable($blockPalette, {
-                    group: { name: 'paletteBlocks', pull: 'clone', put: false },
-                    sort: false,
-                    animation: 150,
-                    onClone: function(evt) {
-                        const orig = evt.item;
-                        const clone = evt.clone;
-                        clone.classList.add('palette-block-clone');
-                        clone.dataset.type = orig.dataset.type;
-                    }
-                });
-            }
-        }
-
-        // Canvas: receive sections from palette
-        sortableSections = new Sortable($canvas, {
-            group: { name: 'sections', put: ['paletteSections'] },
-            handle: '.section-header',
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            onAdd: function(evt) {
-                const sectionType = evt.item.dataset.section;
-                if (sectionType) {
-                    evt.item.remove();
-                    const colCount = parseInt(sectionType);
-                    const newSection = createSection(colCount);
-                    sections.splice(evt.newIndex, 0, newSection);
-                    renderCanvas();
-                    initColumnSortables();
-                    selectSection(newSection.id);
-                }
-            },
-            onEnd: function(evt) {
-                if (evt.oldIndex === evt.newIndex) return;
-                const item = sections.splice(evt.oldIndex, 1)[0];
-                sections.splice(evt.newIndex, 0, item);
-                renderCanvas();
-                initColumnSortables();
-            }
-        });
-    }
-
-    function initColumnSortables() {
-        if (!window.Sortable) return;
-
-        Object.keys(sortableBlocks).forEach(function(k) {
-            if (sortableBlocks[k]) sortableBlocks[k].destroy();
-        });
-        sortableBlocks = {};
-
-        document.querySelectorAll('.email-column').forEach(function($col) {
-            const sid = $col.dataset.sectionId;
-            const cid = parseInt($col.dataset.colIndex);
-            if (!sid || isNaN(cid)) return;
-
-            sortableBlocks[sid + '_' + cid] = new Sortable($col, {
-                group: { name: 'blocks', put: ['paletteBlocks', 'blocks'] },
-                handle: '.email-block',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                onAdd: function(evt) {
-                    const blockType = evt.item.dataset.type;
-                    if (blockType) {
-                        evt.item.remove();
-                        const toSid = evt.to.dataset.sectionId;
-                        const toCol = parseInt(evt.to.dataset.colIndex);
-                        const sec = sections.find(function(s) { return s.id === toSid; });
-                        if (sec && sec.content[toCol]) {
-                            const blk = createBlock(blockType);
-                            sec.content[toCol].splice(evt.newIndex, 0, blk);
-                            renderCanvas();
-                            initColumnSortables();
-                            selectBlock(blk.id, toSid);
-                        }
-                    } else {
-                        // Moved from another column
-                        const fromSid = evt.from.dataset.sectionId;
-                        const fromCol = parseInt(evt.from.dataset.colIndex);
-                        const toSid = evt.to.dataset.sectionId;
-                        const toCol = parseInt(evt.to.dataset.colIndex);
-                        const newIdx = evt.newIndex;
-                        moveBlockData(fromSid, fromCol, evt.oldIndex, toSid, toCol, newIdx);
-                        renderCanvas();
-                        initColumnSortables();
-                    }
-                },
-                onEnd: function(evt) {
-                    const fromSid = evt.from.dataset.sectionId;
-                    const fromCol = parseInt(evt.from.dataset.colIndex);
-                    const toSid = evt.to.dataset.sectionId;
-                    const toCol = parseInt(evt.to.dataset.colIndex);
-                    if (fromSid === toSid && fromCol === toCol && evt.oldIndex === evt.newIndex) return;
-                    moveBlockData(fromSid, fromCol, evt.oldIndex, toSid, toCol, evt.newIndex);
-                    renderCanvas();
-                    initColumnSortables();
-                }
-            });
-        });
-    }
-
-    function moveBlockData(fromSid, fromCol, fromIdx, toSid, toCol, toIdx) {
-        const fromSec = sections.find(function(s) { return s.id === fromSid; });
-        if (!fromSec) return;
-        const block = fromSec.content[fromCol].splice(fromIdx, 1)[0];
-        if (!block) return;
-
-        const toSec = sections.find(function(s) { return s.id === toSid; });
-        if (!toSec) return;
-        toSec.content[toCol].splice(toIdx, 0, block);
-    }
-
-    /* ─── CRUD operations ─── */
-    function addSection(colCount) {
-        sections.push(createSection(colCount));
-        renderCanvas();
-        selectSection(sections[sections.length - 1].id);
-    }
-
-    function addBlock(sectionId, colIndex, type) {
-        const sec = sections.find(function(s) { return s.id === sectionId; });
-        if (!sec) return;
-        const blk = createBlock(type);
-        sec.content[colIndex].push(blk);
-        renderCanvas();
-        selectBlock(blk.id, sectionId);
-    }
-
-    function removeSection(id) {
-        sections = sections.filter(function(s) { return s.id !== id; });
-        selectedId = null;
-        renderCanvas();
-        selectBody();
-    }
-
-    function removeBlock(id) {
-        sections.forEach(function(sec) {
-            sec.content.forEach(function(col) {
-                for (var i = col.length - 1; i >= 0; i--) {
-                    if (col[i].id === id) col.splice(i, 1);
-                }
-            });
-        });
-        selectedId = null;
-        renderCanvas();
-    }
-
-    function duplicateSection(id) {
-        const sec = sections.find(function(s) { return s.id === id; });
-        if (!sec) return;
-        const dup = deepClone(sec);
-        dup.id = generateId('sec');
-        dup.content.forEach(function(col) {
-            col.forEach(function(b) { b.id = generateId('blk'); });
-        });
-        const idx = sections.findIndex(function(s) { return s.id === id; });
-        sections.splice(idx + 1, 0, dup);
-        renderCanvas();
-        selectSection(dup.id);
-    }
-
-    function duplicateBlock(sectionId, blockId) {
-        const sec = sections.find(function(s) { return s.id === sectionId; });
-        if (!sec) return;
-        let found = null, colIdx = 0, blkIdx = 0;
-        sec.content.forEach(function(col, cidx) {
-            col.forEach(function(b, bidx) {
-                if (b.id === blockId) { found = deepClone(b); colIdx = cidx; blkIdx = bidx; }
-            });
-        });
-        if (!found) return;
-        found.id = generateId('blk');
-        sec.content[colIdx].splice(blkIdx + 1, 0, found);
-        renderCanvas();
-        selectBlock(found.id, sectionId);
-    }
-
-
-    /* ─── Properties Panel ─── */
-    function showBodyProperties() {
-        if (!$propertiesPanel) return;
-        $propertiesPanel.innerHTML = '<h3>Email Body Settings</h3>';
-
-        const fields = [
-            { key: 'backgroundColor', label: 'Background Color', type: 'color' },
-            { key: 'fontFamily', label: 'Font Family', type: 'select', options: [
-                { value: 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', label: 'System UI' },
-                { value: 'Arial, Helvetica, sans-serif', label: 'Arial' },
-                { value: 'Georgia, serif', label: 'Georgia' },
-                { value: 'Helvetica, Arial, sans-serif', label: 'Helvetica' },
-                { value: 'Trebuchet MS, sans-serif', label: 'Trebuchet MS' },
-                { value: 'Verdana, sans-serif', label: 'Verdana' }
-            ]},
-            { key: 'fontSize', label: 'Font Size (px)', type: 'range', min: 12, max: 18, step: 1 },
-            { key: 'textColor', label: 'Text Color', type: 'color' },
-            { key: 'lineHeight', label: 'Line Height', type: 'select', options: [
-                { value: '1.2', label: '1.2' }, { value: '1.4', label: '1.4' },
-                { value: '1.6', label: '1.6' }, { value: '1.8', label: '1.8' }, { value: '2.0', label: '2.0' }
-            ]},
-            { key: 'linkColor', label: 'Link Color', type: 'color' },
-            { key: 'contentWidth', label: 'Content Width (px)', type: 'select', options: [
-                { value: '480', label: '480px' }, { value: '540', label: '540px' },
-                { value: '600', label: '600px' }, { value: '640', label: '640px' }
-            ]},
-            { key: 'paddingTop', label: 'Top Padding (px)', type: 'range', min: 0, max: 60 },
-            { key: 'paddingBottom', label: 'Bottom Padding (px)', type: 'range', min: 0, max: 60 }
-        ];
-
-        fields.forEach(function(f) {
-            const $wrap = document.createElement('div');
-            $wrap.className = 'prop-field';
-            $wrap.style.marginBottom = '16px';
-
-            const $label = document.createElement('label');
-            $label.textContent = f.label;
-            $label.style.display = 'block';
-            $label.style.fontSize = '13px';
-            $label.style.color = '#666';
-            $label.style.marginBottom = '4px';
-            $wrap.appendChild($label);
-
-            let $input;
-            if (f.type === 'color') {
-                $input = document.createElement('input');
-                $input.type = 'color';
-                $input.value = body[f.key] || '#000000';
-            } else if (f.type === 'select') {
-                $input = document.createElement('select');
-                $input.style.width = '100%';
-                $input.style.padding = '6px';
-                f.options.forEach(function(opt) {
-                    const $opt = document.createElement('option');
-                    $opt.value = opt.value;
-                    $opt.textContent = opt.label;
-                    $opt.selected = (body[f.key] === opt.value);
-                    $input.appendChild($opt);
-                });
-            } else if (f.type === 'range') {
-                $input = document.createElement('input');
-                $input.type = 'range';
-                $input.min = f.min;
-                $input.max = f.max;
-                $input.step = f.step || 1;
-                $input.value = body[f.key] || f.min;
-                $input.style.width = '100%';
-            }
-
-            $input.addEventListener('change', function() {
-                body[f.key] = $input.value;
-                renderCanvas();
-                renderPreview();
-            });
-
-            $wrap.appendChild($input);
-            $propertiesPanel.appendChild($wrap);
-        });
-    }
-
-    function showSectionProperties(id) {
-        const sec = sections.find(function(s) { return s.id === id; });
-        if (!sec || !$propertiesPanel) return;
-        $propertiesPanel.innerHTML = '';
-
-        const $title = document.createElement('h3');
-        $title.textContent = 'Section Settings';
-        $propertiesPanel.appendChild($title);
-
-        // Columns selector
-        const $colWrap = document.createElement('div');
-        $colWrap.style.marginBottom = '16px';
-        const $colLabel = document.createElement('label');
-        $colLabel.textContent = 'Columns';
-        $colLabel.style.display = 'block';
-        $colLabel.style.fontSize = '13px';
-        $colLabel.style.color = '#666';
-        $colLabel.style.marginBottom = '8px';
-        $colWrap.appendChild($colLabel);
-
-        [1, 2, 3, 4].forEach(function(n) {
-            const $btn = document.createElement('button');
-            $btn.textContent = n + ' Col';
-            $btn.style.marginRight = '6px';
-            $btn.style.padding = '6px 12px';
-            $btn.style.border = sec.columns === n ? '2px solid #D91C48' : '1px solid #ddd';
-            $btn.style.background = sec.columns === n ? '#D91C48' : '#fff';
-            $btn.style.color = sec.columns === n ? '#fff' : '#333';
-            $btn.style.borderRadius = '4px';
-            $btn.style.cursor = 'pointer';
-            $btn.addEventListener('click', function() {
-                changeSectionColumns(id, n);
-            });
-            $colWrap.appendChild($btn);
-        });
-        $propertiesPanel.appendChild($colWrap);
-
-        // Section fields
-        const fields = [
-            { key: 'bgColor', label: 'Background Color', type: 'color' },
-            { key: 'paddingTop', label: 'Top Padding (px)', type: 'range', min: 0, max: 60 },
-            { key: 'paddingBottom', label: 'Bottom Padding (px)', type: 'range', min: 0, max: 60 },
-            { key: 'paddingLeft', label: 'Left Padding (px)', type: 'range', min: 0, max: 60 },
-            { key: 'paddingRight', label: 'Right Padding (px)', type: 'range', min: 0, max: 60 },
-            { key: 'borderTopWidth', label: 'Border Top Width (px)', type: 'range', min: 0, max: 10 },
-            { key: 'borderTopColor', label: 'Border Top Color', type: 'color' },
-            { key: 'borderBottomWidth', label: 'Border Bottom Width (px)', type: 'range', min: 0, max: 10 },
-            { key: 'borderBottomColor', label: 'Border Bottom Color', type: 'color' },
-            { key: 'gap', label: 'Column Gap (px)', type: 'range', min: 0, max: 48 }
-        ];
-
-        fields.forEach(function(f) {
-            const $wrap = document.createElement('div');
-            $wrap.className = 'prop-field';
-            $wrap.style.marginBottom = '12px';
-
-            const $label = document.createElement('label');
-            $label.textContent = f.label;
-            $label.style.display = 'block';
-            $label.style.fontSize = '13px';
-            $label.style.color = '#666';
-            $label.style.marginBottom = '4px';
-            $wrap.appendChild($label);
-
-            let $input;
-            if (f.type === 'color') {
-                $input = document.createElement('input');
-                $input.type = 'color';
-                $input.value = sec[f.key] || '#000000';
-            } else {
-                $input = document.createElement('input');
-                $input.type = 'range';
-                $input.min = f.min;
-                $input.max = f.max;
-                $input.value = sec[f.key] || f.min;
-                $input.style.width = '100%';
-            }
-
-            $input.addEventListener('change', function() {
-                sec[f.key] = $input.value;
-                renderCanvas();
-            });
-
-            $wrap.appendChild($input);
-            $propertiesPanel.appendChild($wrap);
-        });
-
-        // Delete button
-        const $del = document.createElement('button');
-        $del.textContent = 'Delete Section';
-        $del.style.width = '100%';
-        $del.style.padding = '10px';
-        $del.style.background = '#D91C48';
-        $del.style.color = '#fff';
-        $del.style.border = 'none';
-        $del.style.borderRadius = '4px';
-        $del.style.marginTop = '16px';
-        $del.style.cursor = 'pointer';
-        $del.addEventListener('click', function() { removeSection(id); });
-        $propertiesPanel.appendChild($del);
-    }
-
-    function showBlockProperties(id, sectionId) {
-        const sec = sections.find(function(s) { return s.id === sectionId; });
-        if (!sec || !$propertiesPanel) return;
-        let block = null;
-        sec.content.forEach(function(col) {
-            col.forEach(function(b) { if (b.id === id) block = b; });
-        });
-        if (!block) return;
-
-        $propertiesPanel.innerHTML = '';
-        const $title = document.createElement('h3');
-        $title.textContent = block.type.charAt(0).toUpperCase() + block.type.slice(1) + ' Properties';
-        $propertiesPanel.appendChild($title);
-
-        // Merge tags helper for text blocks
-        if (block.type === 'text') {
-            const $tags = document.createElement('div');
-            $tags.style.marginBottom = '12px';
-            $tags.innerHTML = '<span style="font-size:12px;color:#999;">Merge tags: </span>';
-            ['{{company_name}}', '{{contact_person}}', '{{email}}', '{{unsubscribe_url}}'].forEach(function(tag) {
-                const $tagBtn = document.createElement('button');
-                $tagBtn.textContent = tag;
-                $tagBtn.style.fontSize = '11px';
-                $tagBtn.style.padding = '2px 6px';
-                $tagBtn.style.margin = '2px';
-                $tagBtn.style.border = '1px solid #ddd';
-                $tagBtn.style.background = '#f8f9fa';
-                $tagBtn.style.borderRadius = '3px';
-                $tagBtn.style.cursor = 'pointer';
-                $tagBtn.addEventListener('click', function() {
-                    block.data.content = (block.data.content || '') + ' ' + tag + ' ';
-                    renderCanvas();
-                });
-                $tags.appendChild($tagBtn);
-            });
-            $propertiesPanel.appendChild($tags);
-        }
-
-        // Build fields based on block type
-        const fieldDefs = getBlockFieldDefinitions(block.type);
-        fieldDefs.forEach(function(f) {
-            const $wrap = document.createElement('div');
-            $wrap.className = 'prop-field';
-            $wrap.style.marginBottom = '12px';
-
-            const $label = document.createElement('label');
-            $label.textContent = f.label;
-            $label.style.display = 'block';
-            $label.style.fontSize = '13px';
-            $label.style.color = '#666';
-            $label.style.marginBottom = '4px';
-            $wrap.appendChild($label);
-
-            let $input = buildInput(f, block.data[f.key]);
-            $input.addEventListener('change', function() {
-                block.data[f.key] = $input.value;
-                renderCanvas();
-            });
-            $wrap.appendChild($input);
-            $propertiesPanel.appendChild($wrap);
-        });
-
-        // Delete button
-        const $del = document.createElement('button');
-        $del.textContent = 'Delete Block';
-        $del.style.width = '100%';
-        $del.style.padding = '10px';
-        $del.style.background = '#D91C48';
-        $del.style.color = '#fff';
-        $del.style.border = 'none';
-        $del.style.borderRadius = '4px';
-        $del.style.marginTop = '16px';
-        $del.style.cursor = 'pointer';
-        $del.addEventListener('click', function() { removeBlock(id); });
-        $propertiesPanel.appendChild($del);
-    }
-
-    function buildInput(f, value) {
-        let $input;
-        if (f.type === 'color') {
-            $input = document.createElement('input');
-            $input.type = 'color';
-            $input.value = value || '#000000';
-        } else if (f.type === 'select') {
-            $input = document.createElement('select');
-            $input.style.width = '100%';
-            $input.style.padding = '6px';
-            f.options.forEach(function(opt) {
-                const $opt = document.createElement('option');
-                $opt.value = opt.value;
-                $opt.textContent = opt.label;
-                $opt.selected = (String(value) === String(opt.value));
-                $input.appendChild($opt);
-            });
-        } else if (f.type === 'range') {
-            $input = document.createElement('input');
-            $input.type = 'range';
-            $input.min = f.min;
-            $input.max = f.max;
-            $input.step = f.step || 1;
-            $input.value = value || f.min;
-            $input.style.width = '100%';
-        } else if (f.type === 'textarea') {
-            $input = document.createElement('textarea');
-            $input.value = value || '';
-            $input.rows = 4;
-            $input.style.width = '100%';
-            $input.style.padding = '6px';
-        } else {
-            $input = document.createElement('input');
-            $input.type = 'text';
-            $input.value = value || '';
-            $input.style.width = '100%';
-            $input.style.padding = '6px';
-        }
-        return $input;
-    }
-
-    function getBlockFieldDefinitions(type) {
-        const defs = {
-            text: [
-                { key: 'content', label: 'Content', type: 'textarea' },
-                { key: 'fontSize', label: 'Font Size (px)', type: 'range', min: 10, max: 48 },
-                { key: 'fontWeight', label: 'Font Weight', type: 'select', options: [
-                    { value: '400', label: 'Normal' }, { value: '500', label: 'Medium' },
-                    { value: '600', label: 'Semi-bold' }, { value: '700', label: 'Bold' },
-                    { value: '800', label: 'Extra-bold' }
-                ]},
-                { key: 'textAlign', label: 'Text Align', type: 'select', options: [
-                    { value: 'left', label: 'Left' }, { value: 'center', label: 'Center' },
-                    { value: 'right', label: 'Right' }, { value: 'justify', label: 'Justify' }
-                ]},
-                { key: 'color', label: 'Text Color', type: 'color' },
-                { key: 'lineHeight', label: 'Line Height', type: 'select', options: [
-                    { value: '1.2', label: '1.2' }, { value: '1.4', label: '1.4' },
-                    { value: '1.6', label: '1.6' }, { value: '1.8', label: '1.8' }, { value: '2.0', label: '2.0' }
-                ]},
-                { key: 'backgroundColor', label: 'Background', type: 'color' },
-                { key: 'borderRadius', label: 'Border Radius (px)', type: 'range', min: 0, max: 30 },
-                { key: 'paddingTop', label: 'Top Padding (px)', type: 'range', min: 0, max: 40 },
-                { key: 'paddingBottom', label: 'Bottom Padding (px)', type: 'range', min: 0, max: 40 }
-            ],
-            image: [
-                { key: 'src', label: 'Image URL', type: 'text' },
-                { key: 'alt', label: 'Alt Text', type: 'text' },
-                { key: 'width', label: 'Width', type: 'select', options: [
-                    { value: '100%', label: 'Full Width' }, { value: 'auto', label: 'Auto' }
-                ]},
-                { key: 'alignment', label: 'Alignment', type: 'select', options: [
-                    { value: 'left', label: 'Left' }, { value: 'center', label: 'Center' },
-                    { value: 'right', label: 'Right' }
-                ]},
-                { key: 'objectFit', label: 'Object Fit', type: 'select', options: [
-                    { value: 'cover', label: 'Cover' }, { value: 'contain', label: 'Contain' },
-                    { value: 'fill', label: 'Fill' }
-                ]},
-                { key: 'borderRadius', label: 'Border Radius (px)', type: 'range', min: 0, max: 30 },
-                { key: 'linkUrl', label: 'Link URL', type: 'text' }
-            ],
-            button: [
-                { key: 'text', label: 'Button Text', type: 'text' },
-                { key: 'url', label: 'URL', type: 'text' },
-                { key: 'bgColor', label: 'Background Color', type: 'color' },
-                { key: 'textColor', label: 'Text Color', type: 'color' },
-                { key: 'fontSize', label: 'Font Size (px)', type: 'range', min: 10, max: 24 },
-                { key: 'borderRadius', label: 'Border Radius (px)', type: 'range', min: 0, max: 30 },
-                { key: 'paddingVertical', label: 'Vertical Padding (px)', type: 'range', min: 4, max: 24 },
-                { key: 'paddingHorizontal', label: 'Horizontal Padding (px)', type: 'range', min: 8, max: 48 },
-                { key: 'alignment', label: 'Alignment', type: 'select', options: [
-                    { value: 'left', label: 'Left' }, { value: 'center', label: 'Center' },
-                    { value: 'right', label: 'Right' }
-                ]},
-                { key: 'width', label: 'Width', type: 'select', options: [
-                    { value: 'auto', label: 'Auto' }, { value: '100%', label: 'Full Width' }
-                ]}
-            ],
-            divider: [
-                { key: 'color', label: 'Color', type: 'color' },
-                { key: 'thickness', label: 'Thickness (px)', type: 'range', min: 1, max: 10 },
-                { key: 'width', label: 'Width', type: 'select', options: [
-                    { value: '100%', label: 'Full Width' }, { value: '75%', label: '75%' },
-                    { value: '50%', label: '50%' }, { value: '25%', label: '25%' }
-                ]},
-                { key: 'style', label: 'Style', type: 'select', options: [
-                    { value: 'solid', label: 'Solid' }, { value: 'dashed', label: 'Dashed' },
-                    { value: 'dotted', label: 'Dotted' }, { value: 'double', label: 'Double' }
-                ]},
-                { key: 'alignment', label: 'Alignment', type: 'select', options: [
-                    { value: 'left', label: 'Left' }, { value: 'center', label: 'Center' },
-                    { value: 'right', label: 'Right' }
-                ]}
-            ],
-            spacer: [
-                { key: 'height', label: 'Height (px)', type: 'range', min: 0, max: 200 },
-                { key: 'backgroundColor', label: 'Background', type: 'color' }
-            ],
-            html: [
-                { key: 'content', label: 'HTML Content', type: 'textarea' },
-                { key: 'backgroundColor', label: 'Background', type: 'color' }
-            ],
-            social: [
-                { key: 'alignment', label: 'Alignment', type: 'select', options: [
-                    { value: 'left', label: 'Left' }, { value: 'center', label: 'Center' },
-                    { value: 'right', label: 'Right' }
-                ]},
-                { key: 'iconSize', label: 'Icon Size (px)', type: 'range', min: 16, max: 32 },
-                { key: 'spacing', label: 'Spacing (px)', type: 'select', options: [
-                    { value: '4', label: '4px' }, { value: '8', label: '8px' },
-                    { value: '12', label: '12px' }, { value: '16', label: '16px' }
-                ]},
-                { key: 'shape', label: 'Icon Shape', type: 'select', options: [
-                    { value: 'square', label: 'Square' }, { value: 'rounded', label: 'Rounded' },
-                    { value: 'circle', label: 'Circle' }
-                ]}
-            ]
-        };
-        return defs[type] || [];
-    }
-
-    function changeSectionColumns(id, newCount) {
-        const sec = sections.find(function(s) { return s.id === id; });
-        if (!sec) return;
-        if (sec.columns === newCount) return;
-
-        // Flatten existing blocks
-        const allBlocks = [];
-        sec.content.forEach(function(col) {
-            col.forEach(function(b) { allBlocks.push(b); });
-        });
-
-        // Rebuild columns
-        sec.columns = newCount;
-        sec.content = [];
-        for (let i = 0; i < newCount; i++) {
-            sec.content.push([]);
-        }
-
-        // Distribute blocks round-robin
-        allBlocks.forEach(function(b, idx) {
-            sec.content[idx % newCount].push(b);
-        });
-
-        renderCanvas();
-        selectSection(id);
-    }
-
-
-    /* ─── HTML Generation (table-based for email clients) ─── */
-    function getHTML() {
-        var fontFamily = body.fontFamily || 'system-ui, sans-serif';
-        var contentWidth = body.contentWidth || '600';
-        var bgColor = body.backgroundColor || '#f4f4f4';
-        var textColor = body.textColor || '#333333';
-        var fontSize = body.fontSize || '16';
-        var lineHeight = body.lineHeight || '1.6';
-        var linkColor = body.linkColor || '#D91C48';
-
-        var html = '<!DOCTYPE html>\n';
-        html += '<html lang="en">\n';
-        html += '<head>\n';
-        html += '  <meta charset="UTF-8">\n';
-        html += '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
-        html += '  <title>Email</title>\n';
-        html += '  <style>\n';
-        html += '    @media only screen and (max-width: 600px) {\n';
-        html += '      .email-col { display: block !important; width: 100% !important; }\n';
-        html += '      .email-col-inner { width: 100% !important; }\n';
-        html += '    }\n';
-        html += '  </style>\n';
-        html += '</head>\n';
-        html += '<body style="margin:0;padding:0;background-color:' + bgColor + ';font-family:' + fontFamily + ';font-size:' + fontSize + 'px;line-height:' + lineHeight + ';color:' + textColor + ';">\n';
-        html += '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">\n';
-        html += '    <tr>\n';
-        html += '      <td align="center" valign="top" style="padding:' + (body.paddingTop || '20') + 'px 0;' + (body.paddingBottom || '20') + 'px 0;">\n';
-        html += '        <table role="presentation" width="' + contentWidth + '" cellspacing="0" cellpadding="0" border="0" style="max-width:' + contentWidth + 'px;width:100%;">\n';
-
-        sections.forEach(function(sec) {
-            var secBg = sec.bgColor || '#ffffff';
-            var secPadTop = sec.paddingTop || '20';
-            var secPadBottom = sec.paddingBottom || '20';
-            var secPadLeft = sec.paddingLeft || '24';
-            var secPadRight = sec.paddingRight || '24';
-            var borderTop = (sec.borderTopWidth || '0') + 'px ' + (sec.borderTopStyle || 'solid') + ' ' + (sec.borderTopColor || 'transparent');
-            var borderBottom = (sec.borderBottomWidth || '0') + 'px ' + (sec.borderBottomStyle || 'solid') + ' ' + (sec.borderBottomColor || 'transparent');
-
-            html += '          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:' + secBg + ';border-top:' + borderTop + ';border-bottom:' + borderBottom + ';">\n';
-            html += '            <tr>\n';
-            html += '              <td style="padding:' + secPadTop + 'px ' + secPadRight + 'px ' + secPadBottom + 'px ' + secPadLeft + 'px;">\n';
-            html += '                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">\n';
-            html += '                  <tr>\n';
-
-            sec.content.forEach(function(col, colIdx) {
-                var colWidth = Math.floor(100 / sec.columns);
-                html += '                    <td class="email-col" width="' + colWidth + '%" valign="top" style="padding:0;">\n';
-                html += '                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-col-inner">\n';
-                html += '                        <tr>\n';
-                html += '                          <td valign="top" style="padding:0;' + (colIdx > 0 ? 'padding-left:' + (sec.gap || '24') + 'px;' : '') + (colIdx < sec.columns - 1 ? 'padding-right:' + (sec.gap || '24') + 'px;' : '') + '">\n';
-
-                col.forEach(function(blk) {
-                    html += renderBlockHTML(blk, linkColor);
-                });
-
-                html += '                          </td>\n';
-                html += '                        </tr>\n';
-                html += '                      </table>\n';
-                html += '                    </td>\n';
-            });
-
-            html += '                  </tr>\n';
-            html += '                </table>\n';
-            html += '              </td>\n';
-            html += '            </tr>\n';
-            html += '          </table>\n';
-        });
-
-        html += '        </table>\n';
-        html += '      </td>\n';
-        html += '    </tr>\n';
-        html += '  </table>\n';
-        html += '</body>\n';
-        html += '</html>\n';
-
-        return html;
-    }
-
-    function renderBlockHTML(blk, linkColor) {
-        var d = blk.data;
-        var html = '';
-
-        switch (blk.type) {
-            case 'text':
-                html += '                            <div style="';
-                html += 'font-size:' + (d.fontSize || '16') + 'px;';
-                html += 'font-weight:' + (d.fontWeight || '400') + ';';
-                html += 'text-align:' + (d.textAlign || 'left') + ';';
-                html += 'color:' + (d.color || '#333') + ';';
-                html += 'line-height:' + (d.lineHeight || '1.6') + ';';
-                html += 'letter-spacing:' + (d.letterSpacing === 'normal' ? 'normal' : (d.letterSpacing || '0') + 'px') + ';';
-                html += 'text-transform:' + (d.textTransform || 'none') + ';';
-                html += 'font-style:' + (d.fontStyle || 'normal') + ';';
-                html += 'text-decoration:' + (d.textDecoration || 'none') + ';';
-                html += 'padding:' + (d.paddingTop || '0') + 'px ' + (d.paddingRight || '0') + 'px ' + (d.paddingBottom || '0') + 'px ' + (d.paddingLeft || '0') + 'px;';
-                html += 'margin:' + (d.marginTop || '0') + 'px 0 ' + (d.marginBottom || '0') + 'px;';
-                if (d.backgroundColor) html += 'background-color:' + d.backgroundColor + ';';
-                if (d.borderRadius) html += 'border-radius:' + d.borderRadius + 'px;';
-                if (d.borderWidth && parseInt(d.borderWidth) > 0) html += 'border:' + d.borderWidth + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000') + ';';
-                html += '"';
-                html += '>' + (d.content || '') + '</div>\n';
-                break;
-
-            case 'image':
-                html += '                            <div style="text-align:' + (d.alignment || 'center') + ';padding:' + (d.paddingTop || '0') + 'px 0 ' + (d.paddingBottom || '0') + 'px;"';
-                if (d.backgroundColor) html += ' style="background-color:' + d.backgroundColor + ';"';
-                html += '>\n';
-                if (d.linkUrl) html += '                              <a href="' + escapeHtml(d.linkUrl) + '" target="_blank">\n';
-                html += '                              <img src="' + escapeHtml(d.src) + '" alt="' + escapeHtml(d.alt || '') + '" width="' + (d.width === '100%' ? '100%' : 'auto') + '" height="auto" style="max-width:100%;height:auto;border-radius:' + (d.borderRadius || '0') + 'px;display:block;margin:0 auto;';
-                if (d.borderWidth && parseInt(d.borderWidth) > 0) html += 'border:' + d.borderWidth + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000') + ';';
-                html += '"/>\n';
-                if (d.linkUrl) html += '                              </a>\n';
-                html += '                            </div>\n';
-                break;
-
-            case 'button':
-                html += '                            <div style="text-align:' + (d.alignment || 'center') + ';margin:' + (d.marginTop || '0') + 'px 0 ' + (d.marginBottom || '0') + 'px;">\n';
-                html += '                              <a href="' + escapeHtml(d.url || '#') + '" style="';
-                html += 'display:' + (d.width === '100%' ? 'block;width:100%;' : 'inline-block;') + ';';
-                html += 'background-color:' + (d.bgColor || '#D91C48') + ';';
-                html += 'color:' + (d.textColor || '#ffffff') + ';';
-                html += 'font-size:' + (d.fontSize || '16') + 'px;';
-                html += 'font-weight:' + (d.fontWeight || '600') + ';';
-                html += 'border-radius:' + (d.borderRadius || '4') + 'px;';
-                html += 'padding:' + (d.paddingVertical || '12') + 'px ' + (d.paddingHorizontal || '24') + 'px;';
-                html += 'text-decoration:none;text-transform:' + (d.textTransform || 'none') + ';';
-                html += 'letter-spacing:' + (d.letterSpacing === 'normal' ? 'normal' : (d.letterSpacing || '0') + 'px') + ';';
-                if (d.borderWidth && parseInt(d.borderWidth) > 0) html += 'border:' + d.borderWidth + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000') + ';';
-                html += 'text-align:center;';
-                html += '"';
-                html += '>' + escapeHtml(d.text || 'Button') + '</a>\n';
-                html += '                            </div>\n';
-                break;
-
-            case 'divider':
-                html += '                            <hr style="';
-                html += 'border:none;border-top:' + (d.thickness || '1') + 'px ' + (d.style || 'solid') + ' ' + (d.color || '#ddd') + ';';
-                html += 'width:' + (d.width || '100%') + ';';
-                html += 'margin:' + (d.marginTop || '16') + 'px auto ' + (d.marginBottom || '16') + 'px;';
-                if (d.alignment === 'left') html += 'margin-left:0;margin-right:auto;';
-                if (d.alignment === 'right') html += 'margin-left:auto;margin-right:0;';
-                html += '"/>\n';
-                break;
-
-            case 'spacer':
-                html += '                            <div style="height:' + (d.height || '32') + 'px;';
-                if (d.backgroundColor) html += 'background-color:' + d.backgroundColor + ';';
-                if (d.borderRadius) html += 'border-radius:' + d.borderRadius + 'px;';
-                if (d.borderWidth && parseInt(d.borderWidth) > 0) html += 'border:' + d.borderWidth + 'px ' + (d.borderStyle || 'solid') + ' ' + (d.borderColor || '#000') + ';';
-                html += '"';
-                html += '>&nbsp;</div>\n';
-                break;
-
-            case 'html':
-                html += '                            <div style="padding:' + (d.paddingTop || '0') + 'px ' + (d.paddingRight || '0') + 'px ' + (d.paddingBottom || '0') + 'px ' + (d.paddingLeft || '0') + 'px;';
-                if (d.backgroundColor) html += 'background-color:' + d.backgroundColor + ';';
-                html += '"';
-                html += '>' + (d.content || '') + '</div>\n';
-                break;
-
-            case 'social':
-                html += '                            <div style="text-align:' + (d.alignment || 'center') + ';padding:8px 0;">\n';
-                var platforms = d.platforms || {};
-                Object.keys(platforms).forEach(function(key) {
-                    var plat = platforms[key];
-                    if (!plat.active || !plat.url) return;
-                    var size = d.iconSize || '24';
-                    var bg = d.iconColor || '#333';
-                    var rad = d.shape === 'circle' ? '50%' : d.shape === 'rounded' ? '4px' : '0';
-                    html += '                              <a href="' + escapeHtml(plat.url) + '" target="_blank" style="display:inline-block;width:' + size + 'px;height:' + size + 'px;background-color:' + bg + ';border-radius:' + rad + ';margin:0 ' + (d.spacing || '8') + 'px;text-decoration:none;line-height:' + size + 'px;text-align:center;color:#fff;font-size:' + (size * 0.5) + 'px;">' + key[0].toUpperCase() + '</a>\n';
-                });
-                html += '                            </div>\n';
-                break;
-        }
-
-        return html;
-    }
-
-    function renderPreview() {
-        if (!$previewFrame) return;
-        var html = getHTML();
-        $previewFrame.srcdoc = html;
-    }
-
-
-    /* ─── Finder helpers ─── */
-    function findBlock(sectionId, blockId) {
-        var sec = sections.find(function(s) { return s.id === sectionId; });
-        if (!sec) return null;
-        for (var c = 0; c < sec.content.length; c++) {
-            for (var b = 0; b < sec.content[c].length; b++) {
-                if (sec.content[c][b].id === blockId) return sec.content[c][b];
-            }
-        }
-        return null;
-    }
-
-    function findBlockColumn(sectionId, blockId) {
-        var sec = sections.find(function(s) { return s.id === sectionId; });
-        if (!sec) return -1;
-        for (var c = 0; c < sec.content.length; c++) {
-            for (var b = 0; b < sec.content[c].length; b++) {
-                if (sec.content[c][b].id === blockId) return c;
-            }
-        }
-        return -1;
-    }
-
-    /* ─── Tab switching ─── */
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
-        document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
-
-        var $content = document.getElementById('tab-' + tab);
-        var $btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
-        if ($content) $content.classList.add('active');
-        if ($btn) $btn.classList.add('active');
-
-        if (tab === 'preview') {
-            renderPreview();
-        } else if (tab === 'body') {
-            selectBody();
-        }
-    }
-
-    /* ─── Preview size toggle ─── */
-    function setPreviewSize(size) {
-        if (!$previewFrame) return;
-        $previewFrame.style.width = size === 'mobile' ? '375px' : '100%';
-    }
-
-    /* ─── Save / Export ─── */
-    function getJSON() {
-        return JSON.stringify({
-            body: body,
-            sections: sections
-        });
-    }
-
-    function getSections() {
-        return sections;
-    }
-
-    function getBody() {
-        return body;
-    }
-
-    function setSections(newSections) {
-        sections = newSections || [];
-        renderCanvas();
-    }
-
-    function setBody(newBody) {
-        body = Object.assign({}, body, newBody || {});
-        renderCanvas();
-    }
-
-    /* ─── Public API ─── */
+(function (root) {
+  'use strict';
+  /* ============================================================
+   * Constants
+   * ============================================================ */
+  const BRAND = '#D91C48';
+  const STORAGE_PREFIX = 'pp_email_builder_';
+  const AUTOSAVE_DEBOUNCE_MS = 4000;
+  const HISTORY_LIMIT = 60;
+  const MAX_HTML_BYTES = 100 * 1024;          // Gmail clips at 102KB
+  const MERGE_TAGS = [
+    { tag: '{{first_name}}',     label: 'First name' },
+    { tag: '{{last_name}}',      label: 'Last name' },
+    { tag: '{{full_name}}',      label: 'Full name' },
+    { tag: '{{email}}',          label: 'Email' },
+    { tag: '{{company_name}}',   label: 'Company name' },
+    { tag: '{{country}}',        label: 'Country' },
+    { tag: '{{city}}',           label: 'City' },
+    { tag: '{{unsubscribe_url}}',label: 'Unsubscribe URL' },
+    { tag: '{{view_in_browser}}',label: 'View in browser URL' },
+    { tag: '{{sender_name}}',    label: 'Sender name' },
+    { tag: '{{sender_email}}',   label: 'Sender email' }
+  ];
+  const FONT_STACKS = [
+    { v: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", l: 'System Default' },
+    { v: "Arial, Helvetica, sans-serif", l: 'Arial' },
+    { v: "Georgia, 'Times New Roman', serif", l: 'Georgia' },
+    { v: "'Helvetica Neue', Helvetica, Arial, sans-serif", l: 'Helvetica' },
+    { v: "'Trebuchet MS', sans-serif", l: 'Trebuchet MS' },
+    { v: "Verdana, Geneva, sans-serif", l: 'Verdana' },
+    { v: "'Courier New', Courier, monospace", l: 'Courier' },
+    { v: "Tahoma, Geneva, sans-serif", l: 'Tahoma' },
+    { v: "'Lucida Sans', 'Lucida Sans Unicode', sans-serif", l: 'Lucida' },
+    { v: "'Cairo', 'Tajawal', Arial, sans-serif", l: 'Cairo (Arabic)' },
+    { v: "'Tajawal', 'Cairo', Arial, sans-serif", l: 'Tajawal (Arabic)' }
+  ];
+  /* ============================================================
+   * Internal state
+   * ============================================================ */
+  const state = {
+    body: defaultBody(),
+    sections: [],
+    meta: { dir: 'ltr', darkMode: false, name: '', subject: '' },
+    selectedId: null,             // 'body' | sectionId | blockId
+    selectedKind: 'body',         // 'body' | 'section' | 'block'
+    previewSize: 'desktop',
+    history: [],
+    historyIdx: -1,
+    sortableInstances: [],
+    autosaveTimer: null,
+    autosaveUrl: '',
+    saveTarget: null,             // {kind:'campaign'|'template', id:number}
+    csrfToken: '',
+    isDirty: false,
+    onSaved: null
+  };
+  /* ============================================================
+   * Defaults
+   * ============================================================ */
+  function defaultBody() {
     return {
-        init: init,
-        addSection: addSection,
-        addBlock: addBlock,
-        removeSection: removeSection,
-        removeBlock: removeBlock,
-        duplicateSection: duplicateSection,
-        duplicateBlock: duplicateBlock,
-        getJSON: getJSON,
-        getHTML: getHTML,
-        renderPreview: renderPreview,
-        switchTab: switchTab,
-        setPreviewSize: setPreviewSize,
-        getSections: getSections,
-        getBody: getBody,
-        setSections: setSections,
-        setBody: setBody,
-        selectBody: selectBody
+      backgroundColor: '#f4f4f4',
+      contentBackground: '#ffffff',
+      fontFamily: FONT_STACKS[0].v,
+      fontSize: 16,
+      textColor: '#333333',
+      linkColor: BRAND,
+      lineHeight: 1.6,
+      contentWidth: 600,
+      paddingTop: 24,
+      paddingBottom: 24,
+      preheader: ''
     };
-
-})();
-
-/* ─── Global helpers for onclick handlers ─── */
-window.EmailBuilder = EmailBuilder;
+  }
+  function defaultSection() {
+    return {
+      id: uid('sec'),
+      columns: 1,
+      content: [[]],
+      bgColor: '#ffffff',
+      paddingTop: 20, paddingBottom: 20, paddingLeft: 24, paddingRight: 24,
+      borderTopWidth: 0, borderTopColor: '#e5e5e5', borderTopStyle: 'solid',
+      borderBottomWidth: 0, borderBottomColor: '#e5e5e5', borderBottomStyle: 'solid',
+      gap: 24,
+      hideOnMobile: false,
+      stackOnMobile: true
+    };
+  }
+  const BLOCK_DEFAULTS = {
+    text: {
+      content: '<p>Start writing your message here. Click to edit. Use the floating toolbar to format.</p>',
+      fontFamily: '',          // inherit body if empty
+      fontSize: 16,
+      fontWeight: '400',
+      fontStyle: 'normal',
+      textAlign: 'left',
+      color: '',               // inherit body
+      lineHeight: 1.6,
+      letterSpacing: 0,
+      paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+      backgroundColor: 'transparent',
+      hideOnMobile: false,
+      mobileFontSize: 0        // 0 = inherit
+    },
+    heading: {
+      content: '<h2>Your headline here</h2>',
+      level: 'h2',
+      fontFamily: '',
+      fontSize: 28,
+      fontWeight: '700',
+      fontStyle: 'normal',
+      textAlign: 'left',
+      color: '',
+      lineHeight: 1.25,
+      letterSpacing: 0,
+      paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+      backgroundColor: 'transparent',
+      hideOnMobile: false,
+      mobileFontSize: 22
+    },
+    image: {
+      src: 'https://placehold.co/600x300/eeeeee/999999?text=Image',
+      alt: '',
+      width: 100,             // percent of container
+      align: 'center',
+      borderRadius: 0,
+      borderWidth: 0, borderColor: '#000000', borderStyle: 'solid',
+      linkUrl: '',
+      paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+      backgroundColor: 'transparent',
+      hideOnMobile: false
+    },
+    button: {
+      text: 'Click here',
+      url: 'https://',
+      bgColor: BRAND,
+      textColor: '#ffffff',
+      fontFamily: '',
+      fontSize: 16,
+      fontWeight: '600',
+      borderRadius: 6,
+      borderWidth: 0, borderColor: '#000000', borderStyle: 'solid',
+      paddingV: 14, paddingH: 28,
+      align: 'center',
+      fullWidth: false,
+      letterSpacing: 0,
+      textTransform: 'none',
+      paddingTop: 8, paddingBottom: 8,
+      hideOnMobile: false
+    },
+    divider: {
+      color: '#e0e0e0',
+      thickness: 1,
+      style: 'solid',
+      width: 100,
+      align: 'center',
+      paddingTop: 16, paddingBottom: 16,
+      hideOnMobile: false
+    },
+    spacer: {
+      height: 32,
+      backgroundColor: 'transparent',
+      hideOnMobile: false
+    },
+    html: {
+      content: '<!-- Custom HTML — be careful, some email clients are strict -->',
+      paddingTop: 0, paddingBottom: 0,
+      hideOnMobile: false
+    },
+    social: {
+      align: 'center',
+      iconSize: 28,
+      iconColor: '#ffffff',
+      bgColor: '#333333',
+      spacing: 10,
+      shape: 'circle',         // circle | rounded | square
+      paddingTop: 8, paddingBottom: 8,
+      platforms: [
+        { id: 'facebook',  url: '', enabled: false },
+        { id: 'twitter',   url: '', enabled: false },
+        { id: 'linkedin',  url: '', enabled: false },
+        { id: 'instagram', url: '', enabled: false },
+        { id: 'youtube',   url: '', enabled: false }
+      ],
+      hideOnMobile: false
+    },
+    video: {
+      thumbSrc: 'https://placehold.co/600x340/000000/ffffff?text=%E2%96%B6+Watch+video',
+      url: 'https://',
+      alt: 'Watch video',
+      paddingTop: 0, paddingBottom: 0,
+      hideOnMobile: false
+    },
+    footer: {
+      content: '<p style="font-size:12px;color:#999;text-align:center;">You received this email because you subscribed to our list. <a href="{{unsubscribe_url}}" style="color:#999;">Unsubscribe</a> · <a href="{{view_in_browser}}" style="color:#999;">View in browser</a></p>',
+      paddingTop: 8, paddingBottom: 8,
+      hideOnMobile: false
+    }
+  };
+  /* Pre-built section templates */
+  const SECTION_TEMPLATES = {
+    hero: function () {
+      const s = defaultSection();
+      s.bgColor = '#111111';
+      s.paddingTop = 60; s.paddingBottom = 60;
+      s.content[0] = [
+        blockOf('heading', {
+          content: '<h1 style="margin:0;">Welcome aboard 🎉</h1>',
+          color: '#ffffff', textAlign: 'center', fontSize: 36
+        }),
+        blockOf('text', {
+          content: '<p style="margin:12px 0 0;">Thanks for joining us. Here is what to expect next.</p>',
+          color: '#cccccc', textAlign: 'center'
+        }),
+        blockOf('spacer', { height: 16 }),
+        blockOf('button', { text: 'Get started', url: 'https://' })
+      ];
+      return s;
+    },
+    twoCol: function () {
+      const s = defaultSection();
+      s.columns = 2; s.content = [[], []];
+      s.content[0] = [
+        blockOf('image', { src: 'https://placehold.co/280x180/eeeeee/999999?text=Image' }),
+      ];
+      s.content[1] = [
+        blockOf('heading', { content: '<h3>Feature title</h3>', fontSize: 22 }),
+        blockOf('text',    { content: '<p>Briefly describe the feature in one or two sentences.</p>' }),
+        blockOf('button',  { text: 'Learn more', align: 'left' })
+      ];
+      return s;
+    },
+    features: function () {
+      const s = defaultSection();
+      s.columns = 3; s.content = [[], [], []];
+      for (let i = 0; i < 3; i++) {
+        s.content[i] = [
+          blockOf('image',   { src: 'https://placehold.co/120x120/eeeeee/999999?text=%E2%9C%A8', width: 60, align: 'center' }),
+          blockOf('heading', { content: '<h4 style="margin:8px 0;">Benefit ' + (i+1) + '</h4>', textAlign: 'center', fontSize: 18 }),
+          blockOf('text',    { content: '<p style="margin:0;">Short supporting copy.</p>', textAlign: 'center', fontSize: 14, color: '#666' })
+        ];
+      }
+      return s;
+    },
+    cta: function () {
+      const s = defaultSection();
+      s.bgColor = '#fff7f9';
+      s.paddingTop = 48; s.paddingBottom = 48;
+      s.content[0] = [
+        blockOf('heading', { content: '<h2>Ready to get started?</h2>', textAlign: 'center' }),
+        blockOf('text',    { content: '<p>Take the next step in under a minute.</p>', textAlign: 'center', color: '#666' }),
+        blockOf('button',  { text: 'Start free trial', align: 'center' })
+      ];
+      return s;
+    },
+    footer: function () {
+      const s = defaultSection();
+      s.bgColor = '#f4f4f4';
+      s.paddingTop = 24; s.paddingBottom = 24;
+      s.content[0] = [
+        blockOf('social', { platforms: [
+          { id: 'facebook',  url: '#', enabled: true },
+          { id: 'twitter',   url: '#', enabled: true },
+          { id: 'linkedin',  url: '#', enabled: true },
+          { id: 'instagram', url: '#', enabled: true },
+          { id: 'youtube',   url: '',  enabled: false }
+        ]}),
+        blockOf('footer', {})
+      ];
+      return s;
+    }
+  };
+  /* ============================================================
+   * Utilities
+   * ============================================================ */
+  function uid(p) { return p + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function px(v)    { return (v === null || v === undefined || v === '') ? '' : (parseFloat(v) + 'px'); }
+  function esc(s)   { return (s == null ? '' : String(s)).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+  function blockOf(type, overrides) {
+    return { id: uid('blk'), type: type, data: Object.assign(clone(BLOCK_DEFAULTS[type]), overrides || {}) };
+  }
+  function findBlock(blockId) {
+    for (const sec of state.sections) {
+      for (let c = 0; c < sec.content.length; c++) {
+        for (let b = 0; b < sec.content[c].length; b++) {
+          if (sec.content[c][b].id === blockId) return { sec, col: c, idx: b, block: sec.content[c][b] };
+        }
+      }
+    }
+    return null;
+  }
+  function findSection(secId) { return state.sections.find(s => s.id === secId) || null; }
+  /* Color helpers (for contrast warning) */
+  function hexToRgb(hex) {
+    const m = /^#?([a-f0-9]{6}|[a-f0-9]{3})$/i.exec(hex || '');
+    if (!m) return null;
+    let h = m[1];
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+  }
+  function luminance(rgb) {
+    const a = ['r','g','b'].map(k => {
+      let v = rgb[k] / 255;
+      return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4);
+    });
+    return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
+  }
+  function contrast(c1, c2) {
+    const a = hexToRgb(c1), b = hexToRgb(c2);
+    if (!a || !b) return null;
+    const L1 = luminance(a), L2 = luminance(b);
+    return ((Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05)).toFixed(2);
+  }
+  /* ============================================================
+   * History (undo/redo)
+   * ============================================================ */
+  function snapshot() {
+    return { body: clone(state.body), sections: clone(state.sections), meta: clone(state.meta) };
+  }
+  function pushHistory() {
+    state.history = state.history.slice(0, state.historyIdx + 1);
+    state.history.push(snapshot());
+    if (state.history.length > HISTORY_LIMIT) state.history.shift();
+    state.historyIdx = state.history.length - 1;
+    state.isDirty = true;
+    scheduleAutosave();
+    updateToolbarButtons();
+  }
+  function restore(snap) {
+    state.body = clone(snap.body);
+    state.sections = clone(snap.sections);
+    state.meta = clone(snap.meta);
+    renderCanvas();
+    renderPreview();
+  }
+  function undo() {
+    if (state.historyIdx <= 0) return;
+    state.historyIdx--;
+    restore(state.history[state.historyIdx]);
+    updateToolbarButtons();
+  }
+  function redo() {
+    if (state.historyIdx >= state.history.length - 1) return;
+    state.historyIdx++;
+    restore(state.history[state.historyIdx]);
+    updateToolbarButtons();
+  }
+  /* ============================================================
+   * Autosave
+   * ============================================================ */
+  function scheduleAutosave() {
+    if (!state.saveTarget) return;
+    clearTimeout(state.autosaveTimer);
+    state.autosaveTimer = setTimeout(autosave, AUTOSAVE_DEBOUNCE_MS);
+    setStatus('Editing…');
+  }
+  function autosave() {
+    if (!state.saveTarget || !state.isDirty) return;
+    setStatus('Saving…');
+    const payload = buildSavePayload();
+    fetch(payload.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload.body),
+      credentials: 'same-origin'
+    }).then(r => r.json()).then(resp => {
+      if (resp && resp.success) {
+        state.isDirty = false;
+        setStatus('Saved');
+        setTimeout(() => setStatus(''), 1800);
+        if (typeof state.onSaved === 'function') state.onSaved();
+      } else {
+        setStatus('Save failed', true);
+      }
+    }).catch(() => setStatus('Offline — changes kept locally', true));
+    // Local backup
+    try {
+      localStorage.setItem(STORAGE_PREFIX + (state.saveTarget.kind) + '_' + state.saveTarget.id, JSON.stringify(snapshot()));
+    } catch (_) {}
+  }
+  function buildSavePayload() {
+    const json = getJSON();
+    const html = getHTML();
+    if (state.saveTarget.kind === 'campaign') {
+      return {
+        url: '/api/email-campaigns.php?action=update_content&_cb=' + Date.now(),
+        body: {
+          csrf_token: state.csrfToken,
+          campaign_id: state.saveTarget.id,
+          content_json: json,
+          html_content: html
+        }
+      };
+    }
+    return {
+      url: '/api/email-templates.php?action=update_content&_cb=' + Date.now(),
+      body: {
+        csrf_token: state.csrfToken,
+        template_id: state.saveTarget.id,
+        content_json: json,
+        html_content: html
+      }
+    };
+  }
+  function setStatus(msg, isError) {
+    const $s = document.getElementById('eb-status');
+    if (!$s) return;
+    $s.textContent = msg || '';
+    $s.style.color = isError ? '#c0392b' : '#666';
+  }
+  /* ============================================================
+   * Boot
+   * ============================================================ */
+  function init(opts) {
+    opts = opts || {};
+    state.csrfToken = opts.csrfToken || '';
+    if (opts.saveTarget) state.saveTarget = opts.saveTarget;
+    if (opts.onSaved) state.onSaved = opts.onSaved;
+    // Parse existing JSON (supports the legacy "sections+body" shape)
+    if (opts.existingJson) {
+      try {
+        const parsed = typeof opts.existingJson === 'string' ? JSON.parse(opts.existingJson) : opts.existingJson;
+        if (parsed && parsed.sections) {
+          state.sections = migrateSections(parsed.sections);
+          if (parsed.body) Object.assign(state.body, parsed.body);
+          if (parsed.meta) Object.assign(state.meta, parsed.meta);
+        } else if (Array.isArray(parsed)) {
+          state.sections = parsed.map(legacyToSection);
+        }
+      } catch (e) { console.warn('EmailBuilder: existingJson parse failed', e); }
+    }
+    // Empty state — seed with a friendly first section
+    if (!state.sections.length) {
+      state.sections.push(SECTION_TEMPLATES.hero());
+    }
+    document.documentElement.setAttribute('data-eb-dir', state.meta.dir);
+    if (state.meta.darkMode) document.documentElement.classList.add('eb-dark-preview');
+    buildChrome();
+    renderCanvas();
+    renderPreview();
+    selectBody();
+    pushHistory();           // initial snapshot
+    state.isDirty = false;
+    bindKeyboard();
+  }
+  function migrateSections(secs) {
+    return secs.map(s => {
+      const fresh = Object.assign(defaultSection(), s);
+      if (!fresh.id) fresh.id = uid('sec');
+      // Old blocks may not have all fields — merge with defaults
+      fresh.content = (s.content || []).map(col => col.map(b => {
+        const tplDef = BLOCK_DEFAULTS[b.type] || BLOCK_DEFAULTS.text;
+        return { id: b.id || uid('blk'), type: b.type, data: Object.assign(clone(tplDef), b.data || {}) };
+      }));
+      // Ensure column count matches content array length
+      if (fresh.content.length !== fresh.columns) {
+        if (fresh.content.length < fresh.columns) {
+          while (fresh.content.length < fresh.columns) fresh.content.push([]);
+        } else {
+          // Move overflow into the last legal column
+          const overflow = fresh.content.slice(fresh.columns).flat();
+          fresh.content = fresh.content.slice(0, fresh.columns);
+          fresh.content[fresh.columns - 1] = fresh.content[fresh.columns - 1].concat(overflow);
+        }
+      }
+      return fresh;
+    });
+  }
+  function legacyToSection(b) {
+    const s = defaultSection();
+    s.content = [[{ id: uid('blk'), type: b.type || 'text', data: Object.assign(clone(BLOCK_DEFAULTS[b.type] || BLOCK_DEFAULTS.text), b.data || {}) }]];
+    return s;
+  }
+  /* ============================================================
+   * Chrome (toolbar + status)
+   * ============================================================ */
+  function buildChrome() {
+    const $tb = document.getElementById('eb-toolbar-extra');
+    if (!$tb) return;
+    $tb.innerHTML = `
+      <button class="eb-btn" id="eb-undo"   title="Undo (Ctrl+Z)">↶</button>
+      <button class="eb-btn" id="eb-redo"   title="Redo (Ctrl+Y)">↷</button>
+      <span class="eb-sep"></span>
+      <button class="eb-btn" data-size="desktop" title="Desktop">🖥</button>
+      <button class="eb-btn" data-size="tablet"  title="Tablet">📱</button>
+      <button class="eb-btn" data-size="mobile"  title="Mobile">📱̇</button>
+      <span class="eb-sep"></span>
+      <button class="eb-btn" id="eb-dark"   title="Toggle dark-mode preview">🌗</button>
+      <button class="eb-btn" id="eb-dir"    title="Toggle text direction (LTR/RTL)">⇆</button>
+      <button class="eb-btn" id="eb-code"   title="View exported HTML">{ }</button>
+      <button class="eb-btn" id="eb-test"   title="Send test email">✈</button>
+      <span class="eb-sep"></span>
+      <span id="eb-status" class="eb-status"></span>
+    `;
+    $tb.querySelector('#eb-undo').onclick = undo;
+    $tb.querySelector('#eb-redo').onclick = redo;
+    $tb.querySelectorAll('[data-size]').forEach(btn => {
+      btn.onclick = () => setPreviewSize(btn.dataset.size);
+    });
+    $tb.querySelector('#eb-dark').onclick = () => setDarkMode(!state.meta.darkMode);
+    $tb.querySelector('#eb-dir').onclick  = () => setDirection(state.meta.dir === 'rtl' ? 'ltr' : 'rtl');
+    $tb.querySelector('#eb-code').onclick = () => showHtmlModal();
+    $tb.querySelector('#eb-test').onclick = () => promptSendTest();
+    // Active preview size button
+    updateToolbarButtons();
+  }
+  function updateToolbarButtons() {
+    document.querySelectorAll('#eb-toolbar-extra [data-size]').forEach(b => {
+      b.classList.toggle('is-active', b.dataset.size === state.previewSize);
+    });
+    const u = document.getElementById('eb-undo');
+    const r = document.getElementById('eb-redo');
+    if (u) u.disabled = state.historyIdx <= 0;
+    if (r) r.disabled = state.historyIdx >= state.history.length - 1;
+  }
+  /* ============================================================
+   * Canvas rendering (the editable surface)
+   * ============================================================ */
+  function renderCanvas() {
+    const $c = document.getElementById('email-canvas');
+    if (!$c) return;
+    destroyAllSortables();
+    $c.style.background    = state.body.backgroundColor;
+    $c.style.padding       = px(state.body.paddingTop) + ' 0 ' + px(state.body.paddingBottom);
+    $c.style.fontFamily    = state.body.fontFamily;
+    $c.style.fontSize      = px(state.body.fontSize);
+    $c.style.color         = state.body.textColor;
+    $c.style.lineHeight    = state.body.lineHeight;
+    $c.setAttribute('dir', state.meta.dir);
+    // Inner wrapper at content width
+    const $wrap = document.createElement('div');
+    $wrap.id = 'eb-canvas-wrap';
+    $wrap.style.maxWidth = px(state.body.contentWidth);
+    $wrap.style.margin = '0 auto';
+    $wrap.style.background = state.body.contentBackground;
+    $wrap.style.minHeight = '120px';
+    if (!state.sections.length) {
+      const $empty = document.createElement('div');
+      $empty.className = 'eb-empty';
+      $empty.textContent = state.meta.dir === 'rtl'
+        ? 'اسحب قسماً من اليسار للبدء'
+        : 'Drag a section from the palette to start';
+      $wrap.appendChild($empty);
+    }
+    state.sections.forEach(sec => $wrap.appendChild(renderSection(sec)));
+    $c.innerHTML = '';
+    $c.appendChild($wrap);
+    initSortables();
+    updateSelectionOutline();
+    renderPreview();
+  }
+  function renderSection(sec) {
+    const $sec = document.createElement('div');
+    $sec.className = 'eb-section';
+    $sec.dataset.secId = sec.id;
+    $sec.style.background    = sec.bgColor;
+    $sec.style.paddingTop    = px(sec.paddingTop);
+    $sec.style.paddingBottom = px(sec.paddingBottom);
+    $sec.style.paddingLeft   = px(sec.paddingLeft);
+    $sec.style.paddingRight  = px(sec.paddingRight);
+    if (sec.borderTopWidth)    $sec.style.borderTop    = sec.borderTopWidth + 'px ' + sec.borderTopStyle + ' ' + sec.borderTopColor;
+    if (sec.borderBottomWidth) $sec.style.borderBottom = sec.borderBottomWidth + 'px ' + sec.borderBottomStyle + ' ' + sec.borderBottomColor;
+    // Section hover toolbar
+    const $tb = document.createElement('div');
+    $tb.className = 'eb-section-tools';
+    $tb.innerHTML = `
+      <button title="Move up"      data-act="up">⌃</button>
+      <button title="Move down"    data-act="down">⌄</button>
+      <button title="Duplicate"    data-act="dup">⎘</button>
+      <button title="Settings"     data-act="set">⚙</button>
+      <button title="Delete"       data-act="del" class="danger">×</button>
+    `;
+    $tb.addEventListener('click', e => {
+      const act = e.target.closest('button')?.dataset.act;
+      if (!act) return;
+      e.stopPropagation();
+      sectionAction(sec.id, act);
+    });
+    $sec.appendChild($tb);
+    // Columns grid (in editor we use CSS grid for UX; exporter uses tables)
+    const $row = document.createElement('div');
+    $row.className = 'eb-row';
+    $row.style.display = 'grid';
+    $row.style.gridTemplateColumns = 'repeat(' + sec.columns + ', 1fr)';
+    $row.style.gap = px(sec.gap);
+    for (let c = 0; c < sec.columns; c++) {
+      const $col = document.createElement('div');
+      $col.className = 'eb-col';
+      $col.dataset.secId = sec.id;
+      $col.dataset.colIdx = c;
+      $col.style.minHeight = '40px';
+      const blocks = sec.content[c] || [];
+      if (!blocks.length) {
+        const $hint = document.createElement('div');
+        $hint.className = 'eb-col-empty';
+        $hint.textContent = state.meta.dir === 'rtl' ? 'اسحب عنصراً هنا' : 'Drag a block here';
+        $col.appendChild($hint);
+      }
+      blocks.forEach(b => $col.appendChild(renderBlock(b, sec.id, c)));
+      $row.appendChild($col);
+    }
+    $sec.appendChild($row);
+    $sec.addEventListener('click', e => {
+      if (e.target === $sec || e.target === $row) selectSection(sec.id);
+    });
+    return $sec;
+  }
+  function renderBlock(blk, secId, colIdx) {
+    const $b = document.createElement('div');
+    $b.className = 'eb-block eb-block-' + blk.type;
+    $b.dataset.blkId = blk.id;
+    $b.dataset.secId = secId;
+    $b.dataset.colIdx = colIdx;
+    const d = blk.data;
+    switch (blk.type) {
+      case 'text':
+      case 'heading':
+      case 'footer':
+        $b.contentEditable = 'true';
+        $b.innerHTML = d.content;
+        applyTextStyle($b, d);
+        $b.addEventListener('focus', () => showInlineToolbar($b, blk));
+        $b.addEventListener('blur',  () => {
+          d.content = $b.innerHTML;
+          pushHistory();
+          hideInlineToolbar();
+        });
+        $b.addEventListener('input', () => { /* keep state in sync silently; snapshot on blur */ d.content = $b.innerHTML; });
+        $b.addEventListener('mouseup', () => showInlineToolbar($b, blk));
+        break;
+      case 'image': {
+        const $imgWrap = document.createElement('div');
+        $imgWrap.style.textAlign = d.align;
+        $imgWrap.style.background = d.backgroundColor;
+        $imgWrap.style.paddingTop = px(d.paddingTop);
+        $imgWrap.style.paddingBottom = px(d.paddingBottom);
+        const $img = document.createElement('img');
+        $img.src = d.src; $img.alt = d.alt || '';
+        $img.style.maxWidth = '100%';
+        $img.style.width = d.width + '%';
+        $img.style.borderRadius = px(d.borderRadius);
+        if (d.borderWidth) $img.style.border = d.borderWidth + 'px ' + d.borderStyle + ' ' + d.borderColor;
+        $img.style.display = 'inline-block';
+        if (d.linkUrl) {
+          // Visual indicator only in editor — exporter writes the real <a>
+          $imgWrap.classList.add('eb-image-linked');
+          $imgWrap.title = d.linkUrl;
+        }
+        if (!d.alt) {
+          $imgWrap.classList.add('eb-warn-alt');
+          $imgWrap.dataset.warn = state.meta.dir === 'rtl' ? 'يفتقد نص بديل' : 'Missing alt text';
+        }
+        $imgWrap.appendChild($img);
+        $b.appendChild($imgWrap);
+        break;
+      }
+      case 'button': {
+        const $wrap = document.createElement('div');
+        $wrap.style.textAlign = d.align;
+        $wrap.style.paddingTop = px(d.paddingTop);
+        $wrap.style.paddingBottom = px(d.paddingBottom);
+        const $btn = document.createElement('a');
+        $btn.href = d.url || '#';
+        $btn.textContent = d.text;
+        $btn.style.display = d.fullWidth ? 'block' : 'inline-block';
+        $btn.style.backgroundColor = d.bgColor;
+        $btn.style.color = d.textColor;
+        $btn.style.fontSize = px(d.fontSize);
+        $btn.style.fontWeight = d.fontWeight;
+        $btn.style.fontFamily = d.fontFamily || 'inherit';
+        $btn.style.borderRadius = px(d.borderRadius);
+        if (d.borderWidth) $btn.style.border = d.borderWidth + 'px ' + d.borderStyle + ' ' + d.borderColor;
+        $btn.style.padding = px(d.paddingV) + ' ' + px(d.paddingH);
+        $btn.style.textDecoration = 'none';
+        $btn.style.textTransform = d.textTransform;
+        if (d.letterSpacing) $btn.style.letterSpacing = px(d.letterSpacing);
+        $wrap.appendChild($btn);
+        $b.appendChild($wrap);
+        // Contrast check
+        const ratio = contrast(d.bgColor, d.textColor);
+        if (ratio !== null && ratio < 4.5) {
+          $b.classList.add('eb-warn-contrast');
+          $b.dataset.warn = (state.meta.dir === 'rtl' ? 'تباين منخفض ' : 'Low contrast ') + ratio + ':1';
+        }
+        break;
+      }
+      case 'divider': {
+        const $wrap = document.createElement('div');
+        $wrap.style.paddingTop = px(d.paddingTop);
+        $wrap.style.paddingBottom = px(d.paddingBottom);
+        $wrap.style.textAlign = d.align;
+        const $hr = document.createElement('hr');
+        $hr.style.border = 'none';
+        $hr.style.borderTop = d.thickness + 'px ' + d.style + ' ' + d.color;
+        $hr.style.width = d.width + '%';
+        $hr.style.margin = d.align === 'center' ? '0 auto' : (d.align === 'right' ? '0 0 0 auto' : '0');
+        $wrap.appendChild($hr);
+        $b.appendChild($wrap);
+        break;
+      }
+      case 'spacer': {
+        const $sp = document.createElement('div');
+        $sp.style.height = px(d.height);
+        $sp.style.background = d.backgroundColor;
+        $sp.style.lineHeight = '1px';
+        $sp.innerHTML = '&nbsp;';
+        $b.appendChild($sp);
+        break;
+      }
+      case 'html': {
+        const $code = document.createElement('div');
+        $code.innerHTML = d.content;
+        $b.appendChild($code);
+        const $tag = document.createElement('div');
+        $tag.className = 'eb-html-tag';
+        $tag.textContent = 'HTML';
+        $b.appendChild($tag);
+        break;
+      }
+      case 'social': {
+        $b.appendChild(renderSocialEditor(d));
+        break;
+      }
+      case 'video': {
+        const $w = document.createElement('a');
+        $w.href = d.url || '#';
+        $w.target = '_blank';
+        $w.rel = 'noopener';
+        const $im = document.createElement('img');
+        $im.src = d.thumbSrc;
+        $im.alt = d.alt || '';
+        $im.style.maxWidth = '100%';
+        $im.style.display = 'block';
+        $w.appendChild($im);
+        $b.appendChild($w);
+        break;
+      }
+    }
+    // Block hover toolbar
+    const $tb = document.createElement('div');
+    $tb.className = 'eb-block-tools';
+    $tb.innerHTML = `
+      <button title="Drag" data-act="drag" class="eb-handle">⋮⋮</button>
+      <button title="Duplicate" data-act="dup">⎘</button>
+      <button title="Delete" data-act="del" class="danger">×</button>
+    `;
+    $tb.addEventListener('click', e => {
+      const act = e.target.closest('button')?.dataset.act;
+      if (!act || act === 'drag') return;
+      e.stopPropagation();
+      blockAction(blk.id, act);
+    });
+    $b.appendChild($tb);
+    $b.addEventListener('click', e => {
+      e.stopPropagation();
+      if (blk.type === 'text' || blk.type === 'heading' || blk.type === 'footer') return; // text blocks select via focus
+      selectBlock(blk.id);
+    });
+    if (d.hideOnMobile) $b.classList.add('eb-hide-mobile');
+    return $b;
+  }
+  function renderSocialEditor(d) {
+    const $w = document.createElement('div');
+    $w.style.textAlign = d.align;
+    $w.style.paddingTop = px(d.paddingTop);
+    $w.style.paddingBottom = px(d.paddingBottom);
+    const radius = d.shape === 'circle' ? '50%' : d.shape === 'rounded' ? '6px' : '0';
+    d.platforms.forEach(p => {
+      if (!p.enabled) return;
+      const $a = document.createElement('span');
+      $a.title = p.id;
+      $a.style.display = 'inline-block';
+      $a.style.width = px(d.iconSize * 1.6);
+      $a.style.height = px(d.iconSize * 1.6);
+      $a.style.lineHeight = px(d.iconSize * 1.6);
+      $a.style.margin = '0 ' + px(d.spacing / 2);
+      $a.style.background = d.bgColor;
+      $a.style.color = d.iconColor;
+      $a.style.borderRadius = radius;
+      $a.style.fontWeight = '700';
+      $a.style.textAlign = 'center';
+      $a.textContent = p.id[0].toUpperCase();
+      $w.appendChild($a);
+    });
+    if (!d.platforms.some(p => p.enabled)) {
+      const $hint = document.createElement('div');
+      $hint.className = 'eb-col-empty';
+      $hint.textContent = state.meta.dir === 'rtl' ? 'فعّل المنصات في الإعدادات' : 'Enable platforms in the right panel';
+      $w.appendChild($hint);
+    }
+    return $w;
+  }
+  function applyTextStyle(el, d) {
+    if (d.fontFamily) el.style.fontFamily = d.fontFamily;
+    el.style.fontSize = px(d.fontSize);
+    el.style.fontWeight = d.fontWeight;
+    el.style.fontStyle = d.fontStyle;
+    el.style.textAlign = d.textAlign;
+    if (d.color) el.style.color = d.color;
+    el.style.lineHeight = d.lineHeight;
+    if (d.letterSpacing) el.style.letterSpacing = px(d.letterSpacing);
+    el.style.paddingTop = px(d.paddingTop);
+    el.style.paddingBottom = px(d.paddingBottom);
+    el.style.paddingLeft = px(d.paddingLeft);
+    el.style.paddingRight = px(d.paddingRight);
+    if (d.backgroundColor && d.backgroundColor !== 'transparent') el.style.backgroundColor = d.backgroundColor;
+  }
+  /* ============================================================
+   * Drag & Drop (SortableJS only)
+   * ============================================================ */
+  function destroyAllSortables() {
+    state.sortableInstances.forEach(s => { try { s.destroy(); } catch (_) {} });
+    state.sortableInstances = [];
+  }
+  function initSortables() {
+    if (!window.Sortable) return;
+    // Palette: section templates (clone-only)
+    const $secPalette = document.getElementById('eb-palette-sections');
+    if ($secPalette && !$secPalette.dataset.sortInit) {
+      state.sortableInstances.push(new Sortable($secPalette, {
+        group: { name: 'eb-sections', pull: 'clone', put: false },
+        sort: false,
+        animation: 150,
+        ghostClass: 'eb-ghost'
+      }));
+      $secPalette.dataset.sortInit = '1';
+    }
+    // Palette: blocks (clone-only)
+    const $blkPalette = document.getElementById('eb-palette-blocks');
+    if ($blkPalette && !$blkPalette.dataset.sortInit) {
+      state.sortableInstances.push(new Sortable($blkPalette, {
+        group: { name: 'eb-blocks', pull: 'clone', put: false },
+        sort: false,
+        animation: 150,
+        ghostClass: 'eb-ghost'
+      }));
+      $blkPalette.dataset.sortInit = '1';
+    }
+    // Canvas wrapper accepts sections
+    const $wrap = document.getElementById('eb-canvas-wrap');
+    if ($wrap) {
+      state.sortableInstances.push(new Sortable($wrap, {
+        group: { name: 'eb-sections-canvas', pull: false, put: ['eb-sections'] },
+        draggable: '.eb-section',
+        animation: 180,
+        ghostClass: 'eb-ghost',
+        onAdd: function (evt) {
+          const tpl = evt.item.dataset.sectionKey;
+          evt.item.remove();
+          let newSec;
+          if (tpl && SECTION_TEMPLATES[tpl]) {
+            newSec = SECTION_TEMPLATES[tpl]();
+          } else {
+            const cols = parseInt(evt.item.dataset.cols || '1', 10) || 1;
+            newSec = defaultSection();
+            newSec.columns = cols;
+            newSec.content = []; for (let i = 0; i < cols; i++) newSec.content.push([]);
+          }
+          state.sections.splice(evt.newIndex, 0, newSec);
+          pushHistory();
+          renderCanvas();
+          selectSection(newSec.id);
+        },
+        onUpdate: function (evt) {
+          const moved = state.sections.splice(evt.oldIndex, 1)[0];
+          state.sections.splice(evt.newIndex, 0, moved);
+          pushHistory();
+          renderCanvas();
+        }
+      }));
+    }
+    // Each column accepts blocks
+    document.querySelectorAll('.eb-col').forEach($col => {
+      state.sortableInstances.push(new Sortable($col, {
+        group: { name: 'eb-blocks-canvas', pull: true, put: ['eb-blocks', 'eb-blocks-canvas'] },
+        draggable: '.eb-block',
+        handle: '.eb-handle, .eb-block',
+        filter: '[contenteditable="true"]',  // don't start drag from inside text edits
+        preventOnFilter: false,
+        animation: 160,
+        ghostClass: 'eb-ghost',
+        onAdd: function (evt) {
+          const fromPalette = !!evt.item.dataset.blockType;
+          if (fromPalette) {
+            const type = evt.item.dataset.blockType;
+            evt.item.remove();
+            const sec = findSection($col.dataset.secId);
+            if (!sec) return;
+            const c = parseInt($col.dataset.colIdx, 10);
+            const blk = blockOf(type, {});
+            sec.content[c].splice(evt.newIndex, 0, blk);
+            pushHistory();
+            renderCanvas();
+            selectBlock(blk.id);
+            return;
+          }
+          // Moved between columns/sections
+          const fromSec = findSection(evt.from.dataset.secId);
+          const toSec   = findSection($col.dataset.secId);
+          if (!fromSec || !toSec) return;
+          const fromCol = parseInt(evt.from.dataset.colIdx, 10);
+          const toCol   = parseInt($col.dataset.colIdx, 10);
+          const moved = fromSec.content[fromCol].splice(evt.oldIndex, 1)[0];
+          toSec.content[toCol].splice(evt.newIndex, 0, moved);
+          pushHistory();
+          renderCanvas();
+        },
+        onUpdate: function (evt) {
+          const sec = findSection($col.dataset.secId);
+          if (!sec) return;
+          const c = parseInt($col.dataset.colIdx, 10);
+          const moved = sec.content[c].splice(evt.oldIndex, 1)[0];
+          sec.content[c].splice(evt.newIndex, 0, moved);
+          pushHistory();
+        }
+      }));
+    });
+  }
+  /* ============================================================
+   * Selection & properties panel
+   * ============================================================ */
+  function selectBody() {
+    state.selectedKind = 'body';
+    state.selectedId = 'body';
+    updateSelectionOutline();
+    renderProperties();
+  }
+  function selectSection(id) {
+    state.selectedKind = 'section';
+    state.selectedId = id;
+    updateSelectionOutline();
+    renderProperties();
+  }
+  function selectBlock(id) {
+    state.selectedKind = 'block';
+    state.selectedId = id;
+    updateSelectionOutline();
+    renderProperties();
+  }
+  function updateSelectionOutline() {
+    document.querySelectorAll('.eb-section, .eb-block').forEach(el => el.classList.remove('is-selected'));
+    if (!state.selectedId || state.selectedId === 'body') return;
+    if (state.selectedKind === 'section') {
+      const $el = document.querySelector('.eb-section[data-sec-id="' + state.selectedId + '"]');
+      if ($el) $el.classList.add('is-selected');
+    } else {
+      const $el = document.querySelector('.eb-block[data-blk-id="' + state.selectedId + '"]');
+      if ($el) $el.classList.add('is-selected');
+    }
+  }
+  function renderProperties() {
+    const $p = document.getElementById('eb-properties');
+    if (!$p) return;
+    $p.innerHTML = '';
+    if (state.selectedKind === 'body') return renderBodyProperties($p);
+    if (state.selectedKind === 'section') {
+      const sec = findSection(state.selectedId);
+      if (sec) return renderSectionProperties($p, sec);
+    }
+    if (state.selectedKind === 'block') {
+      const found = findBlock(state.selectedId);
+      if (found) return renderBlockProperties($p, found.block);
+    }
+  }
+  /* ---- Body ---- */
+  function renderBodyProperties($p) {
+    const b = state.body;
+    panelTitle($p, 'Email body');
+    fieldGroup($p, 'Email settings', [
+      input('text',  'Preheader text (preview in inbox)', b.preheader, v => { b.preheader = v; deferred(); }),
+      input('text',  'Email name (internal)', state.meta.name, v => { state.meta.name = v; deferred(); }),
+      input('text',  'Subject line', state.meta.subject, v => { state.meta.subject = v; deferred(); })
+    ]);
+    fieldGroup($p, 'Layout', [
+      input('color', 'Page background', b.backgroundColor, v => { b.backgroundColor = v; renderCanvas(); deferred(); }),
+      input('color', 'Content background', b.contentBackground, v => { b.contentBackground = v; renderCanvas(); deferred(); }),
+      input('range', 'Content width (px)', b.contentWidth, v => { b.contentWidth = +v; renderCanvas(); deferred(); }, { min: 480, max: 800, step: 10 }),
+      input('range', 'Top padding',    b.paddingTop,    v => { b.paddingTop = +v;    renderCanvas(); deferred(); }, { min: 0, max: 80 }),
+      input('range', 'Bottom padding', b.paddingBottom, v => { b.paddingBottom = +v; renderCanvas(); deferred(); }, { min: 0, max: 80 })
+    ]);
+    fieldGroup($p, 'Typography', [
+      select('Font family', FONT_STACKS.map(f => ({ v: f.v, l: f.l })), b.fontFamily, v => { b.fontFamily = v; renderCanvas(); deferred(); }),
+      input('range', 'Base font size', b.fontSize, v => { b.fontSize = +v; renderCanvas(); deferred(); }, { min: 12, max: 22 }),
+      input('color', 'Text color', b.textColor, v => { b.textColor = v; renderCanvas(); deferred(); }),
+      input('color', 'Link color', b.linkColor, v => { b.linkColor = v; renderCanvas(); deferred(); }),
+      input('range', 'Line height (×10)', Math.round(b.lineHeight * 10), v => { b.lineHeight = (+v)/10; renderCanvas(); deferred(); }, { min: 10, max: 24 })
+    ]);
+    fieldGroup($p, 'Direction & mode', [
+      select('Text direction', [{ v: 'ltr', l: 'Left-to-Right (English)' }, { v: 'rtl', l: 'Right-to-Left (Arabic / Hebrew)' }], state.meta.dir, v => setDirection(v)),
+      toggle('Dark-mode preview', state.meta.darkMode, v => setDarkMode(v))
+    ]);
+  }
+  /* ---- Section ---- */
+  function renderSectionProperties($p, sec) {
+    panelTitle($p, 'Section');
+    fieldGroup($p, 'Layout', [
+      columnsPicker(sec),
+      input('range', 'Column gap', sec.gap, v => { sec.gap = +v; renderCanvas(); deferred(); }, { min: 0, max: 60 })
+    ]);
+    fieldGroup($p, 'Style', [
+      input('color', 'Background', sec.bgColor, v => { sec.bgColor = v; renderCanvas(); deferred(); }),
+      input('range', 'Padding top',    sec.paddingTop,    v => { sec.paddingTop = +v;    renderCanvas(); deferred(); }, { min: 0, max: 100 }),
+      input('range', 'Padding bottom', sec.paddingBottom, v => { sec.paddingBottom = +v; renderCanvas(); deferred(); }, { min: 0, max: 100 }),
+      input('range', 'Padding left',   sec.paddingLeft,   v => { sec.paddingLeft = +v;   renderCanvas(); deferred(); }, { min: 0, max: 100 }),
+      input('range', 'Padding right',  sec.paddingRight,  v => { sec.paddingRight = +v;  renderCanvas(); deferred(); }, { min: 0, max: 100 })
+    ]);
+    fieldGroup($p, 'Borders', [
+      input('range', 'Top border (px)',    sec.borderTopWidth, v => { sec.borderTopWidth = +v; renderCanvas(); deferred(); }, { min: 0, max: 10 }),
+      input('color', 'Top border color',   sec.borderTopColor, v => { sec.borderTopColor = v; renderCanvas(); deferred(); }),
+      input('range', 'Bottom border (px)', sec.borderBottomWidth, v => { sec.borderBottomWidth = +v; renderCanvas(); deferred(); }, { min: 0, max: 10 }),
+      input('color', 'Bottom border color',sec.borderBottomColor, v => { sec.borderBottomColor = v; renderCanvas(); deferred(); })
+    ]);
+    fieldGroup($p, 'Mobile', [
+      toggle('Hide this section on mobile', sec.hideOnMobile, v => { sec.hideOnMobile = v; renderCanvas(); deferred(); }),
+      toggle('Stack columns on mobile',     sec.stackOnMobile, v => { sec.stackOnMobile = v; deferred(); })
+    ]);
+  }
+  /* ---- Block (delegates per type) ---- */
+  function renderBlockProperties($p, blk) {
+    const d = blk.data;
+    const titleMap = { text: 'Text', heading: 'Heading', image: 'Image', button: 'Button', divider: 'Divider', spacer: 'Spacer', html: 'HTML', social: 'Social', video: 'Video', footer: 'Footer' };
+    panelTitle($p, titleMap[blk.type] || 'Block');
+    if (blk.type === 'text' || blk.type === 'heading' || blk.type === 'footer') {
+      if (blk.type === 'heading') {
+        fieldGroup($p, 'Heading', [
+          select('Level', ['h1','h2','h3','h4'].map(v=>({v,l:v.toUpperCase()})), d.level, v => { d.level = v; updateHeadingContentLevel(blk); renderCanvas(); deferred(); })
+        ]);
+      }
+      fieldGroup($p, 'Typography', [
+        select('Font family', [{ v: '', l: 'Inherit from body' }].concat(FONT_STACKS.map(f=>({v:f.v,l:f.l}))), d.fontFamily, v => { d.fontFamily = v; renderCanvas(); deferred(); }),
+        input('range', 'Font size', d.fontSize, v => { d.fontSize = +v; renderCanvas(); deferred(); }, { min: 10, max: 64 }),
+        select('Weight', ['300','400','500','600','700','800'].map(v=>({v,l:v})), d.fontWeight, v => { d.fontWeight = v; renderCanvas(); deferred(); }),
+        select('Style', [{v:'normal',l:'Normal'},{v:'italic',l:'Italic'}], d.fontStyle, v => { d.fontStyle = v; renderCanvas(); deferred(); }),
+        select('Align', alignOpts(), d.textAlign, v => { d.textAlign = v; renderCanvas(); deferred(); }),
+        input('color', 'Color', d.color || '#333333', v => { d.color = v; renderCanvas(); deferred(); }),
+        input('range', 'Line height (×10)', Math.round(d.lineHeight * 10), v => { d.lineHeight = (+v)/10; renderCanvas(); deferred(); }, { min: 10, max: 24 }),
+        input('range', 'Letter spacing', d.letterSpacing, v => { d.letterSpacing = +v; renderCanvas(); deferred(); }, { min: -2, max: 8 })
+      ]);
+      paddingGroup($p, d);
+      mergeTagPicker($p, blk);
+      mobileGroup($p, d);
+      return;
+    }
+    if (blk.type === 'image') {
+      fieldGroup($p, 'Image', [
+        input('text', 'Image URL', d.src, v => { d.src = v; renderCanvas(); deferred(); }),
+        imageUploadField(d, () => { renderCanvas(); deferred(); }),
+        input('text', 'Alt text (recommended)', d.alt, v => { d.alt = v; renderCanvas(); deferred(); }),
+        input('text', 'Link URL (optional)', d.linkUrl, v => { d.linkUrl = v; renderCanvas(); deferred(); }),
+        input('range', 'Width (%)', d.width, v => { d.width = +v; renderCanvas(); deferred(); }, { min: 10, max: 100 }),
+        select('Align', alignOpts(), d.align, v => { d.align = v; renderCanvas(); deferred(); }),
+        input('range', 'Border radius', d.borderRadius, v => { d.borderRadius = +v; renderCanvas(); deferred(); }, { min: 0, max: 60 }),
+        input('range', 'Border width', d.borderWidth, v => { d.borderWidth = +v; renderCanvas(); deferred(); }, { min: 0, max: 10 }),
+        input('color', 'Border color', d.borderColor, v => { d.borderColor = v; renderCanvas(); deferred(); }),
+        input('color', 'Background', d.backgroundColor === 'transparent' ? '#ffffff' : d.backgroundColor, v => { d.backgroundColor = v; renderCanvas(); deferred(); })
+      ]);
+      paddingGroup($p, d);
+      mobileGroup($p, d);
+      return;
+    }
+    if (blk.type === 'button') {
+      fieldGroup($p, 'Button', [
+        input('text', 'Label', d.text, v => { d.text = v; renderCanvas(); deferred(); }),
+        input('text', 'URL', d.url, v => { d.url = v; renderCanvas(); deferred(); }),
+        select('Align', alignOpts(), d.align, v => { d.align = v; renderCanvas(); deferred(); }),
+        toggle('Full width', d.fullWidth, v => { d.fullWidth = v; renderCanvas(); deferred(); })
+      ]);
+      fieldGroup($p, 'Style', [
+        input('color', 'Background', d.bgColor, v => { d.bgColor = v; renderCanvas(); deferred(); }),
+        input('color', 'Text color', d.textColor, v => { d.textColor = v; renderCanvas(); deferred(); }),
+        input('range', 'Font size', d.fontSize, v => { d.fontSize = +v; renderCanvas(); deferred(); }, { min: 10, max: 32 }),
+        select('Weight', ['400','500','600','700','800'].map(v=>({v,l:v})), d.fontWeight, v => { d.fontWeight = v; renderCanvas(); deferred(); }),
+        input('range', 'Padding vertical',   d.paddingV, v => { d.paddingV = +v; renderCanvas(); deferred(); }, { min: 4, max: 40 }),
+        input('range', 'Padding horizontal', d.paddingH, v => { d.paddingH = +v; renderCanvas(); deferred(); }, { min: 4, max: 60 }),
+        input('range', 'Border radius', d.borderRadius, v => { d.borderRadius = +v; renderCanvas(); deferred(); }, { min: 0, max: 40 }),
+        input('range', 'Border width',  d.borderWidth, v => { d.borderWidth = +v; renderCanvas(); deferred(); }, { min: 0, max: 10 }),
+        input('color', 'Border color',  d.borderColor, v => { d.borderColor = v; renderCanvas(); deferred(); }),
+        select('Text transform', [{v:'none',l:'None'},{v:'uppercase',l:'UPPERCASE'},{v:'lowercase',l:'lowercase'}], d.textTransform, v => { d.textTransform = v; renderCanvas(); deferred(); }),
+        input('range', 'Letter spacing', d.letterSpacing, v => { d.letterSpacing = +v; renderCanvas(); deferred(); }, { min: 0, max: 8 })
+      ]);
+      paddingGroup($p, d, true);
+      mergeTagPicker($p, blk, 'url');
+      mobileGroup($p, d);
+      return;
+    }
+    if (blk.type === 'divider') {
+      fieldGroup($p, 'Divider', [
+        input('color', 'Color', d.color, v => { d.color = v; renderCanvas(); deferred(); }),
+        input('range', 'Thickness', d.thickness, v => { d.thickness = +v; renderCanvas(); deferred(); }, { min: 1, max: 12 }),
+        select('Style', [{v:'solid',l:'Solid'},{v:'dashed',l:'Dashed'},{v:'dotted',l:'Dotted'}], d.style, v => { d.style = v; renderCanvas(); deferred(); }),
+        input('range', 'Width (%)', d.width, v => { d.width = +v; renderCanvas(); deferred(); }, { min: 10, max: 100 }),
+        select('Align', alignOpts(), d.align, v => { d.align = v; renderCanvas(); deferred(); })
+      ]);
+      paddingGroup($p, d, true);
+      mobileGroup($p, d);
+      return;
+    }
+    if (blk.type === 'spacer') {
+      fieldGroup($p, 'Spacer', [
+        input('range', 'Height', d.height, v => { d.height = +v; renderCanvas(); deferred(); }, { min: 4, max: 120 }),
+        input('color', 'Background', d.backgroundColor === 'transparent' ? '#ffffff' : d.backgroundColor, v => { d.backgroundColor = v; renderCanvas(); deferred(); })
+      ]);
+      mobileGroup($p, d);
+      return;
+    }
+    if (blk.type === 'html') {
+      fieldGroup($p, 'Custom HTML', [
+        textarea('HTML', d.content, v => { d.content = v; renderCanvas(); deferred(); }, 10)
+      ]);
+      paddingGroup($p, d, true);
+      mobileGroup($p, d);
+      return;
+    }
+    if (blk.type === 'social') {
+      fieldGroup($p, 'Layout', [
+        select('Align', alignOpts(), d.align, v => { d.align = v; renderCanvas(); deferred(); }),
+        input('range', 'Icon size', d.iconSize, v => { d.iconSize = +v; renderCanvas(); deferred(); }, { min: 16, max: 64 }),
+        input('range', 'Spacing',   d.spacing,  v => { d.spacing = +v; renderCanvas(); deferred(); }, { min: 0, max: 40 }),
+        select('Shape', [{v:'circle',l:'Circle'},{v:'rounded',l:'Rounded'},{v:'square',l:'Square'}], d.shape, v => { d.shape = v; renderCanvas(); deferred(); }),
+        input('color', 'Icon color', d.iconColor, v => { d.iconColor = v; renderCanvas(); deferred(); }),
+        input('color', 'Background', d.bgColor,   v => { d.bgColor = v; renderCanvas(); deferred(); })
+      ]);
+      const items = [];
+      d.platforms.forEach((p, i) => {
+        items.push(toggle(p.id.charAt(0).toUpperCase()+p.id.slice(1)+' — enabled', p.enabled, v => { p.enabled = v; renderCanvas(); deferred(); }));
+        items.push(input('text', p.id+' URL', p.url, v => { p.url = v; deferred(); }));
+      });
+      fieldGroup($p, 'Platforms', items);
+      paddingGroup($p, d, true);
+      mobileGroup($p, d);
+      return;
+    }
+    if (blk.type === 'video') {
+      fieldGroup($p, 'Video', [
+        input('text', 'Video URL', d.url, v => { d.url = v; deferred(); }),
+        input('text', 'Thumbnail URL', d.thumbSrc, v => { d.thumbSrc = v; renderCanvas(); deferred(); }),
+        imageUploadField(d, () => { renderCanvas(); deferred(); }, 'thumbSrc'),
+        input('text', 'Alt text', d.alt, v => { d.alt = v; deferred(); })
+      ]);
+      paddingGroup($p, d, true);
+      mobileGroup($p, d);
+    }
+  }
+  function updateHeadingContentLevel(blk) {
+    const lvl = blk.data.level || 'h2';
+    // Replace outer tag inside content
+    const dom = document.createElement('div');
+    dom.innerHTML = blk.data.content;
+    const oldH = dom.querySelector('h1,h2,h3,h4');
+    if (oldH) {
+      const newH = document.createElement(lvl);
+      newH.innerHTML = oldH.innerHTML;
+      for (const a of oldH.attributes) newH.setAttribute(a.name, a.value);
+      oldH.replaceWith(newH);
+      blk.data.content = dom.innerHTML;
+    }
+  }
+  /* ============================================================
+   * Field helpers
+   * ============================================================ */
+  function panelTitle($p, text) {
+    const $h = document.createElement('h3');
+    $h.className = 'eb-prop-title';
+    $h.textContent = text;
+    $p.appendChild($h);
+  }
+  function fieldGroup($p, title, fields) {
+    const $g = document.createElement('div');
+    $g.className = 'eb-prop-group';
+    if (title) {
+      const $t = document.createElement('div');
+      $t.className = 'eb-prop-group-title';
+      $t.textContent = title;
+      $g.appendChild($t);
+    }
+    fields.forEach(f => f && $g.appendChild(f));
+    $p.appendChild($g);
+  }
+  function row(label, $control) {
+    const $r = document.createElement('label');
+    $r.className = 'eb-prop-row';
+    const $l = document.createElement('span');
+    $l.className = 'eb-prop-label';
+    $l.textContent = label;
+    $r.appendChild($l);
+    $r.appendChild($control);
+    return $r;
+  }
+  function input(type, label, value, onChange, opts) {
+    opts = opts || {};
+    const $i = document.createElement('input');
+    $i.type = type === 'range' ? 'range' : type;
+    if (type === 'range') {
+      $i.min = opts.min ?? 0; $i.max = opts.max ?? 100; $i.step = opts.step ?? 1;
+      const $val = document.createElement('span');
+      $val.className = 'eb-range-val';
+      $val.textContent = value;
+      $i.value = value;
+      $i.addEventListener('input', () => { $val.textContent = $i.value; onChange($i.value); });
+      const $wrap = document.createElement('div');
+      $wrap.className = 'eb-range-wrap';
+      $wrap.appendChild($i); $wrap.appendChild($val);
+      return row(label, $wrap);
+    }
+    $i.value = value == null ? '' : value;
+    $i.addEventListener('input', () => onChange($i.value));
+    return row(label, $i);
+  }
+  function textarea(label, value, onChange, rows) {
+    const $t = document.createElement('textarea');
+    $t.rows = rows || 4;
+    $t.value = value || '';
+    $t.addEventListener('input', () => onChange($t.value));
+    return row(label, $t);
+  }
+  function select(label, options, value, onChange) {
+    const $s = document.createElement('select');
+    options.forEach(o => {
+      const $o = document.createElement('option');
+      $o.value = o.v; $o.textContent = o.l;
+      if (o.v === value) $o.selected = true;
+      $s.appendChild($o);
+    });
+    $s.addEventListener('change', () => onChange($s.value));
+    return row(label, $s);
+  }
+  function toggle(label, value, onChange) {
+    const $w = document.createElement('div'); $w.className = 'eb-toggle';
+    const $i = document.createElement('input'); $i.type = 'checkbox'; $i.checked = !!value;
+    $i.addEventListener('change', () => onChange($i.checked));
+    const $span = document.createElement('span'); $span.textContent = label;
+    $w.appendChild($i); $w.appendChild($span);
+    return $w;
+  }
+  function alignOpts() { return [{v:'left',l:'Left'},{v:'center',l:'Center'},{v:'right',l:'Right'}]; }
+  function columnsPicker(sec) {
+    const $w = document.createElement('div'); $w.className = 'eb-cols-picker';
+    [1,2,3,4].forEach(n => {
+      const $b = document.createElement('button');
+      $b.type = 'button';
+      $b.textContent = n;
+      $b.className = sec.columns === n ? 'is-active' : '';
+      $b.addEventListener('click', () => changeColumns(sec, n));
+      $w.appendChild($b);
+    });
+    return row('Columns', $w);
+  }
+  function changeColumns(sec, n) {
+    if (sec.columns === n) return;
+    if (n > sec.columns) {
+      while (sec.content.length < n) sec.content.push([]);
+    } else {
+      const overflow = sec.content.slice(n).flat();
+      sec.content = sec.content.slice(0, n);
+      sec.content[n - 1] = sec.content[n - 1].concat(overflow);
+    }
+    sec.columns = n;
+    pushHistory();
+    renderCanvas();
+    renderProperties();
+  }
+  function paddingGroup($p, d, simpleOnly) {
+    const items = [];
+    items.push(input('range', 'Padding top',    d.paddingTop,    v => { d.paddingTop = +v; renderCanvas(); deferred(); }, { min: 0, max: 80 }));
+    items.push(input('range', 'Padding bottom', d.paddingBottom, v => { d.paddingBottom = +v; renderCanvas(); deferred(); }, { min: 0, max: 80 }));
+    if (!simpleOnly && 'paddingLeft' in d) {
+      items.push(input('range', 'Padding left',  d.paddingLeft,  v => { d.paddingLeft = +v; renderCanvas(); deferred(); }, { min: 0, max: 80 }));
+      items.push(input('range', 'Padding right', d.paddingRight, v => { d.paddingRight = +v; renderCanvas(); deferred(); }, { min: 0, max: 80 }));
+    }
+    fieldGroup($p, 'Spacing', items);
+  }
+  function mobileGroup($p, d) {
+    const items = [];
+    items.push(toggle('Hide on mobile', !!d.hideOnMobile, v => { d.hideOnMobile = v; renderCanvas(); deferred(); }));
+    if ('mobileFontSize' in d) {
+      items.push(input('range', 'Mobile font size (0 = inherit)', d.mobileFontSize, v => { d.mobileFontSize = +v; deferred(); }, { min: 0, max: 32 }));
+    }
+    fieldGroup($p, 'Mobile', items);
+  }
+  function mergeTagPicker($p, blk, fieldName) {
+    const $g = document.createElement('div'); $g.className = 'eb-prop-group';
+    const $t = document.createElement('div'); $t.className = 'eb-prop-group-title';
+    $t.textContent = 'Merge tags'; $g.appendChild($t);
+    const $hint = document.createElement('div'); $hint.className = 'eb-hint';
+    $hint.textContent = 'Click to insert. Replaced with recipient data when the email is sent.';
+    $g.appendChild($hint);
+    const $w = document.createElement('div'); $w.className = 'eb-tag-grid';
+    MERGE_TAGS.forEach(t => {
+      const $b = document.createElement('button');
+      $b.type = 'button'; $b.className = 'eb-tag-btn';
+      $b.textContent = t.label;
+      $b.title = t.tag;
+      $b.addEventListener('click', () => {
+        if (fieldName) {
+          blk.data[fieldName] = (blk.data[fieldName] || '') + t.tag;
+          renderProperties();
+          renderCanvas();
+        } else {
+          // Insert at caret in the contenteditable
+          const el = document.querySelector('.eb-block[data-blk-id="'+blk.id+'"]');
+          if (el && el.isContentEditable) {
+            el.focus();
+            insertAtCaret(el, t.tag);
+            blk.data.content = el.innerHTML;
+            renderCanvas();
+          } else {
+            blk.data.content = (blk.data.content || '') + t.tag;
+            renderCanvas();
+          }
+        }
+        deferred();
+      });
+      $w.appendChild($b);
+    });
+    $g.appendChild($w);
+    $p.appendChild($g);
+  }
+  function insertAtCaret(el, text) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) { el.innerHTML += text; return; }
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+    range.collapse(false);
+    sel.removeAllRanges(); sel.addRange(range);
+  }
+  function imageUploadField(d, after, fieldName) {
+    fieldName = fieldName || 'src';
+    const $w = document.createElement('div'); $w.className = 'eb-upload';
+    const $btn = document.createElement('button'); $btn.type = 'button';
+    $btn.className = 'eb-upload-btn';
+    $btn.textContent = '⬆ Upload from computer';
+    const $file = document.createElement('input'); $file.type = 'file'; $file.accept = 'image/*'; $file.style.display = 'none';
+    $btn.addEventListener('click', () => $file.click());
+    $file.addEventListener('change', () => {
+      const f = $file.files[0]; if (!f) return;
+      const fd = new FormData(); fd.append('image', f); fd.append('csrf_token', state.csrfToken);
+      setStatus('Uploading…');
+      fetch('/api/email-builder-upload.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(resp => {
+          if (resp && resp.success && resp.url) {
+            d[fieldName] = resp.url;
+            setStatus('Uploaded');
+            setTimeout(() => setStatus(''), 1500);
+            after && after();
+            renderProperties();
+          } else {
+            setStatus(resp?.message || 'Upload failed', true);
+          }
+        }).catch(() => setStatus('Upload failed', true));
+    });
+    $w.appendChild($btn); $w.appendChild($file);
+    return row('Or upload', $w);
+  }
+  /* ============================================================
+   * Inline floating text toolbar
+   * ============================================================ */
+  let $tipBar = null;
+  function showInlineToolbar(el, blk) {
+    hideInlineToolbar();
+    $tipBar = document.createElement('div');
+    $tipBar.className = 'eb-inline-tools';
+    $tipBar.innerHTML = `
+      <button data-cmd="bold"        title="Bold (Ctrl+B)"><b>B</b></button>
+      <button data-cmd="italic"      title="Italic"><i>I</i></button>
+      <button data-cmd="underline"   title="Underline"><u>U</u></button>
+      <button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+      <span class="eb-sep"></span>
+      <button data-cmd="insertUnorderedList" title="Bulleted list">•</button>
+      <button data-cmd="insertOrderedList"   title="Numbered list">1.</button>
+      <span class="eb-sep"></span>
+      <button data-cmd="justifyLeft"   title="Align left">⇤</button>
+      <button data-cmd="justifyCenter" title="Center">⇔</button>
+      <button data-cmd="justifyRight"  title="Align right">⇥</button>
+      <span class="eb-sep"></span>
+      <button data-act="link"   title="Insert / edit link">🔗</button>
+      <button data-act="color"  title="Text color">🎨</button>
+      <button data-act="size"   title="Font size">A↕</button>
+      <button data-act="clear"  title="Clear formatting">✕f</button>
+    `;
+    document.body.appendChild($tipBar);
+    positionInlineToolbar(el);
+    $tipBar.addEventListener('mousedown', e => e.preventDefault());  // keep focus in editor
+    $tipBar.addEventListener('click', e => {
+      const $btn = e.target.closest('button'); if (!$btn) return;
+      el.focus();
+      if ($btn.dataset.cmd) {
+        document.execCommand($btn.dataset.cmd, false, null);
+      } else if ($btn.dataset.act === 'link') {
+        const url = prompt('Link URL', getSelectionLink() || 'https://');
+        if (url !== null) {
+          if (url) document.execCommand('createLink', false, url);
+          else document.execCommand('unlink', false, null);
+        }
+      } else if ($btn.dataset.act === 'color') {
+        const c = prompt('Hex color (e.g. #ff5500)', '#000000');
+        if (c) document.execCommand('foreColor', false, c);
+      } else if ($btn.dataset.act === 'size') {
+        const s = prompt('Font size in px', '16');
+        if (s) {
+          // execCommand fontSize uses 1-7. Wrap in span instead.
+          wrapSelection('font-size:' + parseInt(s,10) + 'px');
+        }
+      } else if ($btn.dataset.act === 'clear') {
+        document.execCommand('removeFormat', false, null);
+        document.execCommand('unlink', false, null);
+      }
+      blk.data.content = el.innerHTML;
+      deferred();
+    });
+  }
+  function positionInlineToolbar(el) {
+    if (!$tipBar) return;
+    const r = el.getBoundingClientRect();
+    $tipBar.style.top  = (window.scrollY + r.top - 44) + 'px';
+    $tipBar.style.left = (window.scrollX + r.left) + 'px';
+  }
+  function hideInlineToolbar() {
+    if ($tipBar) { $tipBar.remove(); $tipBar = null; }
+  }
+  function getSelectionLink() {
+    const s = window.getSelection(); if (!s.anchorNode) return '';
+    let n = s.anchorNode;
+    while (n && n.nodeName !== 'A' && n.parentNode) n = n.parentNode;
+    return n && n.nodeName === 'A' ? n.getAttribute('href') : '';
+  }
+  function wrapSelection(styleStr) {
+    const sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    span.setAttribute('style', styleStr);
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+    sel.removeAllRanges();
+  }
+  /* ============================================================
+   * Actions (section / block buttons)
+   * ============================================================ */
+  function sectionAction(id, act) {
+    const idx = state.sections.findIndex(s => s.id === id);
+    if (idx < 0) return;
+    if (act === 'del') {
+      if (!confirm('Delete this section?')) return;
+      state.sections.splice(idx, 1);
+      pushHistory(); renderCanvas(); selectBody(); return;
+    }
+    if (act === 'dup') {
+      const dup = clone(state.sections[idx]);
+      dup.id = uid('sec');
+      dup.content.forEach(col => col.forEach(b => b.id = uid('blk')));
+      state.sections.splice(idx + 1, 0, dup);
+      pushHistory(); renderCanvas(); selectSection(dup.id); return;
+    }
+    if (act === 'up' && idx > 0) {
+      [state.sections[idx-1], state.sections[idx]] = [state.sections[idx], state.sections[idx-1]];
+      pushHistory(); renderCanvas(); return;
+    }
+    if (act === 'down' && idx < state.sections.length - 1) {
+      [state.sections[idx+1], state.sections[idx]] = [state.sections[idx], state.sections[idx+1]];
+      pushHistory(); renderCanvas(); return;
+    }
+    if (act === 'set') { selectSection(id); }
+  }
+  function blockAction(id, act) {
+    const found = findBlock(id); if (!found) return;
+    if (act === 'del') {
+      found.sec.content[found.col].splice(found.idx, 1);
+      pushHistory(); renderCanvas(); selectBody(); return;
+    }
+    if (act === 'dup') {
+      const dup = clone(found.block); dup.id = uid('blk');
+      found.sec.content[found.col].splice(found.idx + 1, 0, dup);
+      pushHistory(); renderCanvas(); selectBlock(dup.id); return;
+    }
+  }
+  /* ============================================================
+   * Preview iframe
+   * ============================================================ */
+  function renderPreview() {
+    const $frame = document.getElementById('eb-preview');
+    if (!$frame) return;
+    const html = getHTML();
+    $frame.srcdoc = html;
+    // Size
+    const widths = { desktop: 640, tablet: 480, mobile: 360 };
+    $frame.style.width = (widths[state.previewSize] || 640) + 'px';
+  }
+  /* ============================================================
+   * Direction & dark-mode
+   * ============================================================ */
+  function setDirection(dir) {
+    state.meta.dir = dir === 'rtl' ? 'rtl' : 'ltr';
+    document.documentElement.setAttribute('data-eb-dir', state.meta.dir);
+    renderCanvas();
+    renderProperties();
+    deferred();
+  }
+  function setDarkMode(on) {
+    state.meta.darkMode = !!on;
+    document.documentElement.classList.toggle('eb-dark-preview', !!on);
+    renderPreview();
+    deferred();
+  }
+  function setPreviewSize(s) {
+    if (!['desktop','tablet','mobile'].includes(s)) s = 'desktop';
+    state.previewSize = s;
+    updateToolbarButtons();
+    renderPreview();
+  }
+  /* ============================================================
+   * Keyboard shortcuts
+   * ============================================================ */
+  function bindKeyboard() {
+    document.addEventListener('keydown', e => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if (mod && ((e.key === 'z' && e.shiftKey) || e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); }
+      else if (mod && (e.key === 'd' || e.key === 'D')) {
+        if (state.selectedKind === 'block') { e.preventDefault(); blockAction(state.selectedId, 'dup'); }
+        else if (state.selectedKind === 'section') { e.preventDefault(); sectionAction(state.selectedId, 'dup'); }
+      }
+      else if (mod && (e.key === 's' || e.key === 'S')) { e.preventDefault(); autosave(); }
+      else if (e.key === 'Delete' && !isTextEditing()) {
+        if (state.selectedKind === 'block') { e.preventDefault(); blockAction(state.selectedId, 'del'); }
+        else if (state.selectedKind === 'section') { e.preventDefault(); sectionAction(state.selectedId, 'del'); }
+      }
+    });
+  }
+  function isTextEditing() {
+    const a = document.activeElement;
+    return a && (a.isContentEditable || a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+  }
+  /* ============================================================
+   * JSON in/out
+   * ============================================================ */
+  function getJSON() {
+    return JSON.stringify({
+      version: 2,
+      body: state.body,
+      meta: state.meta,
+      sections: state.sections
+    });
+  }
+  /* ============================================================
+   * Email-safe HTML exporter (table-based)
+   * ============================================================ */
+  function getHTML() {
+    const b = state.body;
+    const dir = state.meta.dir;
+    const sectionsHtml = state.sections.map(renderSectionForEmail).join('');
+    const mobileCss = `
+      @media only screen and (max-width:480px) {
+        .eb-content { width:100% !important; }
+        .eb-col { display:block !important; width:100% !important; }
+        .eb-hide-mobile { display:none !important; }
+        .eb-mobile-stack > tbody > tr > td { display:block !important; width:100% !important; }
+      }
+      @media (prefers-color-scheme: dark) {
+        body.eb-supports-dark { background:#111 !important; color:#eee !important; }
+        body.eb-supports-dark .eb-content { background:#1a1a1a !important; }
+      }
+    `;
+    const preheader = b.preheader ? `<div style="display:none;font-size:1px;color:${esc(b.backgroundColor)};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${esc(b.preheader)}</div>` : '';
+    return `<!doctype html>
+<html lang="${dir === 'rtl' ? 'ar' : 'en'}" dir="${dir}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>${esc(state.meta.subject || state.meta.name || 'Email')}</title>
+<!--[if mso]>
+<style type="text/css">
+table { border-collapse:collapse; }
+.eb-btn-mso { mso-padding-alt:0; }
+</style>
+<![endif]-->
+<style>
+  body { margin:0; padding:0; -webkit-font-smoothing:antialiased; }
+  table { border-collapse:collapse; mso-table-lspace:0; mso-table-rspace:0; }
+  img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; display:block; }
+  a { text-decoration:none; color:${esc(b.linkColor)}; }
+  .eb-content { background:${esc(b.contentBackground)}; }
+  ${mobileCss}
+</style>
+</head>
+<body class="eb-supports-dark" dir="${dir}" style="margin:0;padding:0;background:${esc(b.backgroundColor)};font-family:${esc(b.fontFamily)};color:${esc(b.textColor)};font-size:${b.fontSize}px;line-height:${b.lineHeight};">
+${preheader}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${esc(b.backgroundColor)}" style="background:${esc(b.backgroundColor)};">
+  <tr><td align="center" style="padding:${b.paddingTop}px 0 ${b.paddingBottom}px;">
+    <!--[if mso]><table role="presentation" width="${b.contentWidth}" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+    <table role="presentation" class="eb-content" width="${b.contentWidth}" cellpadding="0" cellspacing="0" border="0" style="width:${b.contentWidth}px;max-width:100%;background:${esc(b.contentBackground)};">
+      ${sectionsHtml}
+    </table>
+    <!--[if mso]></td></tr></table><![endif]-->
+  </td></tr>
+</table>
+</body>
+</html>`;
+  }
+  function renderSectionForEmail(sec) {
+    const cls = (sec.hideOnMobile ? 'eb-hide-mobile ' : '') + (sec.stackOnMobile ? 'eb-mobile-stack ' : '');
+    const pad = `padding:${sec.paddingTop}px ${sec.paddingRight}px ${sec.paddingBottom}px ${sec.paddingLeft}px;`;
+    const bt  = sec.borderTopWidth    ? `border-top:${sec.borderTopWidth}px ${sec.borderTopStyle} ${sec.borderTopColor};` : '';
+    const bb  = sec.borderBottomWidth ? `border-bottom:${sec.borderBottomWidth}px ${sec.borderBottomStyle} ${sec.borderBottomColor};` : '';
+    const inner = renderSectionColumns(sec);
+    return `<tr><td class="${cls.trim()}" bgcolor="${esc(sec.bgColor)}" style="${pad}background:${esc(sec.bgColor)};${bt}${bb}">${inner}</td></tr>`;
+  }
+  function renderSectionColumns(sec) {
+    if (sec.columns === 1) {
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td>${(sec.content[0]||[]).map(renderBlockForEmail).join('')}</td></tr></table>`;
+    }
+    const colW = Math.floor(100 / sec.columns);
+    const cells = [];
+    for (let c = 0; c < sec.columns; c++) {
+      const inside = (sec.content[c] || []).map(renderBlockForEmail).join('');
+      const gapStyle = c < sec.columns - 1 ? `padding-${state.meta.dir === 'rtl' ? 'left' : 'right'}:${sec.gap}px;` : '';
+      cells.push(`<td class="eb-col" width="${colW}%" valign="top" style="width:${colW}%;${gapStyle}">${inside}</td>`);
+    }
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="${sec.stackOnMobile ? 'eb-mobile-stack' : ''}"><tr>${cells.join('')}</tr></table>`;
+  }
+  function renderBlockForEmail(blk) {
+    const d = blk.data;
+    const cls = d.hideOnMobile ? ' class="eb-hide-mobile"' : '';
+    switch (blk.type) {
+      case 'text':
+      case 'footer': {
+        const style = textBlockStyle(d);
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td style="${style}">${d.content || ''}</td></tr></table>`;
+      }
+      case 'heading': {
+        const style = textBlockStyle(d);
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td style="${style}">${d.content || ''}</td></tr></table>`;
+      }
+      case 'image': {
+        const alignAttr = d.align === 'center' ? 'center' : (d.align === 'right' ? 'right' : 'left');
+        const pad = `padding:${d.paddingTop}px ${d.paddingRight||0}px ${d.paddingBottom}px ${d.paddingLeft||0}px;`;
+        const border = d.borderWidth ? `border:${d.borderWidth}px ${d.borderStyle} ${d.borderColor};` : '';
+        const bg = d.backgroundColor && d.backgroundColor !== 'transparent' ? `background:${d.backgroundColor};` : '';
+        const imgTag = `<img src="${esc(d.src)}" alt="${esc(d.alt)}" width="${d.width === 100 ? '100%' : Math.round((state.body.contentWidth) * (d.width/100))}" style="display:block;max-width:100%;width:${d.width}%;border-radius:${d.borderRadius}px;${border}" />`;
+        const wrappedImg = d.linkUrl ? `<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${imgTag}</a>` : imgTag;
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td align="${alignAttr}" style="${pad}${bg}">${wrappedImg}</td></tr></table>`;
+      }
+      case 'button': {
+        const alignAttr = d.align === 'center' ? 'center' : (d.align === 'right' ? 'right' : 'left');
+        const pad = `padding:${d.paddingTop}px 0 ${d.paddingBottom}px;`;
+        const radius = d.borderRadius;
+        const ff = d.fontFamily ? `font-family:${d.fontFamily};` : '';
+        const btnStyle =
+          `background:${d.bgColor};color:${d.textColor};${ff}font-size:${d.fontSize}px;font-weight:${d.fontWeight};` +
+          `letter-spacing:${d.letterSpacing}px;text-transform:${d.textTransform};` +
+          `border-radius:${radius}px;` + (d.borderWidth ? `border:${d.borderWidth}px ${d.borderStyle} ${d.borderColor};` : 'border:0;') +
+          `padding:${d.paddingV}px ${d.paddingH}px;display:${d.fullWidth ? 'block' : 'inline-block'};text-decoration:none;mso-padding-alt:0;`;
+        const msoFallback = `
+<!--[if mso]>
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${esc(d.url)}" style="height:${(d.fontSize + d.paddingV*2)}px;v-text-anchor:middle;width:${d.fullWidth ? 480 : 200}px;" arcsize="${Math.round(radius/(d.fontSize + d.paddingV*2)*100)}%" stroke="f" fillcolor="${d.bgColor}">
+<w:anchorlock/>
+<center style="color:${d.textColor};font-family:${esc(d.fontFamily || state.body.fontFamily)};font-size:${d.fontSize}px;font-weight:${d.fontWeight};">${esc(d.text)}</center>
+</v:roundrect>
+<![endif]-->`;
+        const realBtn = `<a href="${esc(d.url)}" target="_blank" rel="noopener" style="${btnStyle}">${esc(d.text)}</a>`;
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td align="${alignAttr}" style="${pad}">${msoFallback}<!--[if !mso]><!-- -->${realBtn}<!--<![endif]--></td></tr></table>`;
+      }
+      case 'divider': {
+        const alignAttr = d.align === 'center' ? 'center' : (d.align === 'right' ? 'right' : 'left');
+        const pad = `padding:${d.paddingTop}px 0 ${d.paddingBottom}px;`;
+        const widthStyle = d.width === 100 ? 'width:100%;' : `width:${d.width}%;`;
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td align="${alignAttr}" style="${pad}"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="${widthStyle}"><tr><td style="border-top:${d.thickness}px ${d.style} ${d.color};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr></table>`;
+      }
+      case 'spacer': {
+        const bg = d.backgroundColor && d.backgroundColor !== 'transparent' ? `background:${d.backgroundColor};` : '';
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td height="${d.height}" style="height:${d.height}px;font-size:0;line-height:0;${bg}">&nbsp;</td></tr></table>`;
+      }
+      case 'html': {
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td style="padding:${d.paddingTop}px 0 ${d.paddingBottom}px;">${d.content || ''}</td></tr></table>`;
+      }
+      case 'social': {
+        const alignAttr = d.align === 'center' ? 'center' : (d.align === 'right' ? 'right' : 'left');
+        const radius = d.shape === 'circle' ? '50%' : d.shape === 'rounded' ? '6px' : '0';
+        const size = d.iconSize;
+        const cellSize = Math.round(size * 1.6);
+        const items = d.platforms.filter(p => p.enabled && p.url).map(p => {
+          return `<td style="padding:0 ${Math.round(d.spacing/2)}px;"><a href="${esc(p.url)}" target="_blank" rel="noopener" style="display:inline-block;width:${cellSize}px;height:${cellSize}px;line-height:${cellSize}px;background:${d.bgColor};color:${d.iconColor};border-radius:${radius};text-align:center;font-weight:700;font-family:${esc(state.body.fontFamily)};font-size:${Math.round(size*0.6)}px;text-decoration:none;">${esc(p.id[0].toUpperCase())}</a></td>`;
+        }).join('');
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td align="${alignAttr}" style="padding:${d.paddingTop}px 0 ${d.paddingBottom}px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${items}</tr></table></td></tr></table>`;
+      }
+      case 'video': {
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${cls}><tr><td align="center" style="padding:${d.paddingTop}px 0 ${d.paddingBottom}px;"><a href="${esc(d.url)}" target="_blank" rel="noopener"><img src="${esc(d.thumbSrc)}" alt="${esc(d.alt)}" style="display:block;max-width:100%;" /></a></td></tr></table>`;
+      }
+    }
+    return '';
+  }
+  function textBlockStyle(d) {
+    const ff = d.fontFamily ? `font-family:${d.fontFamily};` : '';
+    const color = d.color ? `color:${d.color};` : '';
+    const bg = d.backgroundColor && d.backgroundColor !== 'transparent' ? `background:${d.backgroundColor};` : '';
+    return `${ff}font-size:${d.fontSize}px;font-weight:${d.fontWeight};font-style:${d.fontStyle};text-align:${d.textAlign};${color}line-height:${d.lineHeight};letter-spacing:${d.letterSpacing}px;padding:${d.paddingTop}px ${d.paddingRight||0}px ${d.paddingBottom}px ${d.paddingLeft||0}px;${bg}`;
+  }
+  /* ============================================================
+   * View HTML modal + Send test
+   * ============================================================ */
+  function showHtmlModal() {
+    const html = getHTML();
+    const bytes = new Blob([html]).size;
+    const modal = openModal('Exported HTML',
+      `<p style="margin:0 0 8px;color:#666;font-size:13px;">${bytes} bytes ${bytes > MAX_HTML_BYTES ? '<span style="color:#c0392b;">— Gmail may clip emails over 102 KB</span>' : ''}</p>
+       <textarea readonly style="width:100%;height:380px;font-family:monospace;font-size:12px;">${esc(html)}</textarea>
+       <div style="display:flex;gap:8px;margin-top:10px;">
+         <button id="eb-copy">Copy</button>
+         <button id="eb-dl">Download .html</button>
+       </div>`);
+    modal.querySelector('#eb-copy').onclick = () => { navigator.clipboard.writeText(html); setStatus('Copied'); setTimeout(()=>setStatus(''),1500); };
+    modal.querySelector('#eb-dl').onclick = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+      a.download = (state.meta.name || 'email') + '.html';
+      a.click();
+    };
+  }
+  function promptSendTest() {
+    const to = prompt('Send test email to:', '');
+    if (!to) return;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { alert('Invalid email'); return; }
+    sendTest(to);
+  }
+  function sendTest(to) {
+    setStatus('Sending test…');
+    fetch('/api/email-campaigns.php?action=send_test&_cb=' + Date.now(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        csrf_token: state.csrfToken,
+        to: to,
+        subject: state.meta.subject || 'Test from email builder',
+        html: getHTML()
+      })
+    }).then(r => r.json()).then(resp => {
+      if (resp && resp.success) { setStatus('Test sent ✓'); setTimeout(()=>setStatus(''),2500); }
+      else setStatus(resp?.message || 'Test failed', true);
+    }).catch(() => setStatus('Network error', true));
+  }
+  function openModal(title, innerHtml) {
+    const $wrap = document.createElement('div'); $wrap.className = 'eb-modal-wrap';
+    $wrap.innerHTML = `<div class="eb-modal"><div class="eb-modal-header"><strong>${esc(title)}</strong><button class="eb-modal-close">✕</button></div><div class="eb-modal-body">${innerHtml}</div></div>`;
+    $wrap.querySelector('.eb-modal-close').onclick = () => $wrap.remove();
+    $wrap.addEventListener('click', e => { if (e.target === $wrap) $wrap.remove(); });
+    document.body.appendChild($wrap);
+    return $wrap;
+  }
+  /* ============================================================
+   * Deferred (text edits that snapshot on commit)
+   * ============================================================ */
+  let deferTimer = null;
+  function deferred() {
+    state.isDirty = true;
+    scheduleAutosave();
+    clearTimeout(deferTimer);
+    deferTimer = setTimeout(() => pushHistory(), 600);
+  }
+  /* ============================================================
+   * Public API
+   * ============================================================ */
+  root.EmailBuilder = {
+    init: init,
+    getJSON: getJSON,
+    getHTML: getHTML,
+    setPreviewSize: setPreviewSize,
+    setDirection: setDirection,
+    setDarkMode: setDarkMode,
+    undo: undo,
+    redo: redo,
+    sendTest: sendTest
+  };
+})(window);

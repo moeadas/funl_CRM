@@ -327,6 +327,17 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    if (text == null) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 var isSalesRep = <?php echo $isSalesRep ? 'true' : 'false'; ?>;
 let currentLeads = [];
 let currentPage = 1;
@@ -442,9 +453,9 @@ function loadLeads(page) {
                 var errorMsg = data.message || 'Failed to load leads';
                 var colSpan = isSalesRep ? 9 : 11;
                 if (currentView === 'list') {
-                    document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + escapeHtml(errorMsg) + '</td></tr>';
+                    document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + errorMsg + '</td></tr>';
                 } else {
-                    document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;">' + escapeHtml(errorMsg) + '</div>';
+                    document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;">' + errorMsg + '</div>';
                 }
             }
         })
