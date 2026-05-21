@@ -835,6 +835,11 @@
   function destroyAllSortables() {
     state.sortableInstances.forEach(s => { try { s.destroy(); } catch (_) {} });
     state.sortableInstances = [];
+    // Reset dataset flags so palette sortables get re-initialized
+    ['eb-palette-sections','eb-palette-layouts','eb-palette-blocks'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) delete el.dataset.sortInit;
+    });
   }
   function initSortables() {
     if (!window.Sortable) return;
