@@ -50,7 +50,7 @@ try {
             if (!$input) $input = $_POST;
             
             $stmt = $db->prepare("
-                INSERT INTO email_templates (company_id, name, subject, content_json, html_content, created_by, created_at)
+                INSERT INTO email_templates (company_id, name, subject, content_json, content_html, created_by, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, NOW())
             ");
             $stmt->execute([
@@ -58,7 +58,7 @@ try {
                 $input['name'] ?? 'New Template',
                 $input['subject'] ?? '',
                 $input['content_json'] ?? '{}',
-                $input['html_content'] ?? '',
+                $input['content_html'] ?? '',
                 $currentUser['user_id']
             ]);
             jsonSuccess('Template created', ['template_id' => $db->lastInsertId()]);
@@ -77,7 +77,7 @@ try {
                     name = COALESCE(?, name),
                     subject = COALESCE(?, subject),
                     content_json = COALESCE(?, content_json),
-                    html_content = COALESCE(?, html_content),
+                    content_html = COALESCE(?, content_html),
                     updated_at = NOW()
                 WHERE template_id = ? AND company_id = ?
             ");
@@ -85,7 +85,7 @@ try {
                 $input['name'] ?? null,
                 $input['subject'] ?? null,
                 $input['content_json'] ?? null,
-                $input['html_content'] ?? null,
+                $input['content_html'] ?? null,
                 $id, $companyId
             ]);
             jsonSuccess('Template updated');
@@ -102,13 +102,13 @@ try {
             $stmt = $db->prepare("
                 UPDATE email_templates SET
                     content_json = ?,
-                    html_content = ?,
+                    content_html = ?,
                     updated_at = NOW()
                 WHERE template_id = ? AND company_id = ?
             ");
             $stmt->execute([
                 $input['content_json'] ?? '{}',
-                $input['html_content'] ?? '',
+                $input['content_html'] ?? '',
                 $id, $companyId
             ]);
             jsonSuccess('Template content saved');
