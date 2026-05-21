@@ -849,6 +849,17 @@
       }));
       $secPalette.dataset.sortInit = '1';
     }
+    // Palette: layouts (clone-only, same group as sections)
+    const $layPalette = document.getElementById('eb-palette-layouts');
+    if ($layPalette && !$layPalette.dataset.sortInit) {
+      state.sortableInstances.push(new Sortable($layPalette, {
+        group: { name: 'eb-sections', pull: 'clone', put: false },
+        sort: false,
+        animation: 150,
+        ghostClass: 'eb-ghost'
+      }));
+      $layPalette.dataset.sortInit = '1';
+    }
     // Palette: blocks (clone-only)
     const $blkPalette = document.getElementById('eb-palette-blocks');
     if ($blkPalette && !$blkPalette.dataset.sortInit) {

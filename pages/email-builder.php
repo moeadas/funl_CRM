@@ -105,7 +105,7 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
     </div>
     <h4>Empty layouts</h4>
-    <div class="eb-pal-grid">
+    <div class="eb-pal-grid" id="eb-palette-layouts">
       <div class="eb-pal-item" data-cols="1" draggable="false">
         <span class="eb-pal-ico">▌</span><span>1 col</span>
       </div>
