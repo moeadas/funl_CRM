@@ -295,7 +295,7 @@ function getAvatarColor($name) {
 /**
  * Success response JSON
  */
-function jsonSuccess($message, $data = null) {
+function jsonSuccess(string $message, ?array $data = null) {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
@@ -402,7 +402,7 @@ function formatPhone($phone) {
 
 // Encryption helpers for sensitive data (OAuth tokens, SMTP passwords)
 // Uses libsodium if available, falls back to OpenSSL AES-256-GCM
-function encryptToken($plaintext, $key = null) {
+function encryptToken(string $plaintext, ?string $key = null) {
     if ($key === null) {
         $key = getenv('APP_ENCRYPTION_KEY');
     }
@@ -423,7 +423,7 @@ function encryptToken($plaintext, $key = null) {
     }
 }
 
-function decryptToken($encrypted, $key = null) {
+function decryptToken(string $encrypted, ?string $key = null) {
     if ($key === null) {
         $key = getenv('APP_ENCRYPTION_KEY');
     }

@@ -195,7 +195,7 @@ function hashPassword($password) {
 /**
  * Log activity
  */
-function logActivity($userId, $action, $entityType, $entityId = null, $details = null) {
+function logActivity($userId, $action, string $entityType, ?int $entityId = null, ?string $details = null) {
     try {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("
@@ -272,7 +272,7 @@ function generateCSRFToken() {
 /**
  * Verify CSRF token with expiry check (2 hour max)
  */
-function verifyCSRFTokenWithExpiry($token = null) {
+function verifyCSRFTokenWithExpiry(?string $token = null) {
     if ($token === null) {
         $token = $_POST['csrf_token'] ?? null;
         if ($token === null) {
@@ -295,7 +295,7 @@ function verifyCSRFTokenWithExpiry($token = null) {
  * Verify CSRF token — works for both POST forms and JSON API requests
  * (backward-compatible: does NOT check expiry)
  */
-function verifyCSRFToken($token = null) {
+function verifyCSRFToken(?string $token = null) {
     if ($token === null) {
         // Try POST, then JSON body
         $token = $_POST['csrf_token'] ?? null;
@@ -450,7 +450,7 @@ function switchBack() {
  * @param int|null $companyId
  * @return string SQL snippet
  */
-function scopeByCompany($table, $companyId = null) {
+function scopeByCompany(string $table, ?int $companyId = null) {
     if ($companyId === null) {
         $companyId = $_SESSION['company_id'] ?? null;
     }

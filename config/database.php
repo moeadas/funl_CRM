@@ -159,6 +159,7 @@ class Database {
         $replacements = [
             '/`([^`]+)`/'                         => '"$1"',           // backticks to double quotes
             '/NOW\(\)/i'                          => "datetime('now')",
+            /* Note: strftime used for SQLite compat; will be replaced in future */
             '/UNIX_TIMESTAMP\(\)/i'               => "strftime('%s','now')",
             '/\bIFNULL\b/i'                        => 'COALESCE',
             '/\bAUTO_INCREMENT\b/i'                => '',

@@ -42,7 +42,7 @@ function getClientIP() {
  * @param string $ip Override IP (optional)
  * @return bool True if allowed
  */
-function rateLimit($key, $maxAttempts, $windowSeconds, $ip = null) {
+function rateLimit(string $key, int $maxAttempts, int $windowSeconds, ?string $ip = null) {
     $ip = $ip ?: getClientIP();
     $cacheDir = sys_get_temp_dir() . '/wlrm_rate';
     
@@ -86,7 +86,7 @@ function rateLimit($key, $maxAttempts, $windowSeconds, $ip = null) {
 /**
  * Get remaining attempts for a rate limit key
  */
-function rateLimitRemaining($key, $maxAttempts, $windowSeconds, $ip = null) {
+function rateLimitRemaining(string $key, int $maxAttempts, int $windowSeconds, ?string $ip = null) {
     $ip = $ip ?: getClientIP();
     $cacheDir = sys_get_temp_dir() . '/wlrm_rate';
     $cacheFile = $cacheDir . '/' . md5($key . '_' . $ip) . '.json';
@@ -110,7 +110,7 @@ function rateLimitRemaining($key, $maxAttempts, $windowSeconds, $ip = null) {
 /**
  * Clear rate limit for a key
  */
-function rateLimitClear($key, $ip = null) {
+function rateLimitClear(string $key, ?string $ip = null) {
     $ip = $ip ?: getClientIP();
     $cacheDir = sys_get_temp_dir() . '/wlrm_rate';
     $cacheFile = $cacheDir . '/' . md5($key . '_' . $ip) . '.json';
@@ -184,7 +184,7 @@ function isValidUrlAdvanced($url) {
 /**
  * Log security event
  */
-function logSecurityEvent($type, $description, $userId = null, $ip = null) {
+function logSecurityEvent(string $type, string $description, ?int $userId = null, ?string $ip = null) {
     $ip = $ip ?: getClientIP();
     try {
         $db = Database::getInstance();
