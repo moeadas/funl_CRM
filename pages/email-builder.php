@@ -109,7 +109,7 @@ require_once '../includes/header.php';
 
 <div class="builder-wrap">
   <!-- Left Palette -->
-  <div class="builder-palette">
+  <div class="builder-palette" id="palette-items">
     <div class="palette-section">
       <h3>📐 Sections</h3>
       <div class="palette-item" data-section="1" draggable="true">

@@ -313,13 +313,27 @@ function getLeadStats($db, $currentUser) {
     }
     
     $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-    $andClause = $where ? 'AND ' . implode(' AND ', $where) : '';
     
     $stats = [];
-    $stats['total']      = $db->prepare("SELECT COUNT(*) as c FROM leads $whereClause")->execute($params)->fetch()['c'];
-    $stats['by_status']  = $db->prepare("SELECT lead_status, COUNT(*) as count FROM leads $whereClause GROUP BY lead_status")->execute($params)->fetchAll(PDO::FETCH_KEY_PAIR);
-    $stats['by_country'] = $db->prepare("SELECT country, COUNT(*) as count FROM leads WHERE country IS NOT NULL AND country != '' $andClause GROUP BY country ORDER BY count DESC")->execute($params)->fetchAll(PDO::FETCH_KEY_PAIR);
-    $stats['this_month'] = $db->prepare("SELECT COUNT(*) as c FROM leads WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW()) $andClause")->execute($params)->fetch()['c'];
+    
+    $stmt = $db->prepare("SELECT COUNT(*) as c FROM leads $whereClause");
+    $stmt->execute($params);
+    $stats['total'] = $stmt->fetch()['c'] ?? 0;
+    
+    $stmt = $db->prepare("SELECT lead_status, COUNT(*) as count FROM leads $whereClause GROUP BY lead_status");
+    $stmt->execute($params);
+    $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    $countryWhere = $where ? $whereClause . " AND country IS NOT NULL AND country != ''" : "WHERE country IS NOT NULL AND country != ''";
+    $stmt = $db->prepare("SELECT country, COUNT(*) as count FROM leads $countryWhere GROUP BY country ORDER BY count DESC");
+    $stmt->execute($params);
+    $stats['by_country'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    $monthWhere = $where ? $whereClause . " AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())" : "WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())";
+    $stmt = $db->prepare("SELECT COUNT(*) as c FROM leads $monthWhere");
+    $stmt->execute($params);
+    $stats['this_month'] = $stmt->fetch()['c'] ?? 0;
+    
     jsonSuccess('Stats retrieved', $stats);
 }
 
