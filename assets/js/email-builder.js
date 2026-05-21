@@ -1644,6 +1644,13 @@
     if (!['desktop','tablet','mobile'].includes(s)) s = 'desktop';
     state.previewSize = s;
     updateToolbarButtons();
+    // Apply responsive width to edit canvas too
+    const $wrap = document.getElementById('eb-canvas-wrap');
+    if ($wrap) {
+      const widths = { desktop: 640, tablet: 480, mobile: 360 };
+      $wrap.style.transition = 'max-width .3s ease';
+      $wrap.style.maxWidth = (widths[s] || 640) + 'px';
+    }
     renderPreview();
   }
   /* ============================================================
