@@ -25,12 +25,23 @@ $leadTypes = ['Business','Individual','Partner','Reseller','Other'];
 $priorities = ['Low', 'Medium', 'High', 'Urgent'];
 $sources = ['Website', 'Facebook', 'Instagram', 'Google Ads', 'LinkedIn', 'Referral', 'Cold Outreach', 'Event', 'Import', 'Other'];
 
-// Dynamic country list — only countries the user can see
-if ($isSalesRep) {
-    $countryStmt = $db->prepare("SELECT DISTINCT country FROM leads WHERE country IS NOT NULL AND country != '' AND (assigned_to = ? OR created_by = ?) ORDER BY country ASC");
-    $countryStmt->execute([$currentUser['user_id'], $currentUser['user_id']]);
+// Dynamic country list — scoped by company
+$companyId = $_SESSION['company_id'] ?? null;
+if ($companyId) {
+    if ($isSalesRep) {
+        $countryStmt = $db->prepare("SELECT DISTINCT country FROM leads WHERE country IS NOT NULL AND country != '' AND company_id = ? AND (assigned_to = ? OR created_by = ?) ORDER BY country ASC");
+        $countryStmt->execute([$companyId, $currentUser['user_id'], $currentUser['user_id']]);
+    } else {
+        $countryStmt = $db->prepare("SELECT DISTINCT country FROM leads WHERE country IS NOT NULL AND country != '' AND company_id = ? ORDER BY country ASC");
+        $countryStmt->execute([$companyId]);
+    }
 } else {
-    $countryStmt = $db->query("SELECT DISTINCT country FROM leads WHERE country IS NOT NULL AND country != '' ORDER BY country ASC");
+    if ($isSalesRep) {
+        $countryStmt = $db->prepare("SELECT DISTINCT country FROM leads WHERE country IS NOT NULL AND country != '' AND (assigned_to = ? OR created_by = ?) ORDER BY country ASC");
+        $countryStmt->execute([$currentUser['user_id'], $currentUser['user_id']]);
+    } else {
+        $countryStmt = $db->query("SELECT DISTINCT country FROM leads WHERE country IS NOT NULL AND country != '' ORDER BY country ASC");
+    }
 }
 $countries = $countryStmt->fetchAll(PDO::FETCH_COLUMN);
 

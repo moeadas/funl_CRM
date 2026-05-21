@@ -422,16 +422,29 @@ function updateLead($db, $data, $currentUser) {
     // Convert empty strings to null for nullable/enum/int fields
     $newAssignedTo = emptyToNull($data['assigned_to'] ?? null);
 
-    $stmt = $db->prepare("
-        UPDATE leads SET
-            lead_type = ?, company_name = ?, contact_person = ?, title_position = ?,
-            region = ?, country = ?, city = ?, address = ?, phone = ?, mobile = ?,
-            email = ?, website = ?, facebook_url = ?, instagram_url = ?, linkedin_url = ?,
-            twitter_url = ?, youtube_url = ?, industry = ?, company_size = ?, annual_revenue = ?, notes = ?, lead_status = ?, lead_source = ?,
-            priority = ?, assigned_to = ?
-        WHERE lead_id = ?
-    ");
-    $stmt->execute([
+    $companyId = $currentUser['company_id'] ?? null;
+    if ($companyId) {
+        $stmt = $db->prepare("
+            UPDATE leads SET
+                lead_type = ?, company_name = ?, contact_person = ?, title_position = ?,
+                region = ?, country = ?, city = ?, address = ?, phone = ?, mobile = ?,
+                email = ?, website = ?, facebook_url = ?, instagram_url = ?, linkedin_url = ?,
+                twitter_url = ?, youtube_url = ?, industry = ?, company_size = ?, annual_revenue = ?, notes = ?, lead_status = ?, lead_source = ?,
+                priority = ?, assigned_to = ?
+            WHERE lead_id = ? AND company_id = ?
+        ");
+    } else {
+        $stmt = $db->prepare("
+            UPDATE leads SET
+                lead_type = ?, company_name = ?, contact_person = ?, title_position = ?,
+                region = ?, country = ?, city = ?, address = ?, phone = ?, mobile = ?,
+                email = ?, website = ?, facebook_url = ?, instagram_url = ?, linkedin_url = ?,
+                twitter_url = ?, youtube_url = ?, industry = ?, company_size = ?, annual_revenue = ?, notes = ?, lead_status = ?, lead_source = ?,
+                priority = ?, assigned_to = ?
+            WHERE lead_id = ?
+        ");
+    }
+    $params = [
         $data['lead_type'] ?? 'Other', emptyToNull($data['company_name'] ?? null) ?: 'Unknown Company',
         $contactPerson, emptyToNull($data['title_position'] ?? null),
         $data['region'] ?? 'Other', emptyToNull($data['country'] ?? null) ?: 'Unknown', emptyToNull($data['city'] ?? null),
@@ -443,7 +456,9 @@ function updateLead($db, $data, $currentUser) {
         emptyToNull($data['company_size'] ?? null), emptyToNull($data['annual_revenue'] ?? null),
         emptyToNull($data['notes'] ?? null), $data['lead_status'] ?? 'New Lead', $data['lead_source'] ?? 'Other',
         $data['priority'] ?? 'Medium', $newAssignedTo, $data['lead_id'],
-    ]);
+    ];
+    if ($companyId) $params[] = $companyId;
+    $stmt->execute($params);
 
     // Save custom field values
     saveCustomFieldValues($data['lead_id'], $data);
@@ -518,12 +533,19 @@ function bulkAssignLeads($db, $data, $currentUser) {
     $user = $stmt->fetch();
     if (!$user) jsonError('Target user not found', 404);
 
+    $companyId = $currentUser['company_id'] ?? null;
     $ids = array_map('intval', $data['lead_ids']);
     $in  = Database::buildInClause($ids);
 
-    $sql  = "UPDATE leads SET assigned_to = ? WHERE lead_id IN ({$in['placeholders']})";
-    $stmt = $db->prepare($sql);
-    $stmt->execute(array_merge([$data['assigned_to']], $in['params']));
+    if ($companyId) {
+        $sql  = "UPDATE leads SET assigned_to = ? WHERE lead_id IN ({$in['placeholders']}) AND company_id = ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute(array_merge([$data['assigned_to']], $in['params'], [$companyId]));
+    } else {
+        $sql  = "UPDATE leads SET assigned_to = ? WHERE lead_id IN ({$in['placeholders']})";
+        $stmt = $db->prepare($sql);
+        $stmt->execute(array_merge([$data['assigned_to']], $in['params']));
+    }
 
     $count = count($ids);
     logActivity($currentUser['user_id'], 'Bulk Assign', 'Lead', 0, "Assigned $count leads to " . $user['full_name']);
