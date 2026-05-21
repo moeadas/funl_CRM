@@ -229,7 +229,11 @@ require_once __DIR__ . '/../includes/header.php';
   function saveNow(showAlert) {
     if (!saveTarget) {
       // No campaign / template id — offer to create one
-      alert('Open this builder from a campaign or template to enable saving.');
+      if (typeof showNotification === 'function') {
+        showNotification('Open this builder from a campaign or template to enable saving.', 'warning');
+      } else {
+        alert('Open this builder from a campaign or template to enable saving.');
+      }
       return;
     }
     var json = EmailBuilder.getJSON();
@@ -269,10 +273,21 @@ require_once __DIR__ . '/../includes/header.php';
             }
           }
         } else {
-          alert('Save failed: ' + (resp && resp.message ? resp.message : 'Unknown error'));
+          var errMsg = resp && resp.message ? resp.message : 'Unknown error';
+          if (typeof showNotification === 'function') {
+            showNotification('Save failed: ' + errMsg, 'error');
+          } else {
+            alert('Save failed: ' + errMsg);
+          }
         }
       })
-      .catch(function () { alert('Network error — could not save.'); });
+      .catch(function () {
+        if (typeof showNotification === 'function') {
+          showNotification('Network error — could not save.', 'error');
+        } else {
+          alert('Network error — could not save.');
+        }
+      });
   }
 })();
 </script>

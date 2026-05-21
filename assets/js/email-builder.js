@@ -1860,7 +1860,7 @@ ${preheader}
   function promptSendTest() {
     const to = prompt('Send test email to:', '');
     if (!to) return;
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { alert('Invalid email'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { if (typeof showNotification === 'function') { showNotification('Invalid email', 'error'); } else { alert('Invalid email'); }; return; }
     sendTest(to);
   }
   function sendTest(to) {
