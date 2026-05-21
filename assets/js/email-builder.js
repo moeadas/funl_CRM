@@ -70,6 +70,7 @@
     history: [],
     historyIdx: -1,
     sortableInstances: [],
+    lastFocusedElement: null,
     autosaveTimer: null,
     autosaveUrl: '',
     saveTarget: null,             // {kind:'campaign'|'template', id:number}
@@ -730,7 +731,10 @@
         $b.contentEditable = 'true';
         $b.innerHTML = d.content;
         applyTextStyle($b, d);
-        $b.addEventListener('focus', () => showInlineToolbar($b, blk));
+        $b.addEventListener('focus', () => {
+          state.lastFocusedElement = $b;
+          showInlineToolbar($b, blk);
+        });
         $b.addEventListener('blur',  () => {
           d.content = $b.innerHTML;
           pushHistory();
@@ -1435,7 +1439,7 @@
           renderCanvas();
         } else {
           // Insert at caret in the contenteditable
-          const el = document.querySelector('.eb-block[data-blk-id="'+blk.id+'"]');
+          const el = state.lastFocusedElement || document.querySelector('.eb-block[data-blk-id="'+blk.id+'"]');
           if (el && el.isContentEditable) {
             el.focus();
             insertAtCaret(el, t.tag);
