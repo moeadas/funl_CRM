@@ -424,7 +424,10 @@ function loadLeads(page) {
     }
     
     fetch('/api/leads.php?action=list&_cb=' + Date.now() + '&' + params.toString(), { credentials: 'same-origin' })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
         .then(function(data) {
             if (data.success) {
                 currentLeads = data.data.leads;
@@ -434,6 +437,15 @@ function loadLeads(page) {
                     renderLeadsGrid(currentLeads);
                 }
                 renderPagination(data.data.page, data.data.pages);
+            } else {
+                // API returned success:false
+                var errorMsg = data.message || 'Failed to load leads';
+                var colSpan = isSalesRep ? 9 : 11;
+                if (currentView === 'list') {
+                    document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + escapeHtml(errorMsg) + '</td></tr>';
+                } else {
+                    document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;">' + escapeHtml(errorMsg) + '</div>';
+                }
             }
         })
         .catch(function(err) {
