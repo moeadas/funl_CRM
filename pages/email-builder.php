@@ -104,6 +104,24 @@ require_once __DIR__ . '/../includes/header.php';
         <span class="eb-pal-ico">⬇</span><span>Footer + Social</span>
       </div>
     </div>
+    <h4>Full templates</h4>
+    <div class="eb-pal-grid" id="eb-palette-templates">
+      <div class="eb-pal-item is-wide" data-section-key="welcome">
+        <span class="eb-pal-ico">👋</span><span>Welcome Email</span>
+      </div>
+      <div class="eb-pal-item is-wide" data-section-key="newsletter">
+        <span class="eb-pal-ico">📰</span><span>Newsletter</span>
+      </div>
+      <div class="eb-pal-item is-wide" data-section-key="productLaunch">
+        <span class="eb-pal-ico">🚀</span><span>Product Launch</span>
+      </div>
+      <div class="eb-pal-item is-wide" data-section-key="eventInvite">
+        <span class="eb-pal-ico">🎟</span><span>Event Invite</span>
+      </div>
+      <div class="eb-pal-item is-wide" data-section-key="promoSale">
+        <span class="eb-pal-ico">⚡</span><span>Promo / Sale</span>
+      </div>
+    </div>
     <h4>Empty layouts</h4>
     <div class="eb-pal-grid" id="eb-palette-layouts">
       <div class="eb-pal-item" data-cols="1" draggable="false">
@@ -141,6 +159,7 @@ require_once __DIR__ . '/../includes/header.php';
   <aside class="eb-props" id="eb-properties"></aside>
   <!-- Preview overlay (toggled by 👁 button) -->
   <div class="eb-preview-wrap" id="eb-preview-wrap">
+    <button class="eb-preview-close" id="eb-preview-close" title="Close preview">✕</button>
     <iframe id="eb-preview" title="Email preview"></iframe>
   </div>
 </div>
@@ -186,6 +205,16 @@ require_once __DIR__ . '/../includes/header.php';
     });
     document.getElementById('eb-tab-preview').addEventListener('click', function () {
       document.getElementById('eb-preview-wrap').classList.add('is-open');
+    });
+    // Close preview button
+    document.getElementById('eb-preview-close').addEventListener('click', function () {
+      document.getElementById('eb-preview-wrap').classList.remove('is-open');
+    });
+    // Also close on Escape key when preview is open
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        document.getElementById('eb-preview-wrap').classList.remove('is-open');
+      }
     });
     // Warn before leaving with unsaved changes
     window.addEventListener('beforeunload', function (e) {
