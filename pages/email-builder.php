@@ -241,7 +241,7 @@ require_once __DIR__ . '/../includes/header.php';
         csrf_token: CSRF_TOKEN,
         campaign_id: saveTarget.id,
         content_json: json,
-        html_content: html
+        content_html: html
       };
     } else {
       url = '/api/email-templates.php?action=update_content&_cb=' + Date.now();
@@ -249,7 +249,7 @@ require_once __DIR__ . '/../includes/header.php';
         csrf_token: CSRF_TOKEN,
         template_id: saveTarget.id,
         content_json: json,
-        html_content: html
+        content_html: html
       };
     }
     fetch(url, {
