@@ -1210,9 +1210,13 @@
           if (!el) return;
           el.focus();
           if (b.cmd === 'link') {
-            const url = window.ebLinkUrl || 'https://';
-            if (url && url !== 'https://') document.execCommand('createLink', false, url);
-            else document.execCommand('unlink', false, null);
+            const $urlInput = document.getElementById('eb-format-url');
+            if ($urlInput) {
+              const url = $urlInput.value.trim();
+              if (url) document.execCommand('createLink', false, url);
+              else document.execCommand('unlink', false, null);
+              $urlInput.value = '';
+            }
           } else if (b.cmd === 'clear') {
             document.execCommand('removeFormat', false, null);
             document.execCommand('unlink', false, null);
