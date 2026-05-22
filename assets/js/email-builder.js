@@ -658,8 +658,12 @@
     $c.innerHTML = '';
     $c.appendChild($wrap);
     initSortables();
-    updateSelectionOutline();
     renderPreview();
+    // Delay selection outline to ensure SortableJS has finished DOM manipulation
+    requestAnimationFrame(() => {
+      updateSelectionOutline();
+      if (state.selectedId) renderProperties();
+    });
   }
   function renderSection(sec) {
     const $sec = document.createElement('div');
@@ -1081,15 +1085,19 @@
     renderProperties();
   }
   function updateSelectionOutline() {
+    // Remove from ALL elements including SortableJS ghosts
     document.querySelectorAll('.eb-section, .eb-block').forEach(el => el.classList.remove('is-selected'));
     if (!state.selectedId || state.selectedId === 'body') return;
-    if (state.selectedKind === 'section') {
-      const $el = document.querySelector('.eb-section[data-sec-id="' + state.selectedId + '"]');
-      if ($el) $el.classList.add('is-selected');
-    } else {
-      const $el = document.querySelector('.eb-block[data-blk-id="' + state.selectedId + '"]');
-      if ($el) $el.classList.add('is-selected');
-    }
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      if (state.selectedKind === 'section') {
+        const $el = document.querySelector('.eb-section[data-sec-id="' + state.selectedId + '"]');
+        if ($el) $el.classList.add('is-selected');
+      } else {
+        const $el = document.querySelector('.eb-block[data-blk-id="' + state.selectedId + '"]');
+        if ($el) $el.classList.add('is-selected');
+      }
+    });
   }
   function renderProperties() {
     const $p = document.getElementById('eb-properties');
