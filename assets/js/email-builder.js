@@ -874,6 +874,7 @@
     $b.appendChild($tb);
     $b.addEventListener('click', e => {
       e.stopPropagation();
+      if (blk.type === 'text' || blk.type === 'heading' || blk.type === 'footer') return; // text blocks: click places cursor, focus selects
       selectBlock(blk.id);
     });
     if (d.hideOnMobile) $b.classList.add('eb-hide-mobile');
