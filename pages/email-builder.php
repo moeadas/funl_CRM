@@ -232,7 +232,8 @@ require_once __DIR__ . '/../includes/header.php';
       if (typeof showNotification === 'function') {
         showNotification('Open this builder from a campaign or template to enable saving.', 'warning');
       } else {
-        alert('Open this builder from a campaign or template to enable saving.');
+        var $s = document.getElementById('eb-status');
+        if ($s) { $s.textContent = 'Open from campaign/template to save'; $s.style.color = '#d97706'; setTimeout(function(){ $s.textContent = ''; }, 3000); }
       }
       return;
     }
@@ -277,7 +278,8 @@ require_once __DIR__ . '/../includes/header.php';
           if (typeof showNotification === 'function') {
             showNotification('Save failed: ' + errMsg, 'error');
           } else {
-            alert('Save failed: ' + errMsg);
+            var $s = document.getElementById('eb-status');
+            if ($s) { $s.textContent = 'Save failed'; $s.style.color = '#dc2626'; setTimeout(function(){ $s.textContent = ''; }, 3000); }
           }
         }
       })
@@ -285,7 +287,8 @@ require_once __DIR__ . '/../includes/header.php';
         if (typeof showNotification === 'function') {
           showNotification('Network error — could not save.', 'error');
         } else {
-          alert('Network error — could not save.');
+          var $s = document.getElementById('eb-status');
+          if ($s) { $s.textContent = 'Network error'; $s.style.color = '#dc2626'; setTimeout(function(){ $s.textContent = ''; }, 3000); }
         }
       });
   }

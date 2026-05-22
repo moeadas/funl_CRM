@@ -255,7 +255,7 @@ if ($action === 'delete_campaign' && $method === 'POST') {
 if ($action === 'send_test' && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
-    $testEmail = $input['test_email'] ?? '';
+    $testEmail = $input['test_email'] ?? $input['to'] ?? '';
     $subject = $input['subject'] ?? 'Test Email';
     $html = $input['content_html'] ?? '<p>Test</p>';
     if (!filter_var($testEmail, FILTER_VALIDATE_EMAIL)) jsonError('Invalid test email');

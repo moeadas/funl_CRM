@@ -1210,8 +1210,8 @@
           if (!el) return;
           el.focus();
           if (b.cmd === 'link') {
-            const url = prompt('Link URL', 'https://');
-            if (url) document.execCommand('createLink', false, url);
+            const url = window.ebLinkUrl || 'https://';
+            if (url && url !== 'https://') document.execCommand('createLink', false, url);
             else document.execCommand('unlink', false, null);
           } else if (b.cmd === 'clear') {
             document.execCommand('removeFormat', false, null);
@@ -1631,7 +1631,7 @@
     const idx = state.sections.findIndex(s => s.id === id);
     if (idx < 0) return;
     if (act === 'del') {
-      if (!confirm('Delete this section?')) return;
+      // Delete without confirm — user can undo with Ctrl+Z
       state.sections.splice(idx, 1);
       pushHistory(); renderCanvas(); selectBody(); return;
     }
@@ -1917,14 +1917,14 @@ ${preheader}
     };
   }
   function promptSendTest() {
-    const to = prompt('Send test email to:', '');
-    if (!to) return;
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { if (typeof showNotification === 'function') { showNotification('Invalid email', 'error'); } else { alert('Invalid email'); }; return; }
+    const to = document.getElementById('eb-test-email')?.value || '';
+    if (!to) { setStatus('Enter test email address', true); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { setStatus('Invalid email address', true); return; }
     sendTest(to);
   }
   function sendTest(to) {
     setStatus('Sending test…');
-    fetch('/api/email-campaigns.php?action=send_test&_cb=' + Date.now(), {
+    fetch('/api/email.php?action=send_test&_cb=' + Date.now(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
