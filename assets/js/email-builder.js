@@ -1551,68 +1551,14 @@
    * Inline floating text toolbar
    * ============================================================ */
   let $tipBar = null;
-  function showInlineToolbar(el, blk) {
-    hideInlineToolbar();
-    $tipBar = document.createElement('div');
-    $tipBar.className = 'eb-inline-tools';
-    $tipBar.innerHTML = `
-      <button data-cmd="bold"        title="Bold (Ctrl+B)"><b>B</b></button>
-      <button data-cmd="italic"      title="Italic"><i>I</i></button>
-      <button data-cmd="underline"   title="Underline"><u>U</u></button>
-      <button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
-      <span class="eb-sep"></span>
-      <button data-cmd="insertUnorderedList" title="Bulleted list">•</button>
-      <button data-cmd="insertOrderedList"   title="Numbered list">1.</button>
-      <span class="eb-sep"></span>
-      <button data-cmd="justifyLeft"   title="Align left">⇤</button>
-      <button data-cmd="justifyCenter" title="Center">⇔</button>
-      <button data-cmd="justifyRight"  title="Align right">⇥</button>
-      <span class="eb-sep"></span>
-      <button data-act="link"   title="Insert / edit link">🔗</button>
-      <button data-act="color"  title="Text color">🎨</button>
-      <button data-act="size"   title="Font size">A↕</button>
-      <button data-act="clear"  title="Clear formatting">✕f</button>
-    `;
-    document.body.appendChild($tipBar);
-    positionInlineToolbar(el);
-    $tipBar.addEventListener('mousedown', e => e.preventDefault());  // keep focus in editor
-    $tipBar.addEventListener('click', e => {
-      const $btn = e.target.closest('button'); if (!$btn) return;
-      el.focus();
-      if ($btn.dataset.cmd) {
-        document.execCommand($btn.dataset.cmd, false, null);
-      } else if ($btn.dataset.act === 'link') {
-        const url = prompt('Link URL', getSelectionLink() || 'https://');
-        if (url !== null) {
-          if (url) document.execCommand('createLink', false, url);
-          else document.execCommand('unlink', false, null);
-        }
-      } else if ($btn.dataset.act === 'color') {
-        const c = prompt('Hex color (e.g. #ff5500)', '#000000');
-        if (c) document.execCommand('foreColor', false, c);
-      } else if ($btn.dataset.act === 'size') {
-        const s = prompt('Font size in px', '16');
-        if (s) {
-          // execCommand fontSize uses 1-7. Wrap in span instead.
-          wrapSelection('font-size:' + parseInt(s,10) + 'px');
-        }
-      } else if ($btn.dataset.act === 'clear') {
-        document.execCommand('removeFormat', false, null);
-        document.execCommand('unlink', false, null);
-      }
-      blk.data.content = el.innerHTML;
-      deferred();
-    });
-  }
+  // Inline toolbar removed — formatting is in properties panel
   function positionInlineToolbar(el) {
     if (!$tipBar) return;
     const r = el.getBoundingClientRect();
     $tipBar.style.top  = (window.scrollY + r.top - 44) + 'px';
     $tipBar.style.left = (window.scrollX + r.left) + 'px';
   }
-  function hideInlineToolbar() {
-    if ($tipBar) { $tipBar.remove(); $tipBar = null; }
-  }
+  // Inline toolbar removed
   function getSelectionLink() {
     const s = window.getSelection(); if (!s.anchorNode) return '';
     let n = s.anchorNode;
