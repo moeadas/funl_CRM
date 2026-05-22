@@ -226,6 +226,14 @@ require_once __DIR__ . '/../includes/header.php';
       }
     });
   });
+  showNotification = typeof showNotification === "function" ? showNotification : function(msg, type) {
+    var div = document.createElement("div");
+    div.className = "eb-toast eb-toast-" + (type || "info");
+    div.textContent = msg;
+    document.body.appendChild(div);
+    setTimeout(function(){ div.style.opacity = "0"; setTimeout(function(){ div.remove(); }, 300); }, 3000);
+  };
+
   function saveNow(showAlert) {
     if (!saveTarget) {
       // No campaign / template id — offer to create one

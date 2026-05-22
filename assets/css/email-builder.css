@@ -304,3 +304,19 @@ html.eb-dark-preview #email-canvas    { box-shadow: 0 1px 3px rgba(0,0,0,.4); }
   .eb-palette.is-open { transform: translateX(0); }
   .eb-props.is-open { transform: translateX(0); }
 }
+
+/* Toast notifications (fallback when main.js not loaded) */
+.eb-toast {
+  position: fixed; top: 16px; right: 16px; z-index: 99999;
+  padding: 12px 20px; border-radius: 8px; font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15); max-width: 380px;
+  animation: ebToastIn .25s ease-out; color: #fff;
+}
+.eb-toast-success { background: #16a34a; }
+.eb-toast-error   { background: #dc2626; }
+.eb-toast-warning { background: #d97706; }
+.eb-toast-info    { background: #3b82f6; }
+@keyframes ebToastIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
