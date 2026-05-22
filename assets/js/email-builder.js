@@ -713,7 +713,11 @@
     }
     $sec.appendChild($row);
     $sec.addEventListener('click', e => {
-      if (e.target === $sec || e.target === $row) selectSection(sec.id);
+      // Select section unless clicking on a block or toolbar
+      const target = e.target;
+      const isToolbar = target.closest('.eb-section-tools');
+      const isBlock = target.closest('.eb-block');
+      if (!isToolbar && !isBlock) selectSection(sec.id);
     });
     return $sec;
   }
@@ -733,6 +737,7 @@
         applyTextStyle($b, d);
         $b.addEventListener('focus', () => {
           state.lastFocusedElement = $b;
+          selectBlock(blk.id);
         });
         $b.addEventListener('blur',  () => {
           d.content = $b.innerHTML;
@@ -865,7 +870,6 @@
     $b.appendChild($tb);
     $b.addEventListener('click', e => {
       e.stopPropagation();
-      if (blk.type === 'text' || blk.type === 'heading' || blk.type === 'footer') return; // text blocks select via focus
       selectBlock(blk.id);
     });
     if (d.hideOnMobile) $b.classList.add('eb-hide-mobile');
