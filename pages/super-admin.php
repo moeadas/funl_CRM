@@ -100,16 +100,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $password = $_POST['password'] ?? '';
             
             if ($companyId && $username && $email && $fullName && $password) {
-                $db->insert('users', [
-                    'company_id' => $companyId,
-                    'username' => $username,
-                    'email' => $email,
-                    'password_hash' => password_hash($password, PASSWORD_BCRYPT),
-                    'full_name' => $fullName,
-                    'role' => $role,
-                    'status' => 'Active',
-                ]);
-                $_SESSION['success'] = "User '$fullName' created for company.";
+                // Check for duplicate email across ALL users
+                $existing = $db->query("SELECT user_id FROM users WHERE email = ?", [$email])->fetch();
+                if ($existing) {
+                    $_SESSION['error'] = "Email '$email' is already registered. Please use a different email address.";
+                } else {
+                    $db->insert('users', [
+                        'company_id' => $companyId,
+                        'username' => $username,
+                        'email' => $email,
+                        'password_hash' => password_hash($password, PASSWORD_BCRYPT),
+                        'full_name' => $fullName,
+                        'role' => $role,
+                        'status' => 'Active',
+                    ]);
+                    $_SESSION['success'] = "User '$fullName' created for company.";
+                }
             } else {
                 $_SESSION['error'] = 'All fields are required.';
             }

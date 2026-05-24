@@ -47,8 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $existing = $db->query("SELECT 1 FROM companies WHERE email = ? OR company_slug = ?", [$email, $companySlug])->fetch();
                 if ($existing) {
                     $error = 'A company with this email or name already exists.';
-                } else {
-                    $plan = getPlan($planKey);
+                    } else {
+                        // Also check if email already exists in users table (could be from another company)
+                        $existingUser = $db->query("SELECT 1 FROM users WHERE email = ?", [$email])->fetch();
+                        if ($existingUser) {
+                            $error = 'This email address is already registered. Please use a different email or sign in.';
+                        } else {
                     if (!$plan) $plan = getPlan('single');
 
                     $trialEnds = date('Y-m-d H:i:s', strtotime('+14 days'));
