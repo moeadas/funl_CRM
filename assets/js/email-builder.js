@@ -600,6 +600,8 @@
       <button class="eb-btn" id="eb-dark"   title="Toggle dark-mode preview">🌗</button>
       <button class="eb-btn" id="eb-dir"    title="Toggle text direction (LTR/RTL)">⇆</button>
       <button class="eb-btn" id="eb-code"   title="View exported HTML">{ }</button>
+      <span class="eb-sep"></span>
+      <input type="email" id="eb-test-email" placeholder="Test email" style="padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;width:140px;">
       <button class="eb-btn" id="eb-test"   title="Send test email">✈</button>
       <span class="eb-sep"></span>
       <span id="eb-status" class="eb-status"></span>
@@ -1880,14 +1882,23 @@ ${preheader}
       credentials: 'same-origin',
       body: JSON.stringify({
         csrf_token: state.csrfToken,
-        to: to,
+        test_email: to,
         subject: state.meta.subject || 'Test from email builder',
-        html: getHTML()
+        content_html: getHTML()
       })
     }).then(r => r.json()).then(resp => {
-      if (resp && resp.success) { setStatus('Test sent ✓'); setTimeout(()=>setStatus(''),2500); }
-      else setStatus(resp?.message || 'Test failed', true);
-    }).catch(() => setStatus('Network error', true));
+      if (resp && resp.success) {
+        setStatus('Test sent ✓');
+        if (typeof showNotification === 'function') showNotification('Test email sent successfully', 'success');
+        setTimeout(()=>setStatus(''),2500);
+      } else {
+        setStatus('Test failed', true);
+        if (typeof showNotification === 'function') showNotification(resp?.message || 'Test failed', 'error');
+      }
+    }).catch(() => {
+      setStatus('Network error', true);
+      if (typeof showNotification === 'function') showNotification('Network error — could not send test', 'error');
+    });
   }
   function openModal(title, innerHtml) {
     const $wrap = document.createElement('div'); $wrap.className = 'eb-modal-wrap';
