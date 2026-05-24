@@ -18,6 +18,11 @@ function getSetting($key, $default = '') {
     return $settings[$key] ?? $default;
 }
 
+// Alias for backward compatibility
+function getSettingValue($key, $default = '') {
+    return getSetting($key, $default);
+}
+
 function getAppName() {
     return getSetting('app_name', 'White Label CRM');
 }
