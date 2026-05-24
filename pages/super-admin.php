@@ -195,6 +195,13 @@ $pageTitle = 'Super Admin';
 include '../includes/header.php';
 ?>
 
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success" style="margin:16px auto;max-width:1200px;padding:12px 16px;background:#dcfce7;color:#166534;border-radius:8px;"><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div>
+<?php endif; ?>
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-error" style="margin:16px auto;max-width:1200px;padding:12px 16px;background:#fee2e2;color:#dc2626;border-radius:8px;"><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
+<?php endif; ?>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">Platform Administration</h1>
