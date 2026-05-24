@@ -1399,7 +1399,10 @@
       return row(label, $wrap);
     }
     $i.value = value == null ? '' : value;
-    $i.addEventListener('input', () => onChange($i.value));
+    // For text/url/email/color inputs: use 'change' so focus isn't lost on every keystroke
+    // For other inputs (range handled above): use 'input' for live preview
+    const eventName = (type === 'text' || type === 'url' || type === 'email') ? 'change' : 'input';
+    $i.addEventListener(eventName, () => onChange($i.value));
     return row(label, $i);
   }
   function textarea(label, value, onChange, rows) {
