@@ -1105,6 +1105,8 @@
   function renderProperties() {
     const $p = document.getElementById('eb-properties');
     if (!$p) return;
+    // Don't re-render while user is actively editing (typing, dragging slider, etc.)
+    if ($p.querySelector('input:focus, select:focus, textarea:focus')) return;
     $p.innerHTML = '';
     if (state.selectedKind === 'body') return renderBodyProperties($p);
     if (state.selectedKind === 'section') {
