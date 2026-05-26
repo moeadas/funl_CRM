@@ -2,14 +2,13 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-requireCompany();
 $pageTitle = 'Support Tickets';
 $js = ['tickets'];
 require_once __DIR__ . '/../includes/header.php';
 
 $db = Database::getInstance();
-$contacts = $db->query("SELECT contact_id, first_name, last_name FROM contacts WHERE company_id = ? ORDER BY last_name LIMIT 50", [getCurrentCompanyId()])->fetchAll();
-$accounts = $db->query("SELECT account_id, account_name FROM accounts WHERE company_id = ? ORDER BY account_name", [getCurrentCompanyId()])->fetchAll();
+$contacts = $db->query("SELECT contact_id, first_name, last_name FROM contacts WHERE company_id = ? ORDER BY last_name LIMIT 50", [$_SESSION["company_id"] ?? null])->fetchAll();
+$accounts = $db->query("SELECT account_id, account_name FROM accounts WHERE company_id = ? ORDER BY account_name", [$_SESSION["company_id"] ?? null])->fetchAll();
 ?>
 <style>
 .tickets-page { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }

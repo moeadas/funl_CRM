@@ -6,11 +6,10 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-requireCompany();
 
 $userId = getCurrentUserId();
-$companyId = getCurrentCompanyId();
-$userRole = getCurrentUserRole();
+$companyId = $_SESSION["company_id"] ?? null;
+$userRole = $_SESSION["role"] ?? "";
 
 $pageTitle = 'Tasks';
 $css = ['tasks'];
@@ -19,21 +18,9 @@ $js = ['tasks'];
 require_once __DIR__ . '/../includes/header.php';
 
 // Helper: format due date relative to today
-function dueLabel($date) {
-    if (!$date) return ['label' => 'No date', 'class' => 'muted'];
-    $today = date('Y-m-d');
-    if ($date < $today) return ['label' => 'Overdue', 'class' => 'overdue'];
-    if ($date === $today) return ['label' => 'Today', 'class' => 'today'];
-    if ($date === date('Y-m-d', strtotime('+1 day'))) return ['label' => 'Tomorrow', 'class' => 'tomorrow'];
-    return ['label' => formatDate($date), 'class' => 'scheduled'];
-}
 
-function formatDate($d) {
-    if (!$d) return '';
-    $ts = strtotime($d);
-    if (date('Y', $ts) === date('Y')) return date('M j', $ts);
-    return date('M j, Y', $ts);
-}
+
+
 ?>
 
 <style>

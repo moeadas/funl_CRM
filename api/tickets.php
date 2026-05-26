@@ -7,7 +7,7 @@ requireLogin();
 $action = $_GET['action'] ?? '';
 $db = Database::getInstance()->getConnection();
 $userId = getCurrentUser()['user_id'] ?? 0;
-$companyId = getCurrentCompanyId();
+$companyId = $_SESSION["company_id"] ?? null;
 
 if ($action === 'list' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $status = $_GET['status'] ?? '';

@@ -5,11 +5,10 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-requireCompany();
 
 $userId = getCurrentUserId();
-$companyId = getCurrentCompanyId();
-$userRole = getCurrentUserRole();
+$companyId = $_SESSION["company_id"] ?? null;
+$userRole = $_SESSION["role"] ?? "";
 
 $pageTitle = 'Pipeline';
 $js = ['deals'];
@@ -613,10 +612,7 @@ function renderDealCard(deal, stage, cardClass) {
     </div>`;
 }
 
-function formatDate(d) {
-    if (!d) return '';
-    const ts = new Date(d + 'T00:00:00');
-    return ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+);
 }
 
 // Drag & Drop

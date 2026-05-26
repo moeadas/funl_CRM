@@ -6,11 +6,10 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-requireCompany();
 
 $userId = getCurrentUserId();
-$companyId = getCurrentCompanyId();
-$userRole = getCurrentUserRole();
+$companyId = $_SESSION["company_id"] ?? null;
+$userRole = $_SESSION["role"] ?? "";
 
 $pageTitle = 'Automation';
 $js = ['automation'];

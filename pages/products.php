@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-requireCompany();
 $pageTitle = 'Products';
 $js = ['products'];
 require_once __DIR__ . '/../includes/header.php';

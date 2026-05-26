@@ -6,10 +6,9 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-requireCompany();
 
 $userId = getCurrentUserId();
-$companyId = getCurrentCompanyId();
+$companyId = $_SESSION["company_id"] ?? null;
 
 $pageTitle = 'Dashboard';
 $js = ['dashboard'];

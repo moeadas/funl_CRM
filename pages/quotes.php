@@ -2,10 +2,9 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-requireCompany();
 
 $userId = getCurrentUserId();
-$companyId = getCurrentCompanyId();
+$companyId = $_SESSION["company_id"] ?? null;
 
 $pageTitle = 'Quotes';
 $js = ['quotes'];
@@ -387,9 +386,7 @@ function deleteQuote(quoteId) {
     });
 }
 
-function formatDate(d) {
-    if (!d) return '';
-    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+);
 }
 
 function escapeHtml(str) {
