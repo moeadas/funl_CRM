@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `company_id`      INT(11)      NOT NULL,
   `title`           VARCHAR(255) NOT NULL,
   `description`     TEXT         DEFAULT NULL,
-  `status`          TEXT         NOT NULL DEFAULT 'todo' CHECK(status IN ('todo','in_progress','review','done','cancelled')),
-  `priority`        TEXT         NOT NULL DEFAULT 'medium' CHECK(priority IN ('low','medium','high','urgent')),
+  `status`          VARCHAR(20)  NOT NULL DEFAULT 'todo',
+  `priority`        VARCHAR(20)  NOT NULL DEFAULT 'medium',
   `assigned_to`     INT(11)      DEFAULT NULL,
   `lead_id`         INT(11)      DEFAULT NULL,
   `due_date`        DATE         DEFAULT NULL,
@@ -27,13 +27,13 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `updated_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `completed_at`    TIMESTAMP    NULL DEFAULT NULL,
   PRIMARY KEY (`task_id`),
-  KEY `company_id` (`company_id`),
-  KEY `assigned_to` (`assigned_to`),
-  KEY `lead_id` (`lead_id`),
-  KEY `status` (`status`),
-  KEY `due_date` (`due_date`),
-  KEY `follow_up_date` (`follow_up_date`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Tasks and follow-ups';
+  KEY `idx_company` (`company_id`),
+  KEY `idx_assigned` (`assigned_to`),
+  KEY `idx_lead` (`lead_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_due_date` (`due_date`),
+  KEY `idx_follow_up` (`follow_up_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ";
 
 // ── 2. Add task comments ──────────────────────────────────────
@@ -45,9 +45,8 @@ CREATE TABLE IF NOT EXISTS `task_comments` (
   `content`      TEXT         NOT NULL,
   `created_at`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`comment_id`),
-  KEY `task_id` (`task_id`),
-  CONSTRAINT `task_comment_fk` FOREIGN KEY (`task_id`) REFERENCES `tasks`(`task_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  KEY `idx_task` (`task_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ";
 
 echo "<pre>\n";
