@@ -11,6 +11,8 @@ $companyId = $_SESSION["company_id"] ?? null;
 $userRole = $_SESSION["role"] ?? "";
 
 $pageTitle = 'Pipeline';
+$js = ['deals'];
+
 require_once __DIR__ . '/../includes/header.php';
 
 $db = Database::getInstance();
@@ -21,65 +23,325 @@ $stages = $db->query("SELECT stage_name, stage_label, probability, color FROM de
 ?>
 
 <style>
-.deals-page { max-width: 1600px; margin: 0 auto; padding: 0 20px 40px; }
-.page-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 16px; gap: 16px; }
-.page-header h1 { font-size: 20px; font-weight: 600; margin: 0; }
-.header-actions { display: flex; gap: 10px; align-items: center; }
+.deals-page {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+}
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 16px;
+    gap: 16px;
+}
+.page-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
 
 /* Stats Bar */
-.pipeline-stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-.stat-card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 18px; min-width: 140px; flex: 1; }
-.stat-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 500; }
-.stat-value { font-size: 20px; font-weight: 700; color: #111827; margin-top: 4px; }
+.pipeline-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.stat-card {
+    background: white;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 8px;
+    padding: 14px 20px;
+    min-width: 160px;
+}
+.stat-label {
+    font-size: 11px;
+    color: var(--text-secondary, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+}
+.stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary, #1f2937);
+}
+.stat-value.green { color: #16a34a; }
+.stat-value.red { color: #dc2626; }
+.stat-value.blue { color: #2563eb; }
 
 /* Filters */
-.filters-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-.filters-bar input, .filters-bar select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.filters-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+}
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 6px;
+    font-size: 13px;
+    width: 200px;
+    background: white;
+}
+select.filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 6px;
+    font-size: 13px;
+    background: white;
+}
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-primary { background: var(--primary, #2563eb); color: white; }
+.btn-primary:hover { background: var(--primary-dark, #1d4ed8); }
+.btn-outline { background: white; border: 1px solid var(--border, #d1d5db); color: var(--text-primary, #374151); }
 
-/* Kanban */
-.kanban-container { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 20px; min-height: 400px; }
-.kanban-column { flex: 1; min-width: 280px; max-width: 320px; background: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; flex-direction: column; }
-.kanban-column-header { padding: 14px 16px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
-.kanban-column-title { font-size: 13px; font-weight: 600; text-transform: uppercase; }
-.kanban-column-count { font-size: 12px; background: #e5e7eb; padding: 2px 10px; border-radius: 10px; }
-.kanban-column-body { padding: 10px; min-height: 100px; flex: 1; }
+/* Kanban Board */
+.pipeline-board {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+    min-height: calc(100vh - 240px);
+    align-items: flex-start;
+}
+.pipeline-col {
+    flex: 0 0 280px;
+    background: var(--bg-secondary, #f9fafb);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 200px);
+}
+.pipeline-col-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.col-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.col-count {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: white;
+    border-radius: 10px;
+    color: var(--text-secondary, #6b7280);
+}
+.pipeline-col-body {
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
 /* Deal Card */
-.deal-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin-bottom: 10px; cursor: grab; transition: all 0.15s; }
-.deal-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-color: #d1d5db; }
-.deal-card.dragging { opacity: 0.5; }
-.deal-name { font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #111827; }
-.deal-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.deal-value { font-size: 13px; font-weight: 600; color: #059669; }
-.deal-probability { font-size: 11px; color: #6b7280; }
-.deal-company { font-size: 12px; color: #6b7280; }
-.deal-assignee { font-size: 11px; color: #6b7280; }
+.deal-card {
+    background: white;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 8px;
+    padding: 14px;
+    cursor: grab;
+    transition: box-shadow 0.15s, transform 0.15s;
+    position: relative;
+}
+.deal-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+.deal-card.dragging { opacity: 0.5; cursor: grabbing; }
+.deal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding-right: 24px;
+}
+.deal-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary, #1f2937);
+    line-height: 1.4;
+    flex: 1;
+}
+.deal-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary, #2563eb);
+    margin-bottom: 8px;
+}
+.deal-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-secondary, #6b7280);
+}
+.deal-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.deal-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--primary, #2563eb);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.deal-close-date {
+    font-size: 11px;
+    font-weight: 500;
+}
+.deal-close-date.overdue { color: #dc2626; }
+.deal-close-date.soon { color: #ea580c; }
+
+.probability-bar {
+    height: 3px;
+    background: var(--bg-secondary, #e5e7eb);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+.probability-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+}
+
+.deal-won { border-left: 3px solid #22c55e; }
+.deal-lost { border-left: 3px solid #ef4444; opacity: 0.7; }
+
+/* Empty State */
+.pipeline-empty {
+    text-align: center;
+    padding: 30px 16px;
+    color: var(--text-secondary, #9ca3af);
+    font-size: 13px;
+}
 
 /* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
 .modal-overlay.active { display: flex; }
-.modal { background: white; border-radius: 12px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-.modal-header { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-.modal-header h2 { margin: 0; font-size: 18px; font-weight: 600; }
-.modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #9ca3af; line-height: 1; }
-.modal-close:hover { color: #374151; }
-.modal-body { padding: 20px; }
-.modal-footer { padding: 16px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; }
-
+.modal {
+    background: white;
+    border-radius: 12px;
+    width: 580px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.modal-header h2 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+}
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-secondary, #9ca3af);
+}
+.modal-close:hover { color: var(--text-primary, #1f2937); }
+.modal-body { padding: 20px 24px; }
 .form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 5px; }
-.form-control { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
-.form-control:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-select.form-control { height: 38px; }
-textarea.form-control { resize: vertical; min-height: 80px; }
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: var(--text-primary, #374151);
+}
+.form-control {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 6px;
+    font-size: 13px;
+    box-sizing: border-box;
+    font-family: inherit;
+    color: var(--text-primary, #1f2937);
+    background: white;
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+textarea.form-control { min-height: 70px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-actions {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border, #e5e7eb);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.form-actions .btn { padding: 9px 18px; }
 
-.btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; }
-.btn-primary { background: #2563eb; color: white; }
-.btn-primary:hover { background: #1d4ed8; }
-.btn-outline { background: white; border: 1px solid #d1d5db; color: #374151; }
-.btn-outline:hover { background: #f9fafb; }
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.currency-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.currency-input select {
+    width: 80px;
+    padding: 9px 8px;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 6px;
+    font-size: 13px;
+    background: white;
+}
+.currency-input input { flex: 1; }
 </style>
 
 <div class="deals-page">
@@ -90,48 +352,40 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
     </div>
 
-    <div class="pipeline-stats">
+    <!-- Stats -->
+    <div class="pipeline-stats" id="pipeline-stats">
         <div class="stat-card">
             <div class="stat-label">Open Deals</div>
             <div class="stat-value" id="stat-open-count">-</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Pipeline Value</div>
-            <div class="stat-value" id="stat-pipeline-value">-</div>
+            <div class="stat-value blue" id="stat-pipeline-value">-</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Won Value</div>
-            <div class="stat-value" id="stat-won-value">-</div>
+            <div class="stat-label">Won (All Time)</div>
+            <div class="stat-value green" id="stat-won-value">-</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Lost Value</div>
-            <div class="stat-value" id="stat-lost-value">-</div>
+            <div class="stat-label">Lost (All Time)</div>
+            <div class="stat-value red" id="stat-lost-value">-</div>
         </div>
     </div>
 
+    <!-- Filters -->
     <div class="filters-bar">
-        <input type="text" id="deal-search" placeholder="Search deals..." oninput="loadDeals()">
-        <select id="deal-assigned-filter" onchange="loadDeals()">
-            <option value="">All Assignees</option>
-            <?php foreach ($users as $user): ?>
-                <option value="<?php echo $user['user_id']; ?>"><?php echo htmlspecialchars($user['full_name']); ?></option>
+        <input type="text" id="deal-search" class="search-input" placeholder="Search deals..." oninput="loadDeals()">
+        <select id="deal-assigned-filter" class="filter-select" onchange="loadDeals()">
+            <option value="">All Owners</option>
+            <?php foreach ($users as $u): ?>
+                <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
             <?php endforeach; ?>
         </select>
     </div>
 
-    <div class="kanban-container" id="kanban-container">
-        <?php foreach ($stages as $stage): ?>
-            <div class="kanban-column" data-stage="<?php echo htmlspecialchars($stage['stage_name']); ?>"
-                 ondragover="onDragOver(event)" ondrop="onDrop(event)">
-                <div class="kanban-column-header">
-                    <span class="kanban-column-title" style="color:<?php echo htmlspecialchars($stage['color']); ?>">
-                        <?php echo htmlspecialchars($stage['stage_label']); ?>
-                    </span>
-                    <span class="kanban-column-count" id="count-<?php echo htmlspecialchars($stage['stage_name']); ?>">0</span>
-                </div>
-                <div class="kanban-column-body" id="stage-<?php echo htmlspecialchars($stage['stage_name']); ?>"></div>
-            </div>
-        <?php endforeach; ?>
+    <!-- Kanban Board -->
+    <div class="pipeline-board" id="pipeline-board">
+        <!-- Columns rendered by JS -->
     </div>
 </div>
 
@@ -143,41 +397,42 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <button class="modal-close" onclick="closeDealModal()">&times;</button>
         </div>
         <form id="deal-form" onsubmit="saveDeal(event)">
-            <input type="hidden" id="deal-id" value="">
             <div class="modal-body">
+                <input type="hidden" id="deal-id" value="">
                 <div class="form-group">
                     <label class="form-label">Deal Name *</label>
-                    <input type="text" id="deal-name" class="form-control" required>
+                    <input type="text" id="deal-name" class="form-control" required placeholder="e.g. Acme Corp - Enterprise License">
                 </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Value</label>
-                        <input type="number" id="deal-value" class="form-control" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Currency</label>
+                <div class="form-group">
+                    <label class="form-label">Value</label>
+                    <div class="currency-input">
                         <select id="deal-currency" class="form-control">
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
                             <option value="GBP">GBP</option>
+                            <option value="AED">AED</option>
+                            <option value="SAR">SAR</option>
+                            <option value="CAD">CAD</option>
+                            <option value="AUD">AUD</option>
                         </select>
+                        <input type="number" id="deal-value" class="form-control" placeholder="0.00" min="0" step="0.01">
                     </div>
                 </div>
-                <div class="grid-2">
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Stage</label>
                         <select id="deal-stage" class="form-control">
-                            <?php foreach ($stages as $stage): ?>
-                                <option value="<?php echo htmlspecialchars($stage['stage_name']); ?>"><?php echo htmlspecialchars($stage['stage_label']); ?></option>
+                            <?php foreach ($stages as $s): ?>
+                                <option value="<?= $s['stage_name'] ?>"><?= htmlspecialchars($s['stage_label']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Probability (%)</label>
-                        <input type="number" id="deal-probability" class="form-control" value="10" min="0" max="100">
+                        <label class="form-label">Probability %</label>
+                        <input type="number" id="deal-probability" class="form-control" min="0" max="100" value="10">
                     </div>
                 </div>
-                <div class="grid-2">
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Expected Close</label>
                         <input type="date" id="deal-close-date" class="form-control">
@@ -186,26 +441,27 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                         <label class="form-label">Type</label>
                         <select id="deal-type" class="form-control">
                             <option value="New Business">New Business</option>
-                            <option value="Existing Business">Existing Business</option>
+                            <option value="Renewal">Renewal</option>
+                            <option value="Upsell">Upsell</option>
                         </select>
                     </div>
                 </div>
-                <div class="grid-2">
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Account</label>
                         <select id="deal-account-id" class="form-control">
-                            <option value="">-- No Account --</option>
-                            <?php foreach ($accounts as $account): ?>
-                                <option value="<?php echo $account['account_id']; ?>"><?php echo htmlspecialchars($account['account_name']); ?></option>
+                            <option value="">None</option>
+                            <?php foreach ($accounts as $a): ?>
+                                <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Contact</label>
+                        <label class="form-label">Primary Contact</label>
                         <select id="deal-contact-id" class="form-control">
-                            <option value="">-- No Contact --</option>
-                            <?php foreach ($contacts as $contact): ?>
-                                <option value="<?php echo $contact['contact_id']; ?>"><?php echo htmlspecialchars($contact['first_name'] . ' ' . $contact['last_name']); ?></option>
+                            <option value="">None</option>
+                            <?php foreach ($contacts as $c): ?>
+                                <option value="<?= $c['contact_id'] ?>"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -213,18 +469,18 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                 <div class="form-group">
                     <label class="form-label">Assigned To</label>
                     <select id="deal-assigned-to" class="form-control">
-                        <option value="">-- Unassigned --</option>
-                        <?php foreach ($users as $user): ?>
-                            <option value="<?php echo $user['user_id']; ?>"><?php echo htmlspecialchars($user['full_name']); ?></option>
+                        <option value="">Unassigned</option>
+                        <?php foreach ($users as $u): ?>
+                            <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Description</label>
-                    <textarea id="deal-description" class="form-control" rows="3"></textarea>
+                    <textarea id="deal-description" class="form-control" placeholder="Deal details..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="form-actions">
                 <button type="button" class="btn btn-outline" onclick="closeDealModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary" id="deal-save-btn">Create Deal</button>
             </div>
@@ -233,14 +489,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 </div>
 
 <script>
-const COMPANY_ID = <?php echo json_encode($companyId); ?>;
-const USER_ROLE = <?php echo json_encode($userRole); ?>;
-const CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
+const COMPANY_ID = <?= json_encode($companyId) ?>;
+const USER_ROLE = <?= json_encode($userRole) ?>;
+const CSRF_TOKEN = u003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/deals.php';
 
 const STAGES = [
     <?php foreach ($stages as $s): ?>
-        { name: '<?php echo $s['stage_name']; ?>', label: '<?php echo htmlspecialchars($s['stage_label']); ?>', probability: <?php echo $s['probability']; ?>, color: '<?php echo $s['color']; ?>' },
+        { name: '<?= $s['stage_name'] ?>', label: '<?= htmlspecialchars($s['stage_label']) ?>', probability: <?= $s['probability'] ?>, color: '<?= $s['color'] ?>' },
     <?php endforeach; ?>
 ];
 
@@ -252,13 +508,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSummary();
 });
 
-function formatCurrency(value, currency) {
+function formatCurrency(value, currency = 'USD') {
     if (!value) return '-';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 }
 
 function loadSummary() {
-    fetch(API + '?action=summary', { credentials: 'same-origin' })
+    fetch(`${API}?action=summary`, { credentials: 'same-origin' })
         .then(r => r.json())
         .then(resp => {
             if (!resp.success) return;
@@ -271,84 +527,117 @@ function loadSummary() {
 }
 
 function loadDeals() {
-    const search = (document.getElementById('deal-search') \u0026\u0026 document.getElementById('deal-search').value) || '';
-    const assignedTo = (document.getElementById('deal-assigned-filter') \u0026\u0026 document.getElementById('deal-assigned-filter').value) || '';
+    const search = document.getElementById('deal-search')?.value || '';
+    const assignedTo = document.getElementById('deal-assigned-filter')?.value || '';
     
-    let url = API + '?action=list';
-    if (search) url += '&search=' + encodeURIComponent(search);
-    if (assignedTo) url += '&assigned_to=' + assignedTo;
+    let url = `${API}?action=list`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (assignedTo) url += `&assigned_to=${assignedTo}`;
     
     fetch(url, { credentials: 'same-origin' })
         .then(r => r.json())
         .then(resp => {
             if (resp.success) {
                 deals = resp.data || [];
-                renderKanban();
+                renderBoard();
             }
-        })
-        .catch(err => console.error('Error loading deals:', err));
+        });
 }
 
-function renderKanban() {
-    // Clear all columns
-    STAGES.forEach(stage => {
-        document.getElementById('stage-' + stage.name).innerHTML = '';
-        document.getElementById('count-' + stage.name).textContent = '0';
-    });
+function renderBoard() {
+    const board = document.getElementById('pipeline-board');
     
-    // Group deals by stage
-    const dealsByStage = {};
-    STAGES.forEach(stage => dealsByStage[stage.name] = []);
-    deals.forEach(deal => {
-        if (dealsByStage[deal.stage]) {
-            dealsByStage[deal.stage].push(deal);
-        }
-    });
-    
-    // Render each column
-    STAGES.forEach(stage => {
-        const columnDeals = dealsByStage[stage.name] || [];
-        document.getElementById('count-' + stage.name).textContent = columnDeals.length;
+    board.innerHTML = STAGES.map(stage => {
+        const stageDeals = deals.filter(d => d.stage === stage.name);
+        const stageColor = stage.color || '#6b7280';
         
-        const container = document.getElementById('stage-' + stage.name);
-        container.innerHTML = columnDeals.map(deal => `             <div class="deal-card" draggable="true" data-id="${deal.deal_id}"                  ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"                  onclick="openDealModal(${deal.deal_id})">                 <div class="deal-name">${escapeHtml(deal.deal_name)}</div>                 <div class="deal-meta">                     <span class="deal-value">${formatCurrency(deal.deal_value, deal.currency)}</span>                     <span class="deal-probability">${deal.probability || 0}%</span>                 </div>                 ${deal.company_name ? '<div class="deal-company">' + escapeHtml(deal.company_name) + '</div>' : ''}                 ${deal.assigned_name ? '<div class="deal-assignee">' + escapeHtml(deal.assigned_name) + '</div>' : ''}             </div>         `).join('');
-    });
+        const isWon = stage.name === 'closed_won';
+        const isLost = stage.name === 'closed_lost';
+        const cardClass = isWon ? 'deal-won' : isLost ? 'deal-lost' : '';
+        
+        return `
+        <div class="pipeline-col" data-stage="${stage.name}">
+            <div class="pipeline-col-header">
+                <span class="col-title" style="color:${stageColor}">${stage.label}</span>
+                <span class="col-count">${stageDeals.length}</span>
+            </div>
+            <div class="pipeline-col-body" 
+                 ondragover="onDragOver(event)" 
+                 ondrop="onDrop(event, '${stage.name}')">
+                ${stageDeals.length ? stageDeals.map(d => renderDealCard(d, stage, cardClass)).join('') : '<div class="pipeline-empty">Drop deals here</div>'}
+            </div>
+        </div>`;
+    }).join('');
 }
 
+function renderDealCard(deal, stage, cardClass) {
+    const initials = deal.assigned_name ? deal.assigned_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
+    const prob = deal.probability || stage.probability || 0;
+    const probColor = prob >= 75 ? '#22c55e' : prob >= 50 ? '#2563eb' : prob >= 25 ? '#fbbf24' : '#9ca3af';
+    
+    let closeDateHtml = '';
+    if (deal.expected_close) {
+        const today = new Date().toISOString().split('T')[0];
+        const closeDate = deal.expected_close;
+        if (closeDate < today) {
+            closeDateHtml = `<span class="deal-close-date overdue">Overdue: ${formatDate(closeDate)}</span>`;
+        } else if (closeDate <= new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]) {
+            closeDateHtml = `<span class="deal-close-date soon">Close: ${formatDate(closeDate)}</span>`;
+        } else {
+            closeDateHtml = `<span class="deal-close-date">Close: ${formatDate(closeDate)}</span>`;
+        }
+    }
+    
+    return `
+    <div class="deal-card ${cardClass}" draggable="true" data-id="${deal.deal_id}"
+         ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"
+         onclick="openDealModal(${deal.deal_id})">
+        <div class="deal-card-header">
+            <div class="deal-name">${escapeHtml(deal.deal_name)}</div>
+        </div>
+        <div class="deal-value">${formatCurrency(deal.deal_value, deal.currency)}</div>
+        <div class="deal-meta">
+            ${deal.account_name ? `<div class="deal-meta-row">🏢 ${escapeHtml(deal.account_name)}</div>` : ''}
+            ${deal.contact_name ? `<div class="deal-meta-row">👤 ${escapeHtml(deal.contact_name)}</div>` : ''}
+            ${closeDateHtml}
+            ${deal.assigned_name ? `
+            <div class="deal-meta-row">
+                <div class="deal-avatar">${initials}</div>
+                <span>${escapeHtml(deal.assigned_name)}</span>
+            </div>` : ''}
+        </div>
+        <div class="probability-bar">
+            <div class="probability-fill" style="width:${prob}%;background:${probColor}"></div>
+        </div>
+    </div>`;
+}
+
+);
+}
+
+// Drag & Drop
 function onDragStart(e) {
     draggedCard = e.target;
     e.target.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', e.target.dataset.id);
 }
-
 function onDragEnd(e) {
     e.target.classList.remove('dragging');
     draggedCard = null;
 }
-
 function onDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 }
-
-function onDrop(e) {
+function onDrop(e, newStage) {
     e.preventDefault();
-    const column = e.currentTarget;
-    const newStage = column.dataset.stage;
-    const dealId = e.dataTransfer.getData('text/plain');
-    
-    if (!dealId || !newStage) return;
-    
-    const deal = deals.find(d => d.deal_id == dealId);
-    if (!deal || deal.stage === newStage) return;
-    
-    // Update UI immediately
-    deal.stage = newStage;
-    renderKanban();
-    
-    // Update server
-    fetch(API + '?action=move_stage', {
+    if (!draggedCard) return;
+    const dealId = draggedCard.dataset.id;
+    moveDeal(dealId, newStage);
+}
+
+function moveDeal(dealId, newStage) {
+    fetch(`${API}?action=move`, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -356,12 +645,16 @@ function onDrop(e) {
     })
     .then(r => r.json())
     .then(resp => {
-        if (!resp.success) {
-            // Revert on failure
-            loadDeals();
+        if (resp.success) {
+            const deal = deals.find(d => d.deal_id == dealId);
+            if (deal) deal.stage = newStage;
+            renderBoard();
+            loadSummary();
+            showNotification('Deal moved', 'success');
+        } else {
+            showNotification(resp.message || 'Failed to move', 'error');
         }
-    })
-    .catch(() => loadDeals());
+    });
 }
 
 // Modal
@@ -421,32 +714,27 @@ function saveDeal(e) {
     };
     if (dealId) data.deal_id = dealId;
     
-    fetch(API + '?action=' + action, {
+    fetch(`${API}?action=${action}`, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(resp => {
+    }).then(r => r.json()).then(resp => {
         if (resp.success) {
             closeDealModal();
             loadDeals();
             loadSummary();
             showNotification(dealId ? 'Deal updated' : 'Deal created', 'success');
         } else {
-            showNotification(resp.message || 'Failed to save deal', 'error');
+            showNotification(resp.message || 'Failed to save', 'error');
         }
-    })
-    .catch(err => {
-        showNotification('Error saving deal', 'error');
     });
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
+function escapeHtml(str) {
+    if (!str) return '';
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = str;
     return div.innerHTML;
 }
 
@@ -454,18 +742,5 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDealMod
 document.querySelector('.modal-overlay').addEventListener('click', e => { 
     if (e.target === e.currentTarget) closeDealModal(); 
 });
-
-// Notification fallback
-if (typeof showNotification !== "function") {
-    window.showNotification = function(msg, type) {
-        const div = document.createElement("div");
-        div.className = "eb-toast eb-toast-" + (type || "info");
-        div.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);color:#fff;background:" + (type === "error" ? "#dc2626" : type === "success" ? "#16a34a" : "#3b82f6") + ";animation:ebToastIn .25s";
-        div.textContent = msg;
-        document.body.appendChild(div);
-        setTimeout(function() { div.style.opacity = "0"; setTimeout(function() { div.remove(); }, 300); }, 3000);
-    };
-}
 </script>
-
 <?php include __DIR__ . '/../includes/footer.php'; ?>

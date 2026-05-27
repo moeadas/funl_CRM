@@ -79,7 +79,7 @@ table.data-table tr:hover { background: #f9fafb; }
                         <select id="ticket-contact" class="form-control">
                             <option value="">Select contact...</option>
                             <?php foreach ($contacts as $c): ?>
-                                <option value="<?php echo  $c['contact_id'] ?>"><?php echo  htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></option>
+                                <option value="<?= $c['contact_id'] ?>"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -132,7 +132,16 @@ function renderTickets() {
     }
     tbody.innerHTML = tickets.map(t => {
         const contact = t.first_name ? `${t.first_name} ${t.last_name}` : (t.account_name || '-') ;
-        return `         <tr>             <td><strong>${escapeHtml(t.ticket_number)}</strong></td>             <td>${escapeHtml(t.subject)}</td>             <td>${escapeHtml(contact)}</td>             <td><span class="priority-badge priority-${t.priority}">${t.priority}</span></td>             <td><span class="status-badge status-${t.status}">${t.status.replace('_', ' ')}</span></td>             <td>${escapeHtml(t.assigned_name || 'Unassigned')}</td>             <td><button onclick="deleteTicket(${t.ticket_id})" style="background:none;border:none;cursor:pointer;color:#dc2626">🗑️</button></td>         </tr>`;
+        return `
+        <tr>
+            <td><strong>${escapeHtml(t.ticket_number)}</strong></td>
+            <td>${escapeHtml(t.subject)}</td>
+            <td>${escapeHtml(contact)}</td>
+            <td><span class="priority-badge priority-${t.priority}">${t.priority}</span></td>
+            <td><span class="status-badge status-${t.status}">${t.status.replace('_', ' ')}</span></td>
+            <td>${escapeHtml(t.assigned_name || 'Unassigned')}</td>
+            <td><button onclick="deleteTicket(${t.ticket_id})" style="background:none;border:none;cursor:pointer;color:#dc2626">🗑️</button></td>
+        </tr>`;
     }).join('');
 }
 
@@ -172,6 +181,7 @@ function saveTicket(e) {
 }
 
 function deleteTicket(id) {
+    if (!confirm('Delete this ticket?')) return;
     fetch(`${API}?action=delete`, {
         method: 'POST',
         credentials: 'same-origin',

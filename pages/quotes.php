@@ -99,7 +99,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 </div>
 
 <!-- Quote Modal -->
-<div class="modal-overlay<?php if (isset($_GET['action']) && $_GET['action'] === 'new') echo ' active'; ?>" id="quote-modal">
+<div class="modal-overlay" id="quote-modal">
     <div class="modal">
         <div class="modal-header">
             <h2 id="quote-modal-title">New Quote</h2>
@@ -120,7 +120,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                         <select id="quote-deal" class="form-control">
                             <option value="">None</option>
                             <?php foreach ($deals as $d): ?>
-                                <option value="<?php echo  $d['deal_id'] ?>"><?php echo  htmlspecialchars($d['deal_name']) ?></option>
+                                <option value="<?= $d['deal_id'] ?>"><?= htmlspecialchars($d['deal_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -129,7 +129,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                         <select id="quote-account" class="form-control">
                             <option value="">None</option>
                             <?php foreach ($accounts as $a): ?>
-                                <option value="<?php echo  $a['account_id'] ?>"><?php echo  htmlspecialchars($a['account_name']) ?></option>
+                                <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -138,7 +138,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Issue Date</label>
-                        <input type="date" id="quote-issue-date" class="form-control" value="<?php echo  date('Y-m-d') ?>">
+                        <input type="date" id="quote-issue-date" class="form-control" value="<?= date('Y-m-d') ?>">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Expiry Date</label>
@@ -216,8 +216,8 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 </div>
 
 <script>
-const COMPANY_ID = <?php echo  json_encode($companyId) ?>;
-const CSRF_TOKEN = *** json_encode($_SESSION['csrf_token'] ?? '') ?>;
+const COMPANY_ID = <?= json_encode($companyId) ?>;
+const CSRF_TOKEN = u003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/quotes.php';
 
 let quotes = [];
@@ -252,7 +252,16 @@ function renderQuotes() {
         const currency = q.currency || 'USD';
         const total = new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(q.total || 0);
         
-        return `         <tr onclick="viewQuote(${q.quote_id})" style="cursor:pointer">             <td><strong>${escapeHtml(q.quote_number)}</strong></td>             <td>${escapeHtml(q.quote_title)}</td>             <td>${escapeHtml(client)}</td>             <td style="font-weight:600">${total}</td>             <td><span class="status-badge ${statusClass}">${q.status || 'Draft'}</span></td>             <td>${formatDate(q.issue_date)}</td>             <td><button type="button" onclick="event.stopPropagation();deleteQuote(${q.quote_id})" style="background:none;border:none;cursor:pointer;color:#dc2626">🗑️</button></td>         </tr>`;
+        return `
+        <tr onclick="viewQuote(${q.quote_id})" style="cursor:pointer">
+            <td><strong>${escapeHtml(q.quote_number)}</strong></td>
+            <td>${escapeHtml(q.quote_title)}</td>
+            <td>${escapeHtml(client)}</td>
+            <td style="font-weight:600">${total}</td>
+            <td><span class="status-badge ${statusClass}">${q.status || 'Draft'}</span></td>
+            <td>${formatDate(q.issue_date)}</td>
+            <td><button type="button" onclick="event.stopPropagation();deleteQuote(${q.quote_id})" style="background:none;border:none;cursor:pointer;color:#dc2626">🗑️</button></td>
+        </tr>`;
     }).join('');
 }
 
@@ -261,7 +270,13 @@ function addItemRow() {
     const tbody = document.getElementById('items-tbody');
     const row = document.createElement('tr');
     row.dataset.itemId = itemCount;
-    row.innerHTML = `         <td><input type="text" class="item-desc" placeholder="Item description" onchange="calculateTotals()"></td>         <td><input type="number" class="num-input item-qty" value="1" min="0.01" step="0.01" onchange="calculateTotals()"></td>         <td><input type="number" class="num-input item-price" value="0" min="0" step="0.01" onchange="calculateTotals()"></td>         <td><input type="number" class="num-input item-discount" value="0" min="0" max="100" step="0.01" onchange="calculateTotals()"></td>         <td><button type="button" class="action-btn" onclick="removeItemRow(this)">×</button></td>     `;
+    row.innerHTML = `
+        <td><input type="text" class="item-desc" placeholder="Item description" onchange="calculateTotals()"></td>
+        <td><input type="number" class="num-input item-qty" value="1" min="0.01" step="0.01" onchange="calculateTotals()"></td>
+        <td><input type="number" class="num-input item-price" value="0" min="0" step="0.01" onchange="calculateTotals()"></td>
+        <td><input type="number" class="num-input item-discount" value="0" min="0" max="100" step="0.01" onchange="calculateTotals()"></td>
+        <td><button type="button" class="action-btn" onclick="removeItemRow(this)">×</button></td>
+    `;
     tbody.appendChild(row);
 }
 
@@ -272,18 +287,17 @@ function removeItemRow(btn) {
 
 function calculateTotals() {
     let subtotal = 0;
-    document.querySelectorAll('#items-tbody tr').(forEach(row => {
-        const qty = parseFloat(row.querySelector('.item-qty') \u0026\u0026 forEach(row => {
-        const qty = parseFloat(row.querySelector('.item-qty').value) || 0);
-        const price = (parseFloat(row.querySelector('.item-price') \u0026\u0026 parseFloat(row.querySelector('.item-price').value) || 0);
-        const discount = (parseFloat(row.querySelector('.item-discount') \u0026\u0026 parseFloat(row.querySelector('.item-discount').value) || 0);
+    document.querySelectorAll('#items-tbody tr').forEach(row => {
+        const qty = parseFloat(row.querySelector('.item-qty')?.value || 0);
+        const price = parseFloat(row.querySelector('.item-price')?.value || 0);
+        const discount = parseFloat(row.querySelector('.item-discount')?.value || 0);
         subtotal += qty * price * (1 - discount / 100);
     });
     
-    const taxRate = (parseFloat(document.getElementById('quote-tax') \u0026\u0026 parseFloat(document.getElementById('quote-tax').value) || 0);
+    const taxRate = parseFloat(document.getElementById('quote-tax')?.value || 0);
     const tax = subtotal * (taxRate / 100);
     const total = subtotal + tax;
-    const currency = (document.getElementById('quote-currency') \u0026\u0026 document.getElementById('quote-currency').value) || 'USD';
+    const currency = document.getElementById('quote-currency')?.value || 'USD';
     
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: currency });
     document.getElementById('total-subtotal').textContent = fmt.format(subtotal);
@@ -311,17 +325,14 @@ function saveQuote(e) {
     e.preventDefault();
     
     const items = [];
-    document.querySelectorAll('#items-tbody tr').(forEach(row => {
-        const desc = row.querySelector('.item-desc') \u0026\u0026 forEach(row => {
-        const desc = row.querySelector('.item-desc').value);
+    document.querySelectorAll('#items-tbody tr').forEach(row => {
+        const desc = row.querySelector('.item-desc')?.value;
         if (desc) {
-            (items.push({
+            items.push({
                 description: desc,
-                quantity: parseFloat(row.querySelector('.item-qty') \u0026\u0026 items.push({
-                description: desc,
-                quantity: parseFloat(row.querySelector('.item-qty').value) || 1),
-                unit_price: (parseFloat(row.querySelector('.item-price') \u0026\u0026 parseFloat(row.querySelector('.item-price').value) || 0),
-                discount_percent: (parseFloat(row.querySelector('.item-discount') \u0026\u0026 parseFloat(row.querySelector('.item-discount').value) || 0),
+                quantity: parseFloat(row.querySelector('.item-qty')?.value || 1),
+                unit_price: parseFloat(row.querySelector('.item-price')?.value || 0),
+                discount_percent: parseFloat(row.querySelector('.item-discount')?.value || 0),
             });
         }
     });
@@ -361,7 +372,7 @@ function viewQuote(quoteId) {
 }
 
 function deleteQuote(quoteId) {
-    
+    if (!confirm('Delete this quote?')) return;
     fetch(`${API}?action=delete`, {
         method: 'POST',
         credentials: 'same-origin',
@@ -388,28 +399,6 @@ function escapeHtml(str) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQuoteModal(); });
 document.querySelector('.modal-overlay').addEventListener('click', e => { 
     if (e.target === e.currentTarget) closeQuoteModal(); 
-});
-
-
-// Notification fallback
-if (typeof showNotification !== "function") {
-    window.showNotification = function(msg, type) {
-        const div = document.createElement("div");
-        div.className = "eb-toast eb-toast-" + (type || "info");
-        div.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);color:#fff;background:" + (type === "error" ? "#dc2626" : type === "success" ? "#16a34a" : "#3b82f6") + ";animation:ebToastIn .25s";
-        div.textContent = msg;
-        document.body.appendChild(div);
-        setTimeout(function() { div.style.opacity = "0"; setTimeout(function() { div.remove(); }, 300); }, 3000);
-    };
-}
-
-
-// Auto-open modal if coming from dashboard
-document.addEventListener("DOMContentLoaded", function() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("action") === "new") {
-        openQuoteModal();
-    }
 });
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
