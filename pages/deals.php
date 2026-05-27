@@ -491,7 +491,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
 const USER_ROLE = <?= json_encode($userRole) ?>;
-const CSRF_TOKEN = 003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
+const CSRF_TOKEN = "2bfad4363b48dc06ac315f2ec00219afe45a828e0d135b64bfe35f50c9f066c3"; // Fixed
 const API = '/api/deals.php';
 
 const STAGES = [
@@ -612,8 +612,6 @@ function renderDealCard(deal, stage, cardClass) {
     </div>`;
 }
 
-);
-}
 
 // Drag & Drop
 function onDragStart(e) {
