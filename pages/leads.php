@@ -604,8 +604,7 @@ function bulkAssign() {
     var ids = getSelectedIds();
     var userId = document.getElementById('bulkAssignUser').value;
     if (ids.length === 0) return;
-    if (!userId) { alert('Please select a user to assign to.'); return; }
-    if (!confirm('Assign ' + ids.length + ' leads to selected user?')) return;
+    if (!userId) { showNotification('Please select a user to assign to.', 'error'); return; }
     
     fetch('/api/leads.php?action=bulk_assign&_cb=' + Date.now(), {
         credentials: 'same-origin',
@@ -628,7 +627,6 @@ function bulkAssign() {
 function bulkDelete() {
     var ids = getSelectedIds();
     if (ids.length === 0) return;
-    if (!confirm('Are you sure you want to PERMANENTLY delete ' + ids.length + ' leads? This cannot be undone.')) return;
     
     fetch('/api/leads.php?action=bulk_delete&_cb=' + Date.now(), {
         credentials: 'same-origin',

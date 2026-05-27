@@ -353,10 +353,10 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 </div>
 
 <script>
-const COMPANY_ID = <?= json_encode($companyId) ?>;
+const COMPANY_ID = <?php echo  json_encode($companyId) ?>;
 const CSRF_TOKEN = *** json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/automation.php';
-const USERS = <?= json_encode($users) ?>;
+const USERS = <?php echo  json_encode($users) ?>;
 
 let rules = [];
 
@@ -379,11 +379,7 @@ function loadRules() {
 function renderRules() {
     const container = document.getElementById('rules-list');
     if (!rules.length) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <h3>No automation rules yet</h3>
-                Create rules to automate repetitive tasks like assigning leads or creating follow-up tasks.
-            </div>`;
+        container.innerHTML = `             <div class="empty-state">                 <h3>No automation rules yet</h3>                 Create rules to automate repetitive tasks like assigning leads or creating follow-up tasks.             </div>`;
         return;
     }
     
@@ -401,19 +397,7 @@ function renderRules() {
             'move_deal': 'Move deal',
             'notify_user': 'Send notification',
         };
-        return `
-        <div class="rule-card ${r.is_active ? '' : 'inactive'}">
-            <div class="rule-info">
-                <div class="rule-name">${escapeHtml(r.rule_name)}</div>
-                <div class="rule-desc">When <strong>${triggerLabels[r.trigger_type] || r.trigger_type}</strong> → Then <strong>${actionLabels[r.action_type] || r.action_type}</strong></div>
-                <div class="rule-meta">Run ${r.run_count || 0} times · Created by ${escapeHtml(r.creator_name || 'System')}</div>
-            </div>
-            <div class="toggle-switch ${r.is_active ? 'active' : ''}" onclick="toggleRule(${r.rule_id}, this)"></div>
-            <div class="rule-actions">
-                <button onclick="editRule(${r.rule_id})" title="Edit">✏️</button>
-                <button onclick="deleteRule(${r.rule_id})" title="Delete">🗑️</button>
-            </div>
-        </div>`;
+        return `         <div class="rule-card ${r.is_active ? '' : 'inactive'}">             <div class="rule-info">                 <div class="rule-name">${escapeHtml(r.rule_name)}</div>                 <div class="rule-desc">When <strong>${triggerLabels[r.trigger_type] || r.trigger_type}</strong> → Then <strong>${actionLabels[r.action_type] || r.action_type}</strong></div>                 <div class="rule-meta">Run ${r.run_count || 0} times · Created by ${escapeHtml(r.creator_name || 'System')}</div>             </div>             <div class="toggle-switch ${r.is_active ? 'active' : ''}" onclick="toggleRule(${r.rule_id}, this)"></div>             <div class="rule-actions">                 <button onclick="editRule(${r.rule_id})" title="Edit">✏️</button>                 <button onclick="deleteRule(${r.rule_id})" title="Delete">🗑️</button>             </div>         </div>`;
     }).join('');
 }
 
@@ -428,14 +412,7 @@ function loadLogs() {
                 container.innerHTML = '<div class="empty-state" style="padding:20px 0;">No recent activity.</div>';
                 return;
             }
-            container.innerHTML = logs.map(l => `
-                <div class="log-entry">
-                    <div class="log-status ${l.status}"></div>
-                    <div class="log-time">${formatTime(l.created_at)}</div>
-                    <div class="log-action">${escapeHtml(l.action_taken)}</div>
-                    <div class="log-rule">${escapeHtml(l.rule_name || '')}</div>
-                </div>
-            `).join('');
+            container.innerHTML = logs.map(l => `                 <div class="log-entry">                     <div class="log-status ${l.status}"></div>                     <div class="log-time">${formatTime(l.created_at)}</div>                     <div class="log-action">${escapeHtml(l.action_taken)}</div>                     <div class="log-rule">${escapeHtml(l.rule_name || '')}</div>                 </div>             `).join('');
         });
 }
 
@@ -487,64 +464,19 @@ function updateActionOptions() {
     
     switch (action) {
         case 'assign_user':
-            container.innerHTML = `
-                <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Assign to</label>
-                    <select id="action-user-id" class="form-control">${userOptions}</select>
-                </div>`;
+            container.innerHTML = `                 <div class="form-group" style="margin-bottom:0">                     <label class="form-label">Assign to</label>                     <select id="action-user-id" class="form-control">${userOptions}</select>                 </div>`;
             break;
         case 'create_task':
-            container.innerHTML = `
-                <div class="form-group">
-                    <label class="form-label">Task Title</label>
-                    <input type="text" id="action-task-title" class="form-control" value="Follow up">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Due in (days)</label>
-                        <input type="number" id="action-due-days" class="form-control" value="2" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Priority</label>
-                        <select id="action-priority" class="form-control">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                </div>`;
+            container.innerHTML = `                 <div class="form-group">                     <label class="form-label">Task Title</label>                     <input type="text" id="action-task-title" class="form-control" value="Follow up">                 </div>                 <div class="form-row">                     <div class="form-group">                         <label class="form-label">Due in (days)</label>                         <input type="number" id="action-due-days" class="form-control" value="2" min="1">                     </div>                     <div class="form-group">                         <label class="form-label">Priority</label>                         <select id="action-priority" class="form-control">                             <option value="low">Low</option>                             <option value="medium" selected>Medium</option>                             <option value="high">High</option>                         </select>                     </div>                 </div>`;
             break;
         case 'send_email':
-            container.innerHTML = `
-                <div class="form-group">
-                    <label class="form-label">To</label>
-                    <input type="email" id="action-email-to" class="form-control" placeholder="admin@company.com">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Subject</label>
-                    <input type="text" id="action-email-subject" class="form-control" value="New lead notification">
-                </div>`;
+            container.innerHTML = `                 <div class="form-group">                     <label class="form-label">To</label>                     <input type="email" id="action-email-to" class="form-control" placeholder="admin@company.com">                 </div>                 <div class="form-group">                     <label class="form-label">Subject</label>                     <input type="text" id="action-email-subject" class="form-control" value="New lead notification">                 </div>`;
             break;
         case 'move_deal':
-            container.innerHTML = `
-                <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Move to stage</label>
-                    <select id="action-target-stage" class="form-control">
-                        <option value="prospecting">Prospecting</option>
-                        <option value="qualification">Qualification</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="negotiation">Negotiation</option>
-                        <option value="closed_won">Closed Won</option>
-                        <option value="closed_lost">Closed Lost</option>
-                    </select>
-                </div>`;
+            container.innerHTML = `                 <div class="form-group" style="margin-bottom:0">                     <label class="form-label">Move to stage</label>                     <select id="action-target-stage" class="form-control">                         <option value="prospecting">Prospecting</option>                         <option value="qualification">Qualification</option>                         <option value="proposal">Proposal</option>                         <option value="negotiation">Negotiation</option>                         <option value="closed_won">Closed Won</option>                         <option value="closed_lost">Closed Lost</option>                     </select>                 </div>`;
             break;
         case 'notify_user':
-            container.innerHTML = `
-                <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Message</label>
-                    <input type="text" id="action-message" class="form-control" value="Action required!">
-                </div>`;
+            container.innerHTML = `                 <div class="form-group" style="margin-bottom:0">                     <label class="form-label">Message</label>                     <input type="text" id="action-message" class="form-control" value="Action required!">                 </div>`;
             break;
     }
 }
@@ -559,26 +491,26 @@ function saveRule(e) {
     
     switch (actionType) {
         case 'assign_user':
-            actionConfig = { user_id: parseInt(document.getElementById('action-user-id')?.value) || 0 };
+            actionConfig = { user_id: (parseInt(document.getElementById('action-user-id') \u0026\u0026 parseInt(document.getElementById('action-user-id').value)) || 0 };
             break;
         case 'create_task':
             actionConfig = {
-                title: document.getElementById('action-task-title')?.value || 'Follow up',
-                due_days: parseInt(document.getElementById('action-due-days')?.value) || 2,
-                priority: document.getElementById('action-priority')?.value || 'medium',
+                title: (document.getElementById('action-task-title') \u0026\u0026 document.getElementById('action-task-title').value) || 'Follow up',
+                due_days: (parseInt(document.getElementById('action-due-days') \u0026\u0026 parseInt(document.getElementById('action-due-days').value)) || 2,
+                priority: (document.getElementById('action-priority') \u0026\u0026 document.getElementById('action-priority').value) || 'medium',
             };
             break;
         case 'send_email':
             actionConfig = {
-                to: document.getElementById('action-email-to')?.value || '',
-                subject: document.getElementById('action-email-subject')?.value || '',
+                to: (document.getElementById('action-email-to') \u0026\u0026 document.getElementById('action-email-to').value) || '',
+                subject: (document.getElementById('action-email-subject') \u0026\u0026 document.getElementById('action-email-subject').value) || '',
             };
             break;
         case 'move_deal':
-            actionConfig = { stage: document.getElementById('action-target-stage')?.value || 'prospecting' };
+            actionConfig = { stage: (document.getElementById('action-target-stage') \u0026\u0026 document.getElementById('action-target-stage').value) || 'prospecting' };
             break;
         case 'notify_user':
-            actionConfig = { message: document.getElementById('action-message')?.value || '' };
+            actionConfig = { message: (document.getElementById('action-message') \u0026\u0026 document.getElementById('action-message').value) || '' };
             break;
     }
     
@@ -624,7 +556,7 @@ function toggleRule(ruleId, el) {
 }
 
 function deleteRule(ruleId) {
-    if (!confirm('Delete this automation rule?')) return;
+    
     fetch(`${API}?action=delete`, {
         method: 'POST',
         credentials: 'same-origin',
@@ -651,5 +583,19 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRuleMod
 document.querySelector('.modal-overlay').addEventListener('click', e => { 
     if (e.target === e.currentTarget) closeRuleModal(); 
 });
+
+
+// Notification fallback
+if (typeof showNotification !== "function") {
+    window.showNotification = function(msg, type) {
+        const div = document.createElement("div");
+        div.className = "eb-toast eb-toast-" + (type || "info");
+        div.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);color:#fff;background:" + (type === "error" ? "#dc2626" : type === "success" ? "#16a34a" : "#3b82f6") + ";animation:ebToastIn .25s";
+        div.textContent = msg;
+        document.body.appendChild(div);
+        setTimeout(function() { div.style.opacity = "0"; setTimeout(function() { div.remove(); }, 300); }, 3000);
+    };
+}
+
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

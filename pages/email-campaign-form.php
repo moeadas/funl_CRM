@@ -159,7 +159,7 @@ document.getElementById('campaignForm').addEventListener('submit', function(e) {
 });
 
 function sendCampaign() {
-    if (!confirm('Send this campaign to all recipients in the selected list? This cannot be undone.')) return;
+    
     fetch('/api/email.php?action=campaign_send', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},

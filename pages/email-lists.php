@@ -236,7 +236,7 @@ document.getElementById('populateForm').addEventListener('submit', function(e) {
 });
 
 function deleteList(id) {
-    if (!confirm('Delete this list and all its members?')) return;
+    
     fetch('/api/email.php?action=list_delete', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ list_id: id, csrf_token: CSRF })

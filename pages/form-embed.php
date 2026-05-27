@@ -28,13 +28,13 @@ $fontFamily = $style['font_family'] ?? 'system-ui, -apple-system, sans-serif';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($form['title'] ?? 'Contact Form') ?></title>
+    <title><?php echo  htmlspecialchars($form['title'] ?? 'Contact Form') ?></title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: <?= $fontFamily ?>;
-            background: <?= $bgColor ?>;
-            color: <?= $textColor ?>;
+            font-family: <?php echo  $fontFamily ?>;
+            background: <?php echo  $bgColor ?>;
+            color: <?php echo  $textColor ?>;
             line-height: 1.5;
             padding: 24px;
         }
@@ -46,13 +46,13 @@ $fontFamily = $style['font_family'] ?? 'system-ui, -apple-system, sans-serif';
         .form-label .required { color: #dc2626; margin-left: 2px; }
         .form-control {
             width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
-            border-radius: <?= $borderRadius ?>px; font-size: 14px;
-            font-family: inherit; color: <?= $textColor ?>; background: white;
+            border-radius: <?php echo  $borderRadius ?>px; font-size: 14px;
+            font-family: inherit; color: <?php echo  $textColor ?>; background: white;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
         .form-control:focus {
-            outline: none; border-color: <?= $primaryColor ?>;
-            box-shadow: 0 0 0 3px <?= $primaryColor ?>20;
+            outline: none; border-color: <?php echo  $primaryColor ?>;
+            box-shadow: 0 0 0 3px <?php echo  $primaryColor ?>20;
         }
         select.form-control {
             appearance: none;
@@ -61,8 +61,8 @@ $fontFamily = $style['font_family'] ?? 'system-ui, -apple-system, sans-serif';
         }
         textarea.form-control { min-height: 100px; resize: vertical; }
         .btn-submit {
-            width: 100%; padding: 12px; background: <?= $primaryColor ?>;
-            color: white; border: none; border-radius: <?= $borderRadius ?>px;
+            width: 100%; padding: 12px; background: <?php echo  $primaryColor ?>;
+            color: white; border: none; border-radius: <?php echo  $borderRadius ?>px;
             font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
         }
         .btn-submit:hover { opacity: 0.9; }
@@ -81,10 +81,10 @@ $fontFamily = $style['font_family'] ?? 'system-ui, -apple-system, sans-serif';
 <body>
     <div class="form-container" id="form-container">
         <?php if ($form['title']): ?>
-            <h1 class="form-title"><?= htmlspecialchars($form['title']) ?></h1>
+            <h1 class="form-title"><?php echo  htmlspecialchars($form['title']) ?></h1>
         <?php endif; ?>
         <?php if ($form['description']): ?>
-            <p class="form-description"><?= nl2br(htmlspecialchars($form['description'])) ?></p>
+            <p class="form-description"><?php echo  nl2br(htmlspecialchars($form['description'])) ?></p>
         <?php endif; ?>
         
         <div class="error-message" id="error-message"></div>
@@ -93,27 +93,27 @@ $fontFamily = $style['font_family'] ?? 'system-ui, -apple-system, sans-serif';
             <?php foreach ($fields as $field): ?>
                 <div class="form-group">
                     <label class="form-label">
-                        <?= htmlspecialchars($field['label'] ?? $field['name']) ?>
+                        <?php echo  htmlspecialchars($field['label'] ?? $field['name']) ?>
                         <?php if (!empty($field['required'])): ?><span class="required">*</span><?php endif; ?>
                     </label>
                     <?php if ($field['type'] === 'textarea'): ?>
-                        <textarea name="<?= htmlspecialchars($field['name']) ?>" class="form-control"
+                        <textarea name="<?php echo  htmlspecialchars($field['name']) ?>" class="form-control"
                             <?php if (!empty($field['required'])) echo 'required'; ?>
-                            placeholder="<?= htmlspecialchars($field['placeholder'] ?? '') ?>"
+                            placeholder="<?php echo  htmlspecialchars($field['placeholder'] ?? '') ?>"
                         ></textarea>
                     <?php elseif ($field['type'] === 'select'): ?>
-                        <select name="<?= htmlspecialchars($field['name']) ?>" class="form-control" <?php if (!empty($field['required'])) echo 'required'; ?>>
+                        <select name="<?php echo  htmlspecialchars($field['name']) ?>" class="form-control" <?php if (!empty($field['required'])) echo 'required'; ?>>
                             <option value="">Select...</option>
                             <?php foreach ($field['options'] ?? [] as $opt): ?>
-                                <option value="<?= htmlspecialchars($opt) ?>"><?= htmlspecialchars($opt) ?></option>
+                                <option value="<?php echo  htmlspecialchars($opt) ?>"><?php echo  htmlspecialchars($opt) ?></option>
                             <?php endforeach; ?>
                         </select>
                     <?php else: ?>
-                        <input type="<?= htmlspecialchars($field['type'] ?? 'text') ?>" 
-                            name="<?= htmlspecialchars($field['name']) ?>" 
+                        <input type="<?php echo  htmlspecialchars($field['type'] ?? 'text') ?>" 
+                            name="<?php echo  htmlspecialchars($field['name']) ?>" 
                             class="form-control"
                             <?php if (!empty($field['required'])) echo 'required'; ?>
-                            placeholder="<?= htmlspecialchars($field['placeholder'] ?? '') ?>"
+                            placeholder="<?php echo  htmlspecialchars($field['placeholder'] ?? '') ?>"
                         >
                     <?php endif; ?>
                 </div>
@@ -126,7 +126,7 @@ $fontFamily = $style['font_family'] ?? 'system-ui, -apple-system, sans-serif';
     <div class="powered-by">Powered by White Label CRM</div>
     
     <script>
-        const FORM_SLUG = <?= json_encode($slug) ?>;
+        const FORM_SLUG = <?php echo  json_encode($slug) ?>;
         const API_URL = '/api/form-submit.php';
         
         function submitForm(e) {

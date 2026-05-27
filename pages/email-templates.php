@@ -130,7 +130,7 @@ document.getElementById('newTemplateForm').addEventListener('submit', function(e
 });
 
 function deleteTemplate(id) {
-    if (!confirm('Delete this template permanently?')) return;
+    
     fetch('/api/email.php?action=template_delete', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ template_id: id, csrf_token: '<?php echo $csrfToken; ?>' })

@@ -14,7 +14,7 @@ requireLogin();
 
 header('Content-Type: application/json');
 
-$db = Database::getInstance()->getConnection();
+$db = Database::getInstance();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 $currentUser = getCurrentUser();
@@ -96,9 +96,10 @@ function handlePostRequest($db, $action, $currentUser) {
     }
 
     switch ($action) {
-        case 'create':      createLead($db, $data, $currentUser); break;
+        case 'create':       createLead($db, $data, $currentUser); break;
         case 'bulk_assign':  bulkAssignLeads($db, $data, $currentUser); break;
         case 'bulk_delete':  bulkDeleteLeads($db, $data, $currentUser); break;
+        case 'move_to_contact': moveLeadToContact($db, $data, $currentUser); break;
         default:             jsonError('Unknown action', 400);
     }
 }
@@ -384,7 +385,7 @@ function createLead($db, $data, $currentUser) {
     ]);
 
     $leadName = $data['contact_person'] ?? $data['company_name'] ?? 'New Lead';
-    $leadId = $db->lastInsertId();
+    $leadId = $db->getConnection()->lastInsertId();
 
     // Save custom field values
     saveCustomFieldValues($leadId, $data);
@@ -596,5 +597,68 @@ function bulkDeleteLeads($db, $data, $currentUser) {
     $count = count($ids);
     logActivity($currentUser['user_id'], 'Bulk Delete', 'Lead', 0, "Deleted $count leads");
     jsonSuccess("Successfully deleted $count leads");
+}
+
+function moveLeadToContact($db, $data, $currentUser) {
+    if (!hasRole('Sales Manager') && !hasRole('Admin')) {
+        jsonError('Permission denied', 403);
+    }
+    
+    $leadId = intval($data['lead_id'] ?? 0);
+    if (!$leadId) jsonError('Lead ID required', 400);
+    
+    $companyId = $currentUser['company_id'] ?? null;
+    if (!$companyId) jsonError('Company not found', 400);
+    
+    // Get the lead
+    $stmt = $db->prepare("SELECT * FROM leads WHERE lead_id = ? AND company_id = ?");
+    $stmt->execute([$leadId, $companyId]);
+    $lead = $stmt->fetch();
+    if (!$lead) jsonError('Lead not found', 404);
+    
+    // Create contact from lead data
+    $stmt = $db->prepare("
+        INSERT INTO contacts (company_id, first_name, last_name, email, phone, mobile, 
+            title, address, city, country, notes, 
+            assigned_to, created_by, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    ");
+    
+    $nameParts = explode(' ', trim($lead['contact_person'] ?: 'Unknown'), 2);
+    $firstName = $nameParts[0] ?? 'Unknown';
+    $lastName = $nameParts[1] ?? '';
+    
+    $notes = $lead['notes'] ?: '';
+    if ($lead['company_name']) {
+        $notes = "Company: " . $lead['company_name'] . "\n" . $notes;
+    }
+    if ($lead['industry']) {
+        $notes = "Industry: " . $lead['industry'] . "\n" . $notes;
+    }
+    
+    $stmt->execute([
+        $companyId,
+        $firstName,
+        $lastName,
+        $lead['email'] ?: null,
+        $lead['phone'] ?: null,
+        $lead['mobile'] ?: null,
+        $lead['title_position'] ?: null,
+        $lead['address'] ?: null,
+        $lead['city'] ?: null,
+        $lead['country'] ?: null,
+        $notes ?: null,
+        $lead['assigned_to'],
+        $currentUser['user_id']
+    ]);
+    
+    $contactId = $db->getConnection()->lastInsertId();
+    
+    // Log activity
+    $leadName = $lead['contact_person'] ?: $lead['company_name'] ?: 'Lead #' . $leadId;
+    logActivity($currentUser['user_id'], 'Convert to Contact', 'Lead', $leadId, 
+        "Converted lead '$leadName' to contact ID $contactId");
+    
+    jsonSuccess('Lead moved to contacts successfully', ['contact_id' => $contactId]);
 }
 ?>

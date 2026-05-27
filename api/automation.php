@@ -12,7 +12,7 @@ requireLogin();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
-$db = Database::getInstance()->getConnection();
+$db = Database::getInstance();
 $userId = getCurrentUser()['user_id'] ?? 0;
 $companyId = $_SESSION["company_id"] ?? null;
 

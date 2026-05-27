@@ -236,7 +236,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                         <select id="form-assign" class="form-control">
                             <option value="">Do not auto-assign</option>
                             <?php foreach ($users as $u): ?>
-                                <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
+                                <option value="<?php echo  $u['user_id'] ?>"><?php echo  htmlspecialchars($u['full_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -276,7 +276,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 </div>
 
 <script>
-const COMPANY_ID = <?= json_encode($companyId) ?>;
+const COMPANY_ID = <?php echo  json_encode($companyId) ?>;
 const CSRF_TOKEN = *** json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/webforms.php';
 
@@ -298,32 +298,11 @@ function loadForms() {
 function renderForms() {
     const grid = document.getElementById('forms-grid');
     if (!forms.length) {
-        grid.innerHTML = `
-            <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#9ca3af">
-                <h3 style="font-size:16px;margin:0 0 8px;color:#374151">No web forms yet</h3>
-                Create embeddable forms to capture leads from your website.
-            </div>`;
+        grid.innerHTML = `             <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#9ca3af">                 <h3 style="font-size:16px;margin:0 0 8px;color:#374151">No web forms yet</h3>                 Create embeddable forms to capture leads from your website.             </div>`;
         return;
     }
     
-    grid.innerHTML = forms.map(f => `
-        <div class="form-card">
-            <div class="form-card-header">
-                <div class="form-name">${escapeHtml(f.form_name)}</div>
-                <div class="form-status ${f.is_active ? 'active' : 'inactive'}">${f.is_active ? 'Active' : 'Inactive'}</div>
-            </div>
-            <div class="form-slug">${escapeHtml(f.form_slug)}</div>
-            <div class="form-stats">
-                <span>📥 ${f.submit_count || 0} submissions</span>
-                <span>👁️ ${f.is_active ? 'Live' : 'Hidden'}</span>
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-outline" onclick="showEmbed(${f.form_id})">Embed</button>
-                <button class="btn btn-outline" onclick="editForm(${f.form_id})">Edit</button>
-                <button class="btn btn-outline" onclick="deleteForm(${f.form_id})">Delete</button>
-            </div>
-        </div>
-    `).join('');
+    grid.innerHTML = forms.map(f => `         <div class="form-card">             <div class="form-card-header">                 <div class="form-name">${escapeHtml(f.form_name)}</div>                 <div class="form-status ${f.is_active ? 'active' : 'inactive'}">${f.is_active ? 'Active' : 'Inactive'}</div>             </div>             <div class="form-slug">${escapeHtml(f.form_slug)}</div>             <div class="form-stats">                 <span>📥 ${f.submit_count || 0} submissions</span>                 <span>👁️ ${f.is_active ? 'Live' : 'Hidden'}</span>             </div>             <div class="form-actions">                 <button class="btn btn-outline" onclick="showEmbed(${f.form_id})">Embed</button>                 <button class="btn btn-outline" onclick="editForm(${f.form_id})">Edit</button>                 <button class="btn btn-outline" onclick="deleteForm(${f.form_id})">Delete</button>             </div>         </div>     `).join('');
 }
 
 function openFormModal() {
@@ -390,7 +369,7 @@ function saveForm(e) {
 }
 
 function deleteForm(formId) {
-    if (!confirm('Delete this form and all its submissions?')) return;
+    
     fetch(`${API}?action=delete`, {
         method: 'POST',
         credentials: 'same-origin',
@@ -411,12 +390,7 @@ function showEmbed(formId) {
     if (!form) return;
     
     const baseUrl = window.location.origin;
-    const embedCode = `<!-- Embed this form on your website -->
-<iframe 
-    src="${baseUrl}/pages/form-embed.php?slug=${form.form_slug}" 
-    width="100%" 
-    height="600" 
-    style="border:none;border-radius:8px;"></iframe>`;
+    const embedCode = `<!-- Embed this form on your website --> <iframe      src="${baseUrl}/pages/form-embed.php?slug=${form.form_slug}"      width="100%"      height="600"      style="border:none;border-radius:8px;"></iframe>`;
     
     document.getElementById('embed-code').textContent = embedCode;
     document.getElementById('embed-url').value = `${baseUrl}/pages/form-embed.php?slug=${form.form_slug}`;
@@ -440,5 +414,19 @@ document.addEventListener('keydown', e => {
 document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) { closeFormModal(); closeEmbedModal(); } });
 });
+
+
+// Notification fallback
+if (typeof showNotification !== "function") {
+    window.showNotification = function(msg, type) {
+        const div = document.createElement("div");
+        div.className = "eb-toast eb-toast-" + (type || "info");
+        div.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);color:#fff;background:" + (type === "error" ? "#dc2626" : type === "success" ? "#16a34a" : "#3b82f6") + ";animation:ebToastIn .25s";
+        div.textContent = msg;
+        document.body.appendChild(div);
+        setTimeout(function() { div.style.opacity = "0"; setTimeout(function() { div.remove(); }, 300); }, 3000);
+    };
+}
+
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

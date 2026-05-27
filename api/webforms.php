@@ -11,13 +11,13 @@ requireLogin();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
-$db = Database::getInstance()->getConnection();
+$db = Database::getInstance();
 $userId = getCurrentUser()['user_id'] ?? 0;
 $companyId = $_SESSION["company_id"] ?? null;
 
 // ── CRUD ──────────────────────────────────────────────────────
 
-if ($action === 'list' && $method === 'GET') {
+if ($action === 'list' && ($method === 'GET' || $method === 'POST')) {
     $forms = $db->query("
         SELECT f.*, u.full_name as creator_name
         FROM web_forms f

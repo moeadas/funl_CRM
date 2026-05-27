@@ -419,7 +419,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
             <select id="contact-account-filter" class="filter-select" onchange="loadContacts()">
                 <option value="">All Accounts</option>
                 <?php foreach ($accounts as $a): ?>
-                    <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
+                    <option value="<?php echo  $a['account_id'] ?>"><?php echo  htmlspecialchars($a['account_name']) ?></option>
                 <?php endforeach; ?>
             </select>
             <select id="contact-status-filter" class="filter-select" onchange="loadContacts()">
@@ -514,7 +514,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                         <select id="contact-account-id" class="form-control">
                             <option value="">No Account</option>
                             <?php foreach ($accounts as $a): ?>
-                                <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
+                                <option value="<?php echo  $a['account_id'] ?>"><?php echo  htmlspecialchars($a['account_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -531,9 +531,9 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                     <label class="form-label">Tags</label>
                     <div class="tag-selector" id="tag-selector">
                         <?php foreach ($tags as $t): ?>
-                            <label class="tag-option" style="background:<?= htmlspecialchars($t['tag_color']) ?>20;color:<?= htmlspecialchars($t['tag_color']) ?>">
-                                <input type="checkbox" value="<?= $t['tag_id'] ?>" name="tags">
-                                <?= htmlspecialchars($t['tag_name']) ?>
+                            <label class="tag-option" style="background:<?php echo  htmlspecialchars($t['tag_color']) ?>20;color:<?php echo  htmlspecialchars($t['tag_color']) ?>">
+                                <input type="checkbox" value="<?php echo  $t['tag_id'] ?>" name="tags">
+                                <?php echo  htmlspecialchars($t['tag_name']) ?>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -597,7 +597,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                         <select id="account-country" class="form-control">
                             <option value="">Select country</option>
                             <?php foreach ($companies as $c): ?>
-                                <option value="<?= htmlspecialchars($c['country']) ?>"><?= htmlspecialchars($c['country']) ?></option>
+                                <option value="<?php echo  htmlspecialchars($c['country']) ?>"><?php echo  htmlspecialchars($c['country']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -620,9 +620,9 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 </div>
 
 <script>
-const COMPANY_ID = <?= json_encode($companyId) ?>;
-const USER_ROLE = <?= json_encode($userRole) ?>;
-const CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
+const COMPANY_ID = <?php echo  json_encode($companyId) ?>;
+const USER_ROLE = <?php echo  json_encode($userRole) ?>;
+const CSRF_TOKEN = <?php echo  json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/contacts.php';
 
 let contacts = [];
@@ -643,9 +643,9 @@ function switchTab(tab) {
 // ── Contacts ────────────────────────────────────────────────
 
 function loadContacts() {
-    const search = document.getElementById('contact-search')?.value || '';
-    const accountId = document.getElementById('contact-account-filter')?.value || '';
-    const status = document.getElementById('contact-status-filter')?.value || '';
+    const search = (document.getElementById('contact-search') \u0026\u0026 document.getElementById('contact-search').value) || '';
+    const accountId = (document.getElementById('contact-account-filter') \u0026\u0026 document.getElementById('contact-account-filter').value) || '';
+    const status = (document.getElementById('contact-status-filter') \u0026\u0026 document.getElementById('contact-status-filter').value) || '';
     
     let url = `${API}?action=list_contacts`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -673,21 +673,7 @@ function renderContacts() {
             `<span class="tag" style="background:${t.tag_color}20;color:${t.tag_color}">${escapeHtml(t.tag_name)}</span>`
         ).join('') : '';
         const statusClass = 'status-' + (c.contact_status || 'active').toLowerCase().replace(' ', '-');
-        return `<tr onclick="editContact(${c.contact_id})" style="cursor:pointer">
-            <td>
-                <div class="contact-name">${escapeHtml(c.first_name)} ${escapeHtml(c.last_name)}</div>
-                ${c.title ? `<div style="font-size:12px;color:#9ca3af">${escapeHtml(c.title)}</div>` : ''}
-            </td>
-            <td>${c.account_name ? `<span class="account-badge">${escapeHtml(c.account_name)}</span>` : '-'}</td>
-            <td class="contact-email">${c.email ? `<a href="mailto:${escapeHtml(c.email)}">${escapeHtml(c.email)}</a>` : '-'}</td>
-            <td>${c.phone || '-'}</td>
-            <td>${tags || '-'}</td>
-            <td><span class="status-badge ${statusClass}">${c.contact_status || 'Active'}</span></td>
-            <td><div class="action-btns" onclick="event.stopPropagation()">
-                <button onclick="editContact(${c.contact_id})" title="Edit">✏️</button>
-                <button onclick="deleteContact(${c.contact_id})" title="Delete">🗑️</button>
-            </div></td>
-        </tr>`;
+        return `<tr onclick="editContact(${c.contact_id})" style="cursor:pointer">             <td>                 <div class="contact-name">${escapeHtml(c.first_name)} ${escapeHtml(c.last_name)}</div>                 ${c.title ? `<div style="font-size:12px;color:#9ca3af">${escapeHtml(c.title)}</div>` : ''}             </td>             <td>${c.account_name ? `<span class="account-badge">${escapeHtml(c.account_name)}</span>` : '-'}</td>             <td class="contact-email">${c.email ? `<a href="mailto:${escapeHtml(c.email)}">${escapeHtml(c.email)}</a>` : '-'}</td>             <td>${c.phone || '-'}</td>             <td>${tags || '-'}</td>             <td><span class="status-badge ${statusClass}">${c.contact_status || 'Active'}</span></td>             <td><div class="action-btns" onclick="event.stopPropagation()">                 <button onclick="editContact(${c.contact_id})" title="Edit">✏️</button>                 <button onclick="deleteContact(${c.contact_id})" title="Delete">🗑️</button>             </div></td>         </tr>`;
     }).join('');
 }
 
@@ -702,32 +688,7 @@ function showContactForm(contactId) {
 }
 
 function editContact(contactId) {
-    fetch(`${API}?action=get_contact&contact_id=${contactId}`, { credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(resp => {
-            if (!resp.success) { showNotification(resp.message, 'error'); return; }
-            const c = resp.data;
-            document.getElementById('contact-id').value = c.contact_id;
-            document.getElementById('contact-first-name').value = c.first_name || '';
-            document.getElementById('contact-last-name').value = c.last_name || '';
-            document.getElementById('contact-email').value = c.email || '';
-            document.getElementById('contact-phone').value = c.phone || '';
-            document.getElementById('contact-mobile').value = c.mobile || '';
-            document.getElementById('contact-title').value = c.title || '';
-            document.getElementById('contact-account-id').value = c.account_id || '';
-            document.getElementById('contact-status').value = c.contact_status || 'Active';
-            document.getElementById('contact-notes').value = c.notes || '';
-            
-            document.querySelectorAll('#tag-selector input').forEach(i => i.checked = false);
-            if (c.tags) c.tags.forEach(t => {
-                const cb = document.querySelector(`#tag-selector input[value="${t.tag_id}"]`);
-                if (cb) cb.checked = true;
-            });
-            
-            document.getElementById('contact-modal-title').textContent = 'Edit Contact';
-            document.getElementById('contact-save-btn').textContent = 'Save Changes';
-            document.getElementById('contact-modal').classList.add('active');
-        });
+    window.location.href = '/pages/contact-detail.php?id=' + contactId;
 }
 
 function closeContactModal() {
@@ -773,7 +734,7 @@ function saveContact(e) {
 }
 
 function deleteContact(contactId) {
-    if (!confirm('Delete this contact?')) return;
+    
     fetch(`${API}?action=delete_contact`, {
         method: 'POST',
         credentials: 'same-origin',
@@ -792,8 +753,8 @@ function deleteContact(contactId) {
 // ── Accounts ────────────────────────────────────────────────
 
 function loadAccounts() {
-    const search = document.getElementById('account-search')?.value || '';
-    const type = document.getElementById('account-type-filter')?.value || '';
+    const search = (document.getElementById('account-search') \u0026\u0026 document.getElementById('account-search').value) || '';
+    const type = (document.getElementById('account-type-filter') \u0026\u0026 document.getElementById('account-type-filter').value) || '';
     
     let url = `${API}?action=list_accounts`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -815,20 +776,7 @@ function renderAccounts() {
         grid.innerHTML = '<div class="empty-state"><h3>No accounts yet</h3>Click "+ New Account" to add your first account.</div>';
         return;
     }
-    grid.innerHTML = accounts.map(a => `
-        <div class="account-card" onclick="showAccountDetail(${a.account_id})">
-            <div class="account-card-header">
-                <div class="account-name">${escapeHtml(a.account_name)}</div>
-                <div class="account-type">${a.account_type || 'Customer'}</div>
-            </div>
-            <div class="account-meta">
-                ${a.industry ? `<div class="account-meta-row">🏢 ${escapeHtml(a.industry)}</div>` : ''}
-                ${a.phone ? `<div class="account-meta-row">📞 ${escapeHtml(a.phone)}</div>` : ''}
-                ${a.city || a.country ? `<div class="account-meta-row">📍 ${escapeHtml([a.city, a.country].filter(Boolean).join(', '))}</div>` : ''}
-                <div class="account-meta-row">👥 ${a.contact_count || 0} contact${a.contact_count !== '1' ? 's' : ''}</div>
-            </div>
-        </div>
-    `).join('');
+    grid.innerHTML = accounts.map(a => `         <div class="account-card" onclick="showAccountDetail(${a.account_id})">             <div class="account-card-header">                 <div class="account-name">${escapeHtml(a.account_name)}</div>                 <div class="account-type">${a.account_type || 'Customer'}</div>             </div>             <div class="account-meta">                 ${a.industry ? `<div class="account-meta-row">🏢 ${escapeHtml(a.industry)}</div>` : ''}                 ${a.phone ? `<div class="account-meta-row">📞 ${escapeHtml(a.phone)}</div>` : ''}                 ${a.city || a.country ? `<div class="account-meta-row">📍 ${escapeHtml([a.city, a.country].filter(Boolean).join(', '))}</div>` : ''}                 <div class="account-meta-row">👥 ${a.contact_count || 0} contact${a.contact_count !== '1' ? 's' : ''}</div>             </div>         </div>     `).join('');
 }
 
 function showAccountForm(accountId) {
@@ -915,5 +863,17 @@ document.addEventListener('keydown', e => {
 document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) { closeContactModal(); closeAccountModal(); } });
 });
+// Notification fallback
+if (typeof showNotification !== "function") {
+    window.showNotification = function(msg, type) {
+        const div = document.createElement("div");
+        div.className = "eb-toast eb-toast-" + (type || "info");
+        div.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);color:#fff;background:" + (type === "error" ? "#dc2626" : type === "success" ? "#16a34a" : "#3b82f6") + ";animation:ebToastIn .25s";
+        div.textContent = msg;
+        document.body.appendChild(div);
+        setTimeout(function() { div.style.opacity = "0"; setTimeout(function() { div.remove(); }, 300); }, 3000);
+    };
+}
+
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

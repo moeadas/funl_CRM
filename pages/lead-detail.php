@@ -155,6 +155,10 @@ $statusColors = [
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit Lead
         </a>
+        <button onclick="moveLeadToContact(<?php echo $leadId; ?>)" class="btn btn-success" style="background:#16a34a;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            Move to Contacts
+        </button>
         <a href="leads.php" class="btn btn-outline">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             Back
@@ -995,6 +999,30 @@ function sendEmail(e) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeComposeEmail();
 });
+
+// Move lead to contacts
+function moveLeadToContact(leadId) {
+    if (!leadId) return;
+    
+    var fd = new FormData();
+    (fd.append('csrf_token', document.getElementById('globalCsrfToken') \u0026\u0026 fd.append('csrf_token', document.getElementById('globalCsrfToken').value) || '');
+    fd.append('action', 'move_to_contact');
+    fd.append('lead_id', leadId);
+    
+    fetch('/api/leads.php?action=move_to_contact', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Lead moved to contacts successfully!', 'success');
+            setTimeout(function() { window.location.href = '/pages/contacts.php'; }, 1500);
+        } else {
+            showNotification(data.message || 'Failed to move lead to contacts', 'error');
+        }
+    })
+    .catch(function() {
+        showNotification('An error occurred', 'error');
+    });
+}
 </script>
 
 <?php include '../includes/footer.php'; ?>

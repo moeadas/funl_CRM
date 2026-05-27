@@ -12,7 +12,8 @@ requireLogin();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
-$db = Database::getInstance()->getConnection();
+$db = Database::getInstance();
+$conn = $db->getConnection();
 $userId = getCurrentUser()['user_id'] ?? 0;
 $companyId = $_SESSION["company_id"] ?? null;
 
@@ -49,16 +50,18 @@ if ($action === 'list' && $method === 'GET') {
     $sql = "SELECT t.*, 
             u.full_name as assigned_name, 
             l.company_name as lead_name,
-            c.full_name as creator_name
+            CONCAT(c.first_name, ' ', c.last_name) as contact_name,
+            cr.full_name as creator_name
             FROM tasks t
             LEFT JOIN users u ON t.assigned_to = u.user_id
             LEFT JOIN leads l ON t.lead_id = l.lead_id
-            LEFT JOIN users c ON t.created_by = c.user_id
+            LEFT JOIN contacts c ON t.contact_id = c.contact_id
+            LEFT JOIN users cr ON t.created_by = cr.user_id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY 
               CASE t.status WHEN 'todo' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'review' THEN 3 WHEN 'done' THEN 4 ELSE 5 END,
               CASE t.priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,
-              t.due_date ASC NULLS LAST,
+              t.due_date IS NOT NULL ASC, t.due_date ASC,
               t.created_at DESC";
     
     $stmt = $db->prepare($sql);
@@ -77,6 +80,7 @@ if ($action === 'create' && $method === 'POST') {
     $priority = sanitizeInput($input['priority'] ?? 'medium');
     $assignedTo = !empty($input['assigned_to']) ? (int)$input['assigned_to'] : null;
     $leadId = !empty($input['lead_id']) ? (int)$input['lead_id'] : null;
+    $contactId = !empty($input['contact_id']) ? (int)$input['contact_id'] : null;
     $dueDate = sanitizeInput($input['due_date'] ?? '');
     $followUpDate = sanitizeInput($input['follow_up_date'] ?? '');
     
@@ -90,6 +94,7 @@ if ($action === 'create' && $method === 'POST') {
         'priority'       => $priority,
         'assigned_to'    => $assignedTo,
         'lead_id'        => $leadId,
+        'contact_id'     => $contactId,
         'due_date'       => $dueDate ?: null,
         'follow_up_date' => $followUpDate ?: null,
         'created_by'     => $userId,
@@ -114,6 +119,7 @@ if ($action === 'update' && $method === 'POST') {
     if (isset($input['priority'])) $updates['priority'] = sanitizeInput($input['priority']);
     if (isset($input['assigned_to'])) $updates['assigned_to'] = $input['assigned_to'] ? (int)$input['assigned_to'] : null;
     if (isset($input['lead_id'])) $updates['lead_id'] = $input['lead_id'] ? (int)$input['lead_id'] : null;
+    if (isset($input['contact_id'])) $updates['contact_id'] = $input['contact_id'] ? (int)$input['contact_id'] : null;
     if (isset($input['due_date'])) $updates['due_date'] = sanitizeInput($input['due_date']) ?: null;
     if (isset($input['follow_up_date'])) $updates['follow_up_date'] = sanitizeInput($input['follow_up_date']) ?: null;
     

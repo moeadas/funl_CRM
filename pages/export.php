@@ -3,8 +3,8 @@
  * White Label CRM - Data Export Page
  * Export leads, interactions, WhatsApp messages, VoIP calls
  */
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 startSecureSession();
 requireLogin();
 
@@ -26,7 +26,7 @@ $counts = [
 ];
 
 $pageTitle = 'Data Export';
-include '../includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -174,4 +174,4 @@ include '../includes/header.php';
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

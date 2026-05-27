@@ -137,7 +137,7 @@ include '../includes/header.php';
 
 <script>
 function duplicateCampaign(id) {
-    if (!confirm('Duplicate this campaign?')) return;
+    
     fetch('/api/email.php?action=campaign_duplicate', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ campaign_id: id, csrf_token: '<?php echo $csrfToken; ?>' })
@@ -147,7 +147,7 @@ function duplicateCampaign(id) {
     });
 }
 function deleteCampaign(id) {
-    if (!confirm('Delete this draft campaign?')) return;
+    
     fetch('/api/email.php?action=campaign_delete', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ campaign_id: id, csrf_token: '<?php echo $csrfToken; ?>' })

@@ -227,47 +227,47 @@ $pipeline = $db->query("
 
 <div class="dashboard-page">
     <div class="welcome-header">
-        <h1>Good <?= date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening') ?>!</h1>
+        <h1>Good <?php echo  date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening') ?>!</h1>
         <p>Here's what's happening in your business today.</p>
     </div>
 
     <div class="quick-actions">
         <a href="/pages/leads.php" class="quick-btn">+ New Lead</a>
-        <a href="/pages/deals.php" class="quick-btn">+ New Deal</a>
-        <a href="/pages/tasks.php" class="quick-btn">+ New Task</a>
-        <a href="/pages/quotes.php" class="quick-btn">+ New Quote</a>
+        <a href="/pages/deals.php?action=new" class="quick-btn">+ New Deal</a>
+        <a href="/pages/tasks.php?action=new" class="quick-btn">+ New Task</a>
+        <a href="/pages/quotes.php?action=new" class="quick-btn">+ New Quote</a>
         <a href="/pages/tickets.php" class="quick-btn">+ New Ticket</a>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon blue">📋</div>
-            <div class="stat-value"><?= number_format($stats['leads']) ?></div>
+            <div class="stat-value"><?php echo  number_format($stats['leads']) ?></div>
             <div class="stat-label">Total Leads</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon purple">👥</div>
-            <div class="stat-value"><?= number_format($stats['contacts']) ?></div>
+            <div class="stat-value"><?php echo  number_format($stats['contacts']) ?></div>
             <div class="stat-label">Contacts</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon orange">🎯</div>
-            <div class="stat-value"><?= number_format($stats['deals_open']) ?></div>
+            <div class="stat-value"><?php echo  number_format($stats['deals_open']) ?></div>
             <div class="stat-label">Open Deals</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon green">💰</div>
-            <div class="stat-value currency">$<?= number_format($stats['deals_value']) ?></div>
+            <div class="stat-value currency">$<?php echo  number_format($stats['deals_value']) ?></div>
             <div class="stat-label">Pipeline Value</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon red">⚡</div>
-            <div class="stat-value"><?= number_format($stats['tasks_due']) ?></div>
+            <div class="stat-value"><?php echo  number_format($stats['tasks_due']) ?></div>
             <div class="stat-label">Tasks Due Soon</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon gray">🎫</div>
-            <div class="stat-value"><?= number_format($stats['tickets_open']) ?></div>
+            <div class="stat-value"><?php echo  number_format($stats['tickets_open']) ?></div>
             <div class="stat-label">Open Tickets</div>
         </div>
     </div>
@@ -288,8 +288,8 @@ $pipeline = $db->query("
                         $width = ($p['cnt'] / $totalDeals) * 100;
                         $color = $stageColors[$p['stage']] ?? '#9ca3af';
                     ?>
-                        <div class="pipeline-segment" style="width: <?= $width ?>%; background: <?= $color ?>">
-                            <?= $p['cnt'] ?>
+                        <div class="pipeline-segment" style="width: <?php echo  $width ?>%; background: <?php echo  $color ?>">
+                            <?php echo  $p['cnt'] ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -299,8 +299,8 @@ $pipeline = $db->query("
                         $label = $stageLabels[$p['stage']] ?? $p['stage'];
                     ?>
                         <div class="legend-item">
-                            <div class="legend-color" style="background: <?= $color ?>"></div>
-                            <span><?= $label ?> (<?= $p['cnt'] ?>)</span>
+                            <div class="legend-color" style="background: <?php echo  $color ?>"></div>
+                            <span><?php echo  $label ?> (<?php echo  $p['cnt'] ?>)</span>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -325,14 +325,14 @@ $pipeline = $db->query("
                     $timeAgo = time() - $time < 60 ? 'Just now' : (time() - $time < 3600 ? floor((time() - $time) / 60) . 'm ago' : (time() - $time < 86400 ? floor((time() - $time) / 3600) . 'h ago' : date('M j', $time)));
                 ?>
                     <div class="activity-item">
-                        <div class="activity-avatar"><?= $initials ?: '?' ?></div>
+                        <div class="activity-avatar"><?php echo  $initials ?: '?' ?></div>
                         <div class="activity-content">
                             <div class="activity-text">
-                                <strong><?= htmlspecialchars($a['user_name'] ?? 'System') ?></strong> 
-                                <?= htmlspecialchars(strtolower($a['action'])) ?> 
-                                <?= htmlspecialchars($a['entity_type']) ?>
+                                <strong><?php echo  htmlspecialchars($a['user_name'] ?? 'System') ?></strong> 
+                                <?php echo  htmlspecialchars(strtolower($a['action'])) ?> 
+                                <?php echo  htmlspecialchars($a['entity_type']) ?>
                             </div>
-                            <div class="activity-time"><?= $timeAgo ?></div>
+                            <div class="activity-time"><?php echo  $timeAgo ?></div>
                         </div>
                     </div>
                 <?php endforeach; ?>

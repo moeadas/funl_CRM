@@ -51,7 +51,7 @@ switch ($action) {
                 ($data['is_required'] ?? false) ? 1 : 0,
                 $data['sort_order'] ?? 0
             ]);
-            logActivity(getCurrentUserId(), 'Create Custom Field', 'CustomField', $db->lastInsertId(), "Created field: {$data['field_label']}");
+            logActivity(getCurrentUserId(), 'Create Custom Field', 'CustomField', $db->getConnection()->lastInsertId(), "Created field: {$data['field_label']}");
             jsonSuccess('Custom field created');
         } catch (Exception $e) {
             jsonError($e->getMessage());
