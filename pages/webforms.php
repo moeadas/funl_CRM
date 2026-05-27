@@ -277,7 +277,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
-const CSRF_TOKEN = u003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
+const CSRF_TOKEN = 003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/webforms.php';
 
 let forms = [];

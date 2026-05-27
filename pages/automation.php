@@ -354,7 +354,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
-const CSRF_TOKEN = u003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
+const CSRF_TOKEN = 003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/automation.php';
 const USERS = <?= json_encode($users) ?>;
 
