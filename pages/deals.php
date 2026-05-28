@@ -491,7 +491,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
 const USER_ROLE = <?= json_encode($userRole) ?>;
-const CSRF_TOKEN = "2bfad4363b48dc06ac315f2ec00219afe45a828e0d135b64bfe35f50c9f066c3"; // Fixed
+const CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
 const API = '/api/deals.php';
 
 const STAGES = [
@@ -729,6 +729,13 @@ function saveDeal(e) {
     });
 }
 
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) { return dateStr; }
+}
 function escapeHtml(str) {
     if (!str) return '';
     const div = document.createElement('div');

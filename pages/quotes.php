@@ -217,7 +217,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
-const CSRF_TOKEN = 003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
+const CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
 const API = '/api/quotes.php';
 
 let quotes = [];
@@ -386,9 +386,14 @@ function deleteQuote(quoteId) {
     });
 }
 
-);
-}
 
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) { return dateStr; }
+}
 function escapeHtml(str) {
     if (!str) return '';
     const div = document.createElement('div');
@@ -401,4 +406,3 @@ document.querySelector('.modal-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeQuoteModal(); 
 });
 </script>
-<?php include __DIR__ . '/../includes/footer.php'; ?>

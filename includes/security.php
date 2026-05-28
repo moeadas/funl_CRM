@@ -189,7 +189,7 @@ function logSecurityEvent(string $type, string $description, ?int $userId = null
     try {
         $db = Database::getInstance();
         $db->insert('activity_log', [
-            'company_id' => getCurrentCompanyId() ?: 0,
+            'company_id' => (function_exists('getCurrentCompanyId') ? getCurrentCompanyId() : ($_SESSION['company_id'] ?? 0)) ?: 0,
             'user_id' => $userId ?: 0,
             'action' => 'Security: ' . $type,
             'entity_type' => 'security',
@@ -290,13 +290,13 @@ function requireApiAuth() {
     if (!$expectedKey) {
         // No API key configured - fall back to session auth
         if (!isLoggedIn()) {
-            jsonResponse(['error' => 'Unauthorized'], 401);
+            jsonResponseAdvanced(['error' => 'Unauthorized'], 401);
         }
         return;
     }
     
     if (!$apiKey || !secureCompare($apiKey, $expectedKey)) {
-        jsonResponse(['error' => 'Invalid API key'], 401);
+        jsonResponseAdvanced(['error' => 'Invalid API key'], 401);
     }
 }
 
@@ -336,7 +336,7 @@ function hashForUrlAdvanced($value, $salt = '') {
  * Verify URL-safe hash
  */
 function verifyUrlHashAdvanced($value, $hash, $salt = '') {
-    return hash_equals($hash, hashForUrl($value, $salt));
+    return hash_equals($hash, hashForUrlAdvanced($value, $salt));
 }
 
 // Apply security headers on every request
