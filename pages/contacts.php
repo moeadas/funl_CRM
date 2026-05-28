@@ -698,7 +698,7 @@ function showContactForm(contactId) {
     document.getElementById('contact-modal-title').textContent = 'New Contact';
     document.getElementById('contact-save-btn').textContent = 'Create Contact';
     document.getElementById('tag-selector').querySelectorAll('input').forEach(i => i.checked = false);
-    if (!contactId) document.getElementById('contact-modal').classList.add('active');
+    if (!contactId) openModal('contact-modal');
 }
 
 function editContact(contactId) {
@@ -726,12 +726,12 @@ function editContact(contactId) {
             
             document.getElementById('contact-modal-title').textContent = 'Edit Contact';
             document.getElementById('contact-save-btn').textContent = 'Save Changes';
-            document.getElementById('contact-modal').classList.add('active');
+            openModal('contact-modal');
         });
 }
 
 function closeContactModal() {
-    document.getElementById('contact-modal').classList.remove('active');
+    closeModal('contact-modal');
 }
 
 function saveContact(e) {

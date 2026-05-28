@@ -314,11 +314,11 @@ function openQuoteModal() {
     itemCount = 0;
     addItemRow();
     calculateTotals();
-    document.getElementById('quote-modal').classList.add('active');
+    openModal('quote-modal');
 }
 
 function closeQuoteModal() {
-    document.getElementById('quote-modal').classList.remove('active');
+    closeModal('quote-modal');
 }
 
 function saveQuote(e) {
