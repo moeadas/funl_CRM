@@ -1,168 +1,165 @@
 <?php
 /**
- * White Label CRM - Public Web Forms API
+ * Pinpoint CRM — Web Forms API with Field Mapping
  */
 require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/security.php';
-
 startSecureSession();
 requireLogin();
 
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+header('Content-Type: application/json; charset=utf-8');
 $db = Database::getInstance();
-$userId = getCurrentUser()['user_id'] ?? 0;
-$companyId = $_SESSION["company_id"] ?? null;
+$pdo = $db->getConnection();
+$action = $_GET['action'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'];
 
-// ── CRUD ──────────────────────────────────────────────────────
-
-if ($action === 'list' && ($method === 'GET' || $method === 'POST')) {
-    $forms = $db->query("
-        SELECT f.*, u.full_name as creator_name
-        FROM web_forms f
-        LEFT JOIN users u ON f.created_by = u.user_id
+// ══════════════════════════════════════════════════════════════
+//  LIST forms
+// ══════════════════════════════════════════════════════════════
+if ($action === 'list') {
+    $companyId = getCurrentCompanyId();
+    
+    $stmt = $pdo->prepare("
+        SELECT f.*, 
+            (SELECT COUNT(*) FROM webform_submissions WHERE form_id = f.form_id) as submission_count,
+            (SELECT COUNT(*) FROM webform_fields WHERE form_id = f.form_id) as field_count
+        FROM webforms f
         WHERE f.company_id = ?
-        ORDER BY f.created_at DESC", [$companyId])->fetchAll();
-    jsonSuccess('Forms loaded', $forms);
+        ORDER BY f.created_at DESC
+    ");
+    $stmt->execute([$companyId]);
+    
+    echo json_encode(['success' => true, 'forms' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    exit;
 }
 
-if ($action === 'create' && $method === 'POST') {
-    requireCSRF();
-    $input = json_decode(file_get_contents('php://input'), true);
-    $formName = sanitizeInput($input['form_name'] ?? '');
+// ══════════════════════════════════════════════════════════════
+//  GET single form with fields
+// ══════════════════════════════════════════════════════════════
+if ($action === 'get') {
+    $formId = intval($_GET['id'] ?? 0);
+    $companyId = getCurrentCompanyId();
     
-    if (empty($formName)) jsonError('Form name is required');
+    $stmt = $pdo->prepare("SELECT * FROM webforms WHERE form_id = ? AND company_id = ?");
+    $stmt->execute([$formId, $companyId]);
+    $form = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    $slug = generateSlug($formName);
-    // Ensure unique slug
-    $existing = $db->query("SELECT 1 FROM web_forms WHERE company_id = ? AND form_slug = ?", [$companyId, $slug])->fetch();
-    if ($existing) $slug .= '-' . time();
-    
-    $formId = $db->insert('web_forms', [
-        'company_id'       => $companyId,
-        'form_name'        => $formName,
-        'form_slug'        => $slug,
-        'title'            => sanitizeInput($input['title'] ?? $formName),
-        'description'      => sanitizeInput($input['description'] ?? ''),
-        'success_message'  => sanitizeInput($input['success_message'] ?? 'Thank you! We will contact you soon.'),
-        'redirect_url'     => sanitizeInput($input['redirect_url'] ?? ''),
-        'fields_config'    => json_encode($input['fields_config'] ?? defaultFields()),
-        'styling'          => json_encode($input['styling'] ?? defaultStyling()),
-        'thank_you_page'   => isset($input['thank_you_page']) ? (int)$input['thank_you_page'] : 1,
-        'notify_emails'    => sanitizeInput($input['notify_emails'] ?? ''),
-        'auto_assign_to'   => !empty($input['auto_assign_to']) ? (int)$input['auto_assign_to'] : null,
-        'lead_source'      => sanitizeInput($input['lead_source'] ?? 'Web Form'),
-        'created_by'       => $userId,
-    ]);
-    
-    logActivity($userId, 'Create Web Form', 'WebForm', $formId, "Created form: $formName");
-    jsonSuccess('Form created', ['form_id' => $formId, 'slug' => $slug]);
+    if ($form) {
+        $fieldStmt = $pdo->prepare("SELECT * FROM webform_fields WHERE form_id = ? ORDER BY position ASC");
+        $fieldStmt->execute([$formId]);
+        $form['fields'] = $fieldStmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'form' => $form]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Form not found']);
+    }
+    exit;
 }
 
-if ($action === 'update' && $method === 'POST') {
-    requireCSRF();
+// ══════════════════════════════════════════════════════════════
+//  SAVE (create/update)
+// ══════════════════════════════════════════════════════════════
+if ($action === 'save' && $method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
-    $formId = (int)($input['form_id'] ?? 0);
     
-    $form = $db->query("SELECT * FROM web_forms WHERE form_id = ? AND company_id = ?", [$formId, $companyId])->fetch();
-    if (!$form) jsonError('Form not found');
-    
-    $updates = [];
-    if (isset($input['form_name'])) $updates['form_name'] = sanitizeInput($input['form_name']);
-    if (isset($input['is_active'])) $updates['is_active'] = (int)$input['is_active'];
-    if (isset($input['title'])) $updates['title'] = sanitizeInput($input['title']);
-    if (isset($input['description'])) $updates['description'] = sanitizeInput($input['description']);
-    if (isset($input['success_message'])) $updates['success_message'] = sanitizeInput($input['success_message']);
-    if (isset($input['redirect_url'])) $updates['redirect_url'] = sanitizeInput($input['redirect_url']);
-    if (isset($input['fields_config'])) $updates['fields_config'] = json_encode($input['fields_config']);
-    if (isset($input['styling'])) $updates['styling'] = json_encode($input['styling']);
-    if (isset($input['thank_you_page'])) $updates['thank_you_page'] = (int)$input['thank_you_page'];
-    if (isset($input['notify_emails'])) $updates['notify_emails'] = sanitizeInput($input['notify_emails']);
-    if (isset($input['auto_assign_to'])) $updates['auto_assign_to'] = $input['auto_assign_to'] ? (int)$input['auto_assign_to'] : null;
-    if (isset($input['lead_source'])) $updates['lead_source'] = sanitizeInput($input['lead_source']);
-    
-    if (!empty($updates)) {
-        $db->update('web_forms', $updates, ['form_id' => $formId]);
+    if (empty($input['csrf_token']) || !verifyCSRFToken($input['csrf_token'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+        exit;
     }
     
-    logActivity($userId, 'Update Web Form', 'WebForm', $formId, "Updated form");
-    jsonSuccess('Form updated');
+    $companyId = getCurrentCompanyId();
+    $userId = getCurrentUserId();
+    $formId = intval($input['form_id'] ?? 0);
+    
+    $pdo->beginTransaction();
+    
+    try {
+        if ($formId) {
+            // Update form
+            $stmt = $pdo->prepare("
+                UPDATE webforms 
+                SET form_name = ?, description = ?, status = ?, updated_at = NOW()
+                WHERE form_id = ? AND company_id = ?
+            ");
+            $stmt->execute([
+                $input['form_name'] ?? '',
+                $input['description'] ?? '',
+                $input['status'] ?? 'active',
+                $formId,
+                $companyId
+            ]);
+            
+            // Delete old fields
+            $pdo->prepare("DELETE FROM webform_fields WHERE form_id = ?")->execute([$formId]);
+        } else {
+            // Create form
+            $stmt = $pdo->prepare("
+                INSERT INTO webforms (company_id, form_name, description, status, created_by, created_at)
+                VALUES (?, ?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([
+                $companyId,
+                $input['form_name'] ?? '',
+                $input['description'] ?? '',
+                'active',
+                $userId
+            ]);
+            $formId = $pdo->lastInsertId();
+        }
+        
+        // Insert fields
+        if (!empty($input['fields']) && is_array($input['fields'])) {
+            $fieldStmt = $pdo->prepare("
+                INSERT INTO webform_fields (form_id, field_label, crm_field, field_type, position, required)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
+            
+            foreach ($input['fields'] as $idx => $field) {
+                $fieldStmt->execute([
+                    $formId,
+                    $field['label'] ?? '',
+                    $field['crm_field'] ?? '',
+                    $field['type'] ?? 'text',
+                    $idx,
+                    $field['required'] ?? 0
+                ]);
+            }
+        }
+        
+        $pdo->commit();
+        echo json_encode(['success' => true, 'message' => $formId ? 'Form updated' : 'Form created', 'form_id' => $formId]);
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
 }
 
+// ══════════════════════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════════════════════
 if ($action === 'delete' && $method === 'POST') {
-    requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
-    $formId = (int)($input['form_id'] ?? 0);
     
-    $form = $db->query("SELECT * FROM web_forms WHERE form_id = ? AND company_id = ?", [$formId, $companyId])->fetch();
-    if (!$form) jsonError('Form not found');
+    if (empty($input['csrf_token']) || !verifyCSRFToken($input['csrf_token'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+        exit;
+    }
     
-    $db->query("DELETE FROM web_form_submissions WHERE form_id = ?", [$formId]);
-    $db->query("DELETE FROM web_forms WHERE form_id = ?", [$formId]);
+    $formId = intval($input['form_id'] ?? 0);
+    $companyId = getCurrentCompanyId();
     
-    logActivity($userId, 'Delete Web Form', 'WebForm', $formId, "Deleted form: {$form['form_name']}");
-    jsonSuccess('Form deleted');
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare("DELETE FROM webform_fields WHERE form_id = ?")->execute([$formId]);
+        $pdo->prepare("DELETE FROM webform_submissions WHERE form_id = ?")->execute([$formId]);
+        $pdo->prepare("DELETE FROM webforms WHERE form_id = ? AND company_id = ?")->execute([$formId, $companyId]);
+        $pdo->commit();
+        echo json_encode(['success' => true, 'message' => 'Form deleted']);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
 }
 
-if ($action === 'get' && $method === 'GET') {
-    $formId = (int)($_GET['form_id'] ?? 0);
-    $form = $db->query("SELECT * FROM web_forms WHERE form_id = ? AND company_id = ?", [$formId, $companyId])->fetch();
-    if (!$form) jsonError('Form not found');
-    
-    $form['fields_config'] = json_decode($form['fields_config'] ?? '[]', true);
-    $form['styling'] = json_decode($form['styling'] ?? '{}', true);
-    
-    $submissions = $db->query("SELECT COUNT(*) as cnt FROM web_form_submissions WHERE form_id = ?", [$formId])->fetch();
-    $form['submission_count'] = $submissions['cnt'] ?? 0;
-    
-    jsonSuccess('Form loaded', $form);
-}
-
-if ($action === 'submissions' && $method === 'GET') {
-    $formId = (int)($_GET['form_id'] ?? 0);
-    $limit = min((int)($_GET['limit'] ?? 50), 100);
-    
-    $subs = $db->query("
-        SELECT s.*, l.company_name as lead_name
-        FROM web_form_submissions s
-        LEFT JOIN leads l ON s.lead_id = l.lead_id
-        WHERE s.form_id = ? AND s.company_id = ?
-        ORDER BY s.created_at DESC
-        LIMIT $limit", [$formId, $companyId])->fetchAll();
-    
-    jsonSuccess('Submissions loaded', $subs);
-}
-
-// ── Default helpers ───────────────────────────────────────────
-
-function defaultFields() {
-    return [
-        ['type' => 'text', 'name' => 'company_name', 'label' => 'Company Name', 'required' => true],
-        ['type' => 'text', 'name' => 'contact_person', 'label' => 'Contact Person', 'required' => true],
-        ['type' => 'email', 'name' => 'email', 'label' => 'Email', 'required' => true],
-        ['type' => 'tel', 'name' => 'phone', 'label' => 'Phone', 'required' => false],
-        ['type' => 'select', 'name' => 'country', 'label' => 'Country', 'required' => true, 'options' => ['United States','United Kingdom','Canada','Australia','Germany','France','UAE','Saudi Arabia','Other']],
-        ['type' => 'textarea', 'name' => 'message', 'label' => 'Message', 'required' => false],
-    ];
-}
-
-function defaultStyling() {
-    return [
-        'primary_color' => '#2563eb',
-        'bg_color'      => '#ffffff',
-        'text_color'    => '#1f2937',
-        'border_radius' => '8',
-        'font_family'   => 'system-ui',
-    ];
-}
-
-function generateSlug($name) {
-    $slug = strtolower(trim($name));
-    $slug = preg_replace('/[^a-z0-9\-]/', '-', $slug);
-    $slug = preg_replace('/-+/', '-', $slug);
-    return substr($slug, 0, 100);
-}
-
-jsonError('Unknown action');
-?>
+echo json_encode(['success' => false, 'message' => 'Invalid action']);
