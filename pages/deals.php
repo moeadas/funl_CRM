@@ -688,7 +688,7 @@ function openDealModal(dealId) {
 }
 
 function closeDealModal() {
-    closeModal('deal-modal');
+    document.getElementById('deal-modal').classList.remove('active');
 }
 
 function saveDeal(e) {

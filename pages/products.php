@@ -107,33 +107,64 @@ function loadProducts() {
             if (resp.success) {
                 products = resp.data || [];
                 renderProducts();
+            } else {
+                showNotification(resp.message || 'Failed to load products', 'error');
             }
-        });
+        })
+        .catch(() => showNotification('Network error loading products', 'error'));
 }
 
 function renderProducts() {
     const tbody = document.getElementById('products-tbody');
     if (!products.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af">No products yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af">No products yet. Click "+ New Product" to add one.</td></tr>';
         return;
     }
     tbody.innerHTML = products.map(p => `
         <tr>
-            <td><strong>${escapeHtml(p.product_name)}</strong></td>
-            <td>${escapeHtml(p.sku || '-')}</td>
-            <td>${escapeHtml(p.category || '-')}</td>
-            <td class="price">$${Number(p.price).toFixed(2)}</td>
-            <td>${p.quantity_in_stock ?? '-'}</td>
-            <td><button onclick="deleteProduct(${p.product_id})" style="background:none;border:none;cursor:pointer;color:#dc2626">🗑️</button></td>
+            <td><strong>${escapeHtml(p.product_name)}</strong>
+                ${p.description ? `<div style="font-size:12px;color:#9ca3af;margin-top:2px">${escapeHtml(p.description.substring(0,60))}${p.description.length>60?'…':''}</div>` : ''}
+            </td>
+            <td>${escapeHtml(p.sku || '—')}</td>
+            <td>${escapeHtml(p.category || '—')}</td>
+            <td class="price">$${Number(p.price || 0).toFixed(2)}</td>
+            <td>${p.quantity_in_stock != null ? p.quantity_in_stock : '—'}</td>
+            <td>
+                <div style="display:flex;gap:6px">
+                    <button onclick="editProduct(${p.product_id})"
+                        style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;color:#374151">✏️ Edit</button>
+                    <button onclick="deleteProduct(${p.product_id})"
+                        style="background:#fef2f2;border:1px solid #fecaca;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;color:#dc2626">🗑️ Delete</button>
+                </div>
+            </td>
         </tr>
     `).join('');
 }
 
-function openProductModal() {
+function openProductModal(product) {
     document.getElementById('product-form').reset();
-    document.getElementById('product-id').value = '';
-    document.getElementById('product-modal-title').textContent = 'New Product';
+    if (product) {
+        document.getElementById('product-id').value = product.product_id;
+        document.getElementById('product-name').value = product.product_name || '';
+        document.getElementById('product-sku').value = product.sku || '';
+        document.getElementById('product-category').value = product.category || '';
+        document.getElementById('product-price').value = product.price || '';
+        document.getElementById('product-stock').value = product.quantity_in_stock || '';
+        document.getElementById('product-desc').value = product.description || '';
+        document.getElementById('product-modal-title').textContent = 'Edit Product';
+        document.querySelector('#product-form button[type="submit"]').textContent = 'Save Changes';
+    } else {
+        document.getElementById('product-id').value = '';
+        document.getElementById('product-modal-title').textContent = 'New Product';
+        document.querySelector('#product-form button[type="submit"]').textContent = 'Create Product';
+    }
     document.getElementById('product-modal').classList.add('active');
+}
+
+function editProduct(productId) {
+    const product = products.find(p => p.product_id == productId);
+    if (!product) { showNotification('Product not found', 'error'); return; }
+    openProductModal(product);
 }
 
 function closeProductModal() {

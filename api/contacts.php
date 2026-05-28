@@ -57,7 +57,7 @@ if ($action === 'list_contacts' && $method === 'GET') {
 
 if ($action === 'create_contact' && $method === 'POST') {
     requireCSRF();
-    requireRole(['Admin','Sales Manager']);
+    // REMOVED: requireRole(['Admin','Sales Manager']); — all authenticated users can create contacts
     
     $input = json_decode(file_get_contents('php://input'), true);
     $firstName = sanitizeInput($input['first_name'] ?? '');

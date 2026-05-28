@@ -494,7 +494,10 @@ function renderLeadsList(leads) {
         if (!isSalesRep) row += '<td>' + escapeHtml(lead.assigned_name || 'Unassigned') + '</td>';
         row += '<td><small class="text-muted">' + formatDate(lead.created_at) + '</small></td>' +
             '<td><small class="text-muted">' + formatDate(lead.updated_at) + '</small></td>' +
-            '<td onclick="event.stopPropagation()"><button class="btn btn-sm btn-outline" onclick="editLead(' + lead.lead_id + ')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>' +
+            '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;justify-content:center">' +
+            '<button class="btn btn-sm btn-outline" onclick="editLead(' + lead.lead_id + ')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+            '<button onclick="moveLeadToContact(' + lead.lead_id + ', event)" title="Convert to Contact" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;color:#15803d;white-space:nowrap">→ Contact</button>' +
+            '</div></td>' +
         '</tr>';
         return row;
     }).join('');
@@ -835,6 +838,29 @@ function saveLead(e) {
     })
     .catch(function() { showNotification('An error occurred', 'error'); });
 }
+// ── Move Lead to Contact ──
+function moveLeadToContact(leadId, e) {
+    if (e) e.stopPropagation();
+    if (!confirm('Convert this lead to a Contact? The lead status will be set to "Won".')) return;
+
+    fetch('/api/move-lead-to-contact.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, csrf_token: CSRF_TOKEN })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+        if (resp.success) {
+            showNotification('Lead converted to contact successfully!', 'success');
+            loadLeads();
+        } else {
+            showNotification(resp.message || 'Conversion failed', 'error');
+        }
+    })
+    .catch(function() { showNotification('Network error', 'error'); });
+}
+
 </script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

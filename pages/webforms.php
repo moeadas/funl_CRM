@@ -85,7 +85,7 @@ $crmFields = [
 </div>
 
 <script>
-const CSRF_TOKEN = "<?= $_SESSION['csrf_token'] ?? '' ?>";
+const CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const CRM_FIELDS = <?= json_encode($crmFields) ?>;
 let currentFields = [];
 let fieldCount = 0;

@@ -547,6 +547,25 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// ── CRITICAL FIX: dueLabel() was called but never defined ──
+function dueLabel(dateStr) {
+    if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const due = new Date(dateStr + 'T00:00:00');
+    if (isNaN(due)) return null;
+    if (due < today) return { label: 'Overdue: ' + formatDate(due), class: 'overdue' };
+    if (+due === +today) return { label: 'Due today', class: 'today' };
+    if (+due === +tomorrow) return { label: 'Due tomorrow', class: 'tomorrow' };
+    return { label: 'Due ' + formatDate(due), class: 'scheduled' };
+}
+
+function formatDate(date) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 // Drag & Drop
 function onDragStart(e) {
     draggedCard = e.target;
