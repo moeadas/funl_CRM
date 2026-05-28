@@ -7,6 +7,9 @@ require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
+// Initialize database
+$db = Database::getInstance();
+
 $userId = getCurrentUserId();
 $companyId = $_SESSION["company_id"] ?? null;
 $userRole = $_SESSION["role"] ?? "";
