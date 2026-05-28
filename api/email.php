@@ -94,7 +94,7 @@ $action = $_GET['action'] ?? '';
 
 // ─── LIST ALL ───
 if ($action === 'list') {
-    $stmt = $db->query("SELECT el.*, u.full_name as creator, (SELECT COUNT(*) FROM email_list_members WHERE list_id = el.list_id AND status = 'Active') as active_members FROM email_lists el LEFT JOIN users u ON el.created_by = u.user_id ORDER BY el.updated_at DESC");
+    $companyId = getCurrentCompanyId(); $stmt = $db->prepare("SELECT el.*, u.full_name as creator, (SELECT COUNT(*) FROM email_list_members WHERE list_id = el.list_id AND status = 'Active') as active_members FROM email_lists el LEFT JOIN users u ON el.created_by = u.user_id WHERE el.company_id = ? ORDER BY el.updated_at DESC");
     jsonSuccess('Lists loaded', $stmt->fetchAll());
 }
 
@@ -207,7 +207,7 @@ if ($action === 'remove_member' && $method === 'POST') {
 
 // ─── CAMPAIGN LIST ───
 if ($action === 'campaign_list') {
-    $stmt = $db->query("SELECT c.*, el.name as list_name FROM email_campaigns c LEFT JOIN email_lists el ON c.list_id = el.list_id ORDER BY c.created_at DESC");
+    $stmt = $db->query("SELECT c.*, el.name as list_name FROM email_campaigns c LEFT JOIN email_lists el ON c.list_id = el.list_id WHERE c.company_id = ? ORDER BY c.created_at DESC");
     jsonSuccess('Campaigns loaded', $stmt->fetchAll());
 }
 
@@ -436,7 +436,7 @@ if ($action === 'delete_template' && $method === 'POST') {
 
 // ─── LEADS WITH EMAIL (for list building) ───
 if ($action === 'leads_with_email') {
-    $stmt = $db->query("SELECT lead_id, company_name, contact_person, email, lead_status, country, lead_type, priority FROM leads WHERE email IS NOT NULL AND email != '' ORDER BY company_name LIMIT 5000");
+    $companyId = getCurrentCompanyId(); $stmt = $db->prepare("SELECT lead_id, company_name, contact_person, email, lead_status, country, lead_type, priority FROM leads WHERE company_id = ? AND email IS NOT NULL AND email != '' ORDER BY company_name LIMIT 5000"); $stmt->execute([$companyId]);
     jsonSuccess('Leads loaded', $stmt->fetchAll());
 }
 
