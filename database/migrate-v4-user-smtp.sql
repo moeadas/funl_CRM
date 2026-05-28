@@ -1,4 +1,4 @@
--- Victory Genomics CRM — Migration V4: Per-user SMTP settings
+-- White Label CRM CRM — Migration V4: Per-user SMTP settings
 -- Run this on the production database to add email columns to users table
 -- Compatible with MySQL 5.7+ / MariaDB 10.x
 

@@ -1,4 +1,4 @@
--- Victory Genomics CRM - VoIP Calls Table
+-- White Label CRM CRM - VoIP Calls Table
 -- Migration: 003_voip_calls.sql
 -- Creates the voip_calls table for call logging and tracking
 -- Note: The dashboard also auto-creates this table if it doesn't exist

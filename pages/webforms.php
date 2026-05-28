@@ -1,8 +1,13 @@
 <?php
+/**
+* White Label CRM - Web Forms Page
+* FIXED: Removed getCurrentCompanyId() call before auth.php include
+*/
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
+// Get company info AFTER auth is loaded
 $db = Database::getInstance();
 $companyId = getCurrentCompanyId();
 
@@ -24,7 +29,7 @@ $crmFields = [
     ['name' => 'budget', 'label' => 'Budget', 'type' => 'number'],
     ['name' => 'website', 'label' => 'Website', 'type' => 'url'],
 ];
-?\u003e
+?>
 
 <div class="page-header">
     <div>
@@ -32,20 +37,25 @@ $crmFields = [
         <p class="text-muted">Create embedded forms that feed directly into your CRM</p>
     </div>
     <div class="header-actions">
-        <button class="btn btn-primary btn-sm" onclick="openFormModal()">+ New Form</button>
+        <button class="btn btn-primary btn-sm" onclick="openFormModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Form
+        </button>
     </div>
 </div>
 
 <div class="card">
-    <div id="formsList" style="padding:20px;">Loading...</div>
+    <div id="formsList" style="padding:20px;">
+        <div class="text-center text-muted" style="padding:40px;">Loading...</div>
+    </div>
 </div>
 
-<!-- Modal -->
+<!-- Form Modal -->
 <div class="modal-overlay" id="form-modal">
-    <div class="modal" style="max-width:800px;">
+    <div class="modal modal-md">
         <div class="modal-header">
-            <h2 id="modal-title">New Web Form</h2>
-            <button class="modal-close" onclick="closeFormModal()">&times;</button>
+            <h2 id="form-modal-title">New Web Form</h2>
+            <button class="modal-close" onclick="closeModal('form-modal')">&times;</button>
         </div>
         <form id="form-builder" onsubmit="saveForm(event)">
             <div class="modal-body">
@@ -66,8 +76,8 @@ $crmFields = [
                     <div id="fields-container" style="max-height:300px;overflow-y:auto;"></div>
                 </div>
             </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeFormModal()">Cancel</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('form-modal')">Cancel</button>
                 <button type="submit" class="btn btn-primary" id="save-btn">Create Form</button>
             </div>
         </form>
@@ -75,25 +85,36 @@ $crmFields = [
 </div>
 
 <script>
-const CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
+const CSRF_TOKEN = "<?= $_SESSION['csrf_token'] ?? '' ?>";
 const CRM_FIELDS = <?= json_encode($crmFields) ?>;
+let currentFields = [];
+let fieldCount = 0;
 
 function loadForms() {
     fetch('/api/webforms.php?action=list')
         .then(r => r.json())
         .then(data => {
             if (!data.success) {
-                document.getElementById('formsList').innerHTML = '<div class="text-center text-muted" style="padding:40px;">Error loading forms</div>';
+                document.getElementById('formsList').innerHTML = '<div class="text-center text-muted" style="padding:40px;">Error: ' + (data.message || 'Failed to load') + '</div>';
                 return;
             }
-            renderForms(data.forms);
+            renderForms(data.forms || []);
+        })
+        .catch(() => {
+            document.getElementById('formsList').innerHTML = '<div class="text-center text-muted" style="padding:40px;">Error loading forms</div>';
         });
 }
 
 function renderForms(forms) {
+    const container = document.getElementById('formsList');
     if (!forms || forms.length === 0) {
-        document.getElementById('formsList').innerHTML = `
+        container.innerHTML = `
             <div class="text-center text-muted" style="padding:60px 40px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;opacity:.4;">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                </svg>
                 <h3 style="margin:0 0 8px;font-size:18px;">No forms yet</h3>
                 <p>Create your first web form to capture leads directly from your website.</p>
                 <button class="btn btn-primary" onclick="openFormModal()" style="margin-top:16px;">Create Form</button>
@@ -101,48 +122,52 @@ function renderForms(forms) {
         return;
     }
     
-    document.getElementById('formsList').innerHTML = `
-        <div class="table-container">
-            <table class="table">
-                <thead><tr><th>Form Name</th><th>Fields</th><th>Submissions</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>${forms.map(f => `
-                    <tr>
-                        <td><strong>${escapeHtml(f.form_name)}</strong><div class="text-muted" style="font-size:13px;">${escapeHtml(f.description || '')}</div></td>
-                        <td>${f.field_count || 0} fields</td>
-                        <td>${f.submission_count || 0}</td>
-                        <td><span class="badge badge-${f.status === 'active' ? 'success' : 'secondary'}">${f.status || 'active'}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-outline" onclick="editForm(${f.form_id})">Edit</button>
-                            <button class="btn btn-sm btn-outline" onclick="getEmbedCode(${f.form_id})">Embed</button>
-                            <button class="btn btn-sm btn-danger-outline" onclick="deleteForm(${f.form_id})">Delete</button>
-                        </td>
-                    </tr>`).join('')}
-                </tbody>
-            </table>
-        </div>`;
+    container.innerHTML = `
+        <table class="table">
+            <thead><tr><th>Form Name</th><th>Fields</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>${forms.map(f => `
+                <tr>
+                    <td><strong>${escapeHtml(f.form_name || '')}</strong><div class="text-muted" style="font-size:13px;">${escapeHtml(f.description || '')}</div></td>
+                    <td>${f.field_count || 0}</td>
+                    <td><span class="badge badge-${f.status === 'active' ? 'success' : 'secondary'}">${f.status || 'active'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="editForm(${f.form_id})">Edit</button>
+                        <button class="btn btn-sm btn-danger-outline" onclick="deleteForm(${f.form_id})">Delete</button>
+                    </td>
+                </tr>`).join('')}</tbody>
+        </table>`;
 }
-
-let fieldCount = 0;
 
 function addFieldRow(data) {
     const container = document.getElementById('fields-container');
     const idx = fieldCount++;
     
-    const fieldOptions = CRM_FIELDS.map(f => `<option value="${f.name}" ${data && data.crm_field === f.name ? 'selected' : ''}>${f.label}</option>`).join('');
+    const options = CRM_FIELDS.map(f => 
+        `<option value="${f.name}" ${data && data.crm_field === f.name ? 'selected' : ''}>${f.label}</option>`
+    ).join('');
     
     const div = document.createElement('div');
+    div.className = 'field-row';
     div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;padding:8px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:8px;';
     div.innerHTML = `
-        <div class="form-group" style="margin:0;"><label style="font-size:11px;color:#6b7280;">Label *</label><input type="text" class="form-control field-label" value="${data ? escapeHtml(data.label) : ''}" placeholder="Field label" required style="font-size:13px;"></div>
-        <div class="form-group" style="margin:0;"><label style="font-size:11px;color:#6b7280;">Map to CRM Field *</label><select class="form-control field-crm" required style="font-size:13px;"><option value="">Select field...</option>${fieldOptions}</select></div>
-        <div class="form-group" style="margin:0;"><label style="font-size:11px;color:#6b7280;">Type</label><select class="form-control field-type" style="font-size:13px;">
-            <option value="text" ${data && data.type === 'text' ? 'selected' : ''}>Text</option>
-            <option value="email" ${data && data.type === 'email' ? 'selected' : ''}>Email</option>
-            <option value="tel" ${data && data.type === 'tel' ? 'selected' : ''}>Phone</option>
-            <option value="textarea" ${data && data.type === 'textarea' ? 'selected' : ''}>Textarea</option>
-            <option value="number" ${data && data.type === 'number' ? 'selected' : ''}>Number</option>
-            <option value="select" ${data && data.type === 'select' ? 'selected' : ''}>Dropdown</option>
-        </select></div>
+        <div class="form-group" style="margin:0;">
+            <label style="font-size:11px;color:#6b7280;">Label *</label>
+            <input type="text" class="form-control field-label" value="${data ? escapeHtml(data.field_label || '') : ''}" placeholder="Field label" required style="font-size:13px;">
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label style="font-size:11px;color:#6b7280;">CRM Field *</label>
+            <select class="form-control field-crm" required style="font-size:13px;"><option value="">Select...</option>${options}</select>
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label style="font-size:11px;color:#6b7280;">Type</label>
+            <select class="form-control field-type" style="font-size:13px;">
+                <option value="text" ${data && data.field_type === 'text' ? 'selected' : ''}>Text</option>
+                <option value="email" ${data && data.field_type === 'email' ? 'selected' : ''}>Email</option>
+                <option value="tel" ${data && data.field_type === 'tel' ? 'selected' : ''}>Phone</option>
+                <option value="textarea" ${data && data.field_type === 'textarea' ? 'selected' : ''}>Textarea</option>
+                <option value="number" ${data && data.field_type === 'number' ? 'selected' : ''}>Number</option>
+            </select>
+        </div>
         <button type="button" class="btn btn-sm btn-danger-outline" onclick="this.closest('.field-row').remove()" style="margin-bottom:2px;">×</button>`;
     container.appendChild(div);
 }
@@ -150,18 +175,26 @@ function addFieldRow(data) {
 function openFormModal() {
     document.getElementById('form-builder').reset();
     document.getElementById('form-id').value = '';
-    document.getElementById('modal-title').textContent = 'New Web Form';
+    document.getElementById('form-modal-title').textContent = 'New Web Form';
     document.getElementById('save-btn').textContent = 'Create Form';
     document.getElementById('fields-container').innerHTML = '';
     fieldCount = 0;
-    addFieldRow({ label: 'Company Name', crm_field: 'company_name', type: 'text' });
-    addFieldRow({ label: 'Contact Name', crm_field: 'contact_name', type: 'text' });
-    addFieldRow({ label: 'Email', crm_field: 'email', type: 'email' });
-    document.getElementById('form-modal').classList.add('active');
+    addFieldRow();
+    addFieldRow();
+    addFieldRow();
+    openModal('form-modal');
 }
 
-function closeFormModal() {
-    document.getElementById('form-modal').classList.remove('active');
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function saveForm(e) {
@@ -176,7 +209,10 @@ function saveForm(e) {
         });
     });
     
-    if (fields.length === 0) { showNotification('Add at least one field', 'error'); return; }
+    if (fields.length === 0) {
+        showNotification('Add at least one field', 'error');
+        return;
+    }
     
     const payload = {
         csrf_token: CSRF_TOKEN,
@@ -193,9 +229,40 @@ function saveForm(e) {
     })
     .then(r => r.json())
     .then(data => {
-        showNotification(data.message, data.success ? 'success' : 'error');
-        if (data.success) { closeFormModal(); loadForms(); }
-    });
+        showNotification(data.message || (data.success ? 'Saved' : 'Error'), data.success ? 'success' : 'error');
+        if (data.success) {
+            closeModal('form-modal');
+            loadForms();
+        }
+    })
+    .catch(() => showNotification('Network error', 'error'));
+}
+
+function editForm(id) {
+    fetch('/api/webforms.php?action=get&id=' + id)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success || !data.form) {
+                showNotification('Form not found', 'error');
+                return;
+            }
+            const f = data.form;
+            document.getElementById('form-id').value = f.form_id;
+            document.getElementById('form-name').value = f.form_name || '';
+            document.getElementById('form-description').value = f.description || '';
+            document.getElementById('form-modal-title').textContent = 'Edit Form';
+            document.getElementById('save-btn').textContent = 'Save Changes';
+            
+            document.getElementById('fields-container').innerHTML = '';
+            fieldCount = 0;
+            (f.fields || []).forEach(field => addFieldRow(field));
+            if ((f.fields || []).length === 0) {
+                addFieldRow();
+                addFieldRow();
+                addFieldRow();
+            }
+            openModal('form-modal');
+        });
 }
 
 function deleteForm(id) {
@@ -207,14 +274,9 @@ function deleteForm(id) {
     })
     .then(r => r.json())
     .then(data => {
-        showNotification(data.message, data.success ? 'success' : 'error');
+        showNotification(data.message || (data.success ? 'Deleted' : 'Error'), data.success ? 'success' : 'error');
         if (data.success) loadForms();
     });
-}
-
-function getEmbedCode(id) {
-    const code = `\u003c!-- Pinpoint CRM Web Form --\u003e\n\u003cdiv id="pinpoint-form-${id}">\u003c/div\u003e\n\u003cscript src="https://crm.pinpoint.online/embed/form.js?id=${id}">\u003c/script\u003e\n\u003c!-- End Pinpoint CRM Web Form --\u003e`;
-    navigator.clipboard.writeText(code).then(() => showNotification('Embed code copied!', 'success'));
 }
 
 function escapeHtml(text) {
@@ -227,4 +289,4 @@ function escapeHtml(text) {
 loadForms();
 </script>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?\u003e
+<?php include __DIR__ . '/../includes/footer.php'; ?>

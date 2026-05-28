@@ -1,4 +1,4 @@
--- Victory Genomics CRM — Migration V7: Make company_name and country nullable
+-- White Label CRM CRM — Migration V7: Make company_name and country nullable
 -- Only the contact person's name is required when creating a lead.
 -- All other fields (company_name, country, etc.) are optional and accept NULL.
 -- Run this on the production database.

@@ -1,4 +1,4 @@
--- Victory Genomics CRM — Migration V6: Make region column nullable
+-- White Label CRM CRM — Migration V6: Make region column nullable
 -- The Region field has been replaced by Country in the UI.
 -- This migration makes it nullable so INSERTs without region don't fail.
 -- Run this on the production database.
