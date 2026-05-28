@@ -1,5 +1,5 @@
 -- ============================================
--- Victory Genomics CRM V3 — VoIP & WhatsApp Tables
+-- White Label CRM CRM V3 — VoIP & WhatsApp Tables
 -- Run AFTER base schema and email schema
 -- ============================================
 
@@ -96,11 +96,11 @@ CREATE TABLE IF NOT EXISTS `whatsapp_templates` (
 -- Insert Default WhatsApp Templates
 -- ============================================
 INSERT INTO `whatsapp_templates` (`name`, `category`, `body`, `is_active`, `created_by`) VALUES
-('Introduction', 'Introduction', 'Hello {{contact_name}}, this is {{user_name}} from Victory Genomics. We specialize in advanced equine genomic testing and I''d love to discuss how we can help {{company_name}}. Would you have a few minutes to chat?', 1, 1),
+('Introduction', 'Introduction', 'Hello {{contact_name}}, this is {{user_name}} from White Label CRM. We specialize in advanced equine genomic testing and I''d love to discuss how we can help {{company_name}}. Would you have a few minutes to chat?', 1, 1),
 ('Follow-up After Call', 'Follow-up', 'Hi {{contact_name}}, thank you for speaking with us today. As discussed, I''ll be sending over more details about our genomic testing services for {{company_name}}. Please don''t hesitate to reach out if you have any questions!', 1, 1),
-('Meeting Confirmation', 'Meeting', 'Hi {{contact_name}}, just confirming our meeting scheduled for tomorrow. Looking forward to discussing how Victory Genomics can support {{company_name}}. See you then!', 1, 1),
+('Meeting Confirmation', 'Meeting', 'Hi {{contact_name}}, just confirming our meeting scheduled for tomorrow. Looking forward to discussing how White Label CRM can support {{company_name}}. See you then!', 1, 1),
 ('Proposal Follow-up', 'Proposal', 'Hello {{contact_name}}, I wanted to follow up on the proposal we sent for {{company_name}}. Have you had a chance to review it? I''d be happy to answer any questions or schedule a call to discuss further.', 1, 1),
-('Thank You', 'Thank You', 'Hi {{contact_name}}, thank you for choosing Victory Genomics! We''re excited to work with {{company_name}} and deliver exceptional equine genomic insights. Your account manager will be in touch shortly.', 1, 1);
+('Thank You', 'Thank You', 'Hi {{contact_name}}, thank you for choosing White Label CRM! We''re excited to work with {{company_name}} and deliver exceptional equine genomic insights. Your account manager will be in touch shortly.', 1, 1);
 
 -- ============================================
 -- Insert Twilio settings placeholders

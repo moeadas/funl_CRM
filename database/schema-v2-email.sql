@@ -1,5 +1,5 @@
 -- ============================================
--- Victory Genomics CRM V2 — Email Marketing Tables
+-- White Label CRM CRM V2 — Email Marketing Tables
 -- Run AFTER the base schema (schema.sql)
 -- ============================================
 
@@ -133,7 +133,7 @@ INSERT IGNORE INTO `settings` (`setting_key`, `setting_value`, `setting_type`) V
 ('smtp_username', '', 'text'),
 ('smtp_password', '', 'password'),
 ('smtp_encryption', 'ssl', 'text'),
-('email_from_name', 'Victory Genomics', 'text'),
+('email_from_name', 'White Label CRM', 'text'),
 ('email_from_address', '', 'email'),
 ('email_reply_to', '', 'email'),
 ('company_address', '', 'text'),

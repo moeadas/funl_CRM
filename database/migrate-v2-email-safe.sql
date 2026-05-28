@@ -1,5 +1,5 @@
 -- ============================================
--- Victory Genomics CRM V2 — SAFE Migration Script
+-- White Label CRM CRM V2 — SAFE Migration Script
 -- Run this on your EXISTING live database to ADD the 5 new
 -- email marketing tables WITHOUT touching your current data.
 --
@@ -140,7 +140,7 @@ INSERT IGNORE INTO `settings` (`setting_key`, `setting_value`, `setting_type`) V
 ('smtp_username', '', 'text'),
 ('smtp_password', '', 'password'),
 ('smtp_encryption', 'ssl', 'text'),
-('email_from_name', 'Victory Genomics', 'text'),
+('email_from_name', 'White Label CRM', 'text'),
 ('email_from_address', '', 'email'),
 ('email_reply_to', '', 'email'),
 ('company_address', '', 'text'),
