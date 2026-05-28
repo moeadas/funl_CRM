@@ -1,416 +1,291 @@
 <?php
-/**
- * White Label CRM - Lead Form (Add/Edit)
- * CSRF protected, Apple-style, no FA icons
- */
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
-require_once '../includes/twilio.php';
-
+require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
-$currentUser = getCurrentUser();
-$db = Database::getInstance()->getConnection();
-
-$leadId = $_GET['id'] ?? null;
-$isEdit = !empty($leadId);
-$lead = null;
-$errors = [];
-$success = '';
-
-// Flash message from redirect (POST-Redirect-GET)
-if (!empty($_SESSION['success'])) {
-    $success = $_SESSION['success'];
-    unset($_SESSION['success']);
-}
-
-// Load existing lead for editing
-if ($isEdit) {
-    $stmt = $db->prepare("SELECT * FROM leads WHERE lead_id = ?");
-    $stmt->execute([$leadId]);
-    $lead = $stmt->fetch();
-    
-    if (!$lead) {
-        header('Location: leads.php');
-        exit;
-    }
-    
-    if (!hasRole('Admin') && !hasRole('Sales Manager') && $lead['assigned_to'] != $currentUser['user_id']) {
-        die('Access denied');
-    }
-}
-
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Verify CSRF
-    requireCSRF();
-    
-    // Only contact_person (name) is truly required; all other fields are optional
-    $fieldErrors = [];
-    $contactPerson = trim($_POST['contact_person'] ?? '');
-    if ($contactPerson === '') {
-        $fieldErrors['contact_person'] = 'Cannot be empty';
-    }
-    $errors = !empty($fieldErrors) ? array_values($fieldErrors) : [];
-    
-    if (empty($errors)) {
-        $data = [
-            'lead_type' => sanitizeInput($_POST['lead_type']),
-            'company_name' => sanitizeInput($_POST['company_name']),
-            'contact_person' => sanitizeInput($_POST['contact_person']),
-            'title_position' => sanitizeInput($_POST['title_position']),
-            'country' => sanitizeInput($_POST['country']),
-            'city' => sanitizeInput($_POST['city']),
-            'address' => sanitizeInput($_POST['address']),
-            'phone' => sanitizeInput($_POST['phone']),
-            'mobile' => sanitizeInput($_POST['mobile']),
-            'email' => sanitizeInput($_POST['email']),
-            'website' => sanitizeInput($_POST['website']),
-            'facebook_url' => sanitizeInput($_POST['facebook_url']),
-            'instagram_url' => sanitizeInput($_POST['instagram_url']),
-            'linkedin_url' => sanitizeInput($_POST['linkedin_url']),
-            'twitter_url' => sanitizeInput($_POST['twitter_url']),
-            'youtube_url' => sanitizeInput($_POST['youtube_url']),
-            'specialization' => sanitizeInput($_POST['specialization']),
-            'notes' => sanitizeInput($_POST['notes']),
-            'lead_status' => sanitizeInput($_POST['lead_status']),
-            'lead_source' => sanitizeInput($_POST['lead_source']),
-            'priority' => sanitizeInput($_POST['priority']),
-            'assigned_to' => (hasRole('Admin') || hasRole('Sales Manager'))
-                ? ($_POST['assigned_to'] ? (int)$_POST['assigned_to'] : null)
-                : ($isEdit ? $lead['assigned_to'] : $currentUser['user_id']),
-        ];
-        
-        try {
-            if ($isEdit) {
-                // Get previous assigned_to before updating
-                $prevAssigned = $lead['assigned_to'] ?? null;
-
-                $sql = "UPDATE leads SET 
-                    lead_type = ?, company_name = ?, contact_person = ?, title_position = ?,
-                    country = ?, city = ?, address = ?,
-                    phone = ?, mobile = ?, email = ?, website = ?,
-                    facebook_url = ?, instagram_url = ?, linkedin_url = ?, twitter_url = ?, youtube_url = ?,
-                    specialization = ?, notes = ?, lead_status = ?, lead_source = ?, priority = ?, assigned_to = ?
-                    WHERE lead_id = ?";
-                
-                $stmt = $db->prepare($sql);
-                $stmt->execute([
-                    $data['lead_type'], $data['company_name'], $data['contact_person'], $data['title_position'],
-                    $data['country'], $data['city'], $data['address'],
-                    $data['phone'], $data['mobile'], $data['email'], $data['website'],
-                    $data['facebook_url'], $data['instagram_url'], $data['linkedin_url'], $data['twitter_url'], $data['youtube_url'],
-                    $data['specialization'], $data['notes'], $data['lead_status'], $data['lead_source'], $data['priority'], $data['assigned_to'],
-                    $leadId
-                ]);
-                
-                // Save custom fields
-                saveCustomFieldValues($leadId, $_POST);
-                
-                logActivity($currentUser['user_id'], 'Update Lead', 'Lead', $leadId, "Updated lead: {$data['contact_person']}");
-
-                // Send WhatsApp notification if assignment changed
-                if ($data['assigned_to'] && $data['assigned_to'] != $prevAssigned) {
-                    TwilioHelper::notifyLeadAssignment(
-                        intval($data['assigned_to']),
-                        $data['contact_person'] ?: $data['company_name'] ?: 'Lead #' . $leadId,
-                        intval($leadId),
-                        $currentUser['full_name'] ?? ''
-                    );
-                }
-                
-                // Redirect back to the same edit page (POST-Redirect-GET pattern)
-                // This re-fetches the lead from DB so updated values are visible immediately
-                $_SESSION['success'] = 'Lead updated successfully!';
-                header("Location: lead-form.php?id=$leadId");
-                exit;
-            } else {
-                $sql = "INSERT INTO leads (
-                    lead_type, company_name, contact_person, title_position,
-                    country, city, address,
-                    phone, mobile, email, website,
-                    facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url,
-                    specialization, notes, lead_status, lead_source, priority, assigned_to, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                
-                $stmt = $db->prepare($sql);
-                $stmt->execute([
-                    $data['lead_type'], $data['company_name'], $data['contact_person'], $data['title_position'],
-                    $data['country'], $data['city'], $data['address'],
-                    $data['phone'], $data['mobile'], $data['email'], $data['website'],
-                    $data['facebook_url'], $data['instagram_url'], $data['linkedin_url'], $data['twitter_url'], $data['youtube_url'],
-                    $data['specialization'], $data['notes'], $data['lead_status'], $data['lead_source'], $data['priority'], $data['assigned_to'],
-                    $currentUser['user_id']
-                ]);
-                
-                $leadId = $db->lastInsertId();
-                
-                // Save custom fields
-                saveCustomFieldValues($leadId, $_POST);
-                
-                logActivity($currentUser['user_id'], 'Create Lead', 'Lead', $leadId, "Created lead: {$data['contact_person']}");
-
-                // Send WhatsApp notification if assigned to someone else
-                if ($data['assigned_to'] && $data['assigned_to'] != $currentUser['user_id']) {
-                    TwilioHelper::notifyLeadAssignment(
-                        intval($data['assigned_to']),
-                        $data['contact_person'] ?: $data['company_name'] ?: 'New Lead',
-                        intval($leadId),
-                        $currentUser['full_name'] ?? ''
-                    );
-                }
-                
-                header("Location: lead-detail.php?id=$leadId");
-                exit;
-            }
-        } catch (Exception $e) {
-            $errors[] = 'Database error: ' . $e->getMessage();
-        }
-    }
-}
-
-$users = getAllUsers();
-
-$pageTitle = $isEdit ? 'Edit Lead' : 'Add New Lead';
-include '../includes/header.php';
+$pageTitle = 'Lead';
+$currentPage = 'leads';
+$leadId = intval($_GET['id'] ?? 0);
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
+<style>
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; }
+.card { background:#fff; border:1px solid #e5e5e7; border-radius:12px; padding:24px; margin-bottom:16px; }
+.card-title { font-size:15px; font-weight:600; color:#1d1d1f; margin:0 0 20px; }
+.form-label { display:block; font-size:13px; font-weight:500; color:#424245; margin-bottom:6px; }
+.form-control { width:100%; padding:10px 12px; border:1px solid #d2d2d7; border-radius:8px; font-size:14px; color:#1d1d1f; background:#fff; box-sizing:border-box; transition:border-color 0.2s; }
+.form-control:focus { outline:none; border-color:#0071e3; box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
+textarea.form-control { min-height:80px; resize:vertical; }
+.row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.btn { padding:10px 18px; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; border:none; text-decoration:none; display:inline-block; }
+.btn-primary { background:#0071e3; color:#fff; }
+.btn-primary:hover { background:#0077ed; }
+.btn-outline { background:#fff; color:#0071e3; border:1px solid #0071e3; }
+.btn-outline:hover { background:#f5f5f7; }
+</style>
+
 <div class="page-header">
-    <h1 class="page-title">
-        <a href="leads.php" class="text-muted back-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        </a>
-        <?php echo $pageTitle; ?>
-    </h1>
+    <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/pages/leads.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Leads</a>
+        <h1><?= $leadId ? 'Edit Lead' : 'New Lead' ?></h1>
+    </div>
+    <div>
+        <button type="button" class="btn btn-primary" onclick="saveLead()">Save Lead</button>
+    </div>
 </div>
 
-<?php if (!empty($errors) && empty($fieldErrors)): ?>
-    <div class="alert alert-error">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-        <div>
-            <?php foreach ($errors as $error): ?>
-                <div><?php echo htmlspecialchars($error); ?></div>
-            <?php endforeach; ?>
+<div style="max-width:1000px;">
+    <div class="card">
+        <h3 class="card-title">Company Information</h3>
+        <div class="row-2">
+            <div class="form-group">
+                <label class="form-label">Company Name *</label>
+                <input type="text" id="companyName" class="form-control" placeholder="e.g., Acme Corp">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Lead Type</label>
+                <select id="leadType" class="form-control">
+                    <option value="Prospect">Prospect</option>
+                    <option value="Customer">Customer</option>
+                    <option value="Partner">Partner</option>
+                    <option value="Competitor">Competitor</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+        <div class="row-2" style="margin-top:16px;">
+            <div class="form-group">
+                <label class="form-label">Industry</label>
+                <input type="text" id="industry" class="form-control" placeholder="e.g., Technology">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Company Size</label>
+                <select id="companySize" class="form-control">
+                    <option value="">Select...</option>
+                    <option value="1-10">1-10 employees</option>
+                    <option value="11-50">11-50 employees</option>
+                    <option value="51-200">51-200 employees</option>
+                    <option value="201-500">201-500 employees</option>
+                    <option value="501+">501+ employees</option>
+                </select>
+            </div>
         </div>
     </div>
-<?php endif; ?>
 
-<?php if ($success): ?>
-    <div class="alert alert-success">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        <span><?php echo htmlspecialchars($success); ?></span>
+    <div class="card">
+        <h3 class="card-title">Contact Details</h3>
+        <div class="row-2">
+            <div class="form-group">
+                <label class="form-label">Contact Person *</label>
+                <input type="text" id="contactPerson" class="form-control" placeholder="e.g., John Doe">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Title / Position</label>
+                <input type="text" id="titlePosition" class="form-control" placeholder="e.g., CEO">
+            </div>
+        </div>
+        <div class="row-3" style="margin-top:16px;">
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="email" class="form-control" placeholder="john@example.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" id="phone" class="form-control" placeholder="+1 555-0100">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mobile</label>
+                <input type="tel" id="mobile" class="form-control" placeholder="+1 555-0100">
+            </div>
+        </div>
     </div>
-<?php endif; ?>
 
-<form method="POST" action="">
-    <?php echo csrfField(); ?>
+    <div class="card">
+        <h3 class="card-title">Location & Source</h3>
+        <div class="row-3">
+            <div class="form-group">
+                <label class="form-label">Country</label>
+                <select id="country" class="form-control">
+                    <option value="">Select Country...</option>
+                    <option value="United States">United States</option>
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="Spain">Spain</option>
+                    <option value="Jordan">Jordan</option>
+                    <option value="UAE">UAE</option>
+                    <option value="Saudi Arabia">Saudi Arabia</option>
+                    <option value="Egypt">Egypt</option>
+                    <option value="India">India</option>
+                    <option value="China">China</option>
+                    <option value="Japan">Japan</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Brazil">Brazil</option>
+                    <option value="Mexico">Mexico</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">City</label>
+                <input type="text" id="city" class="form-control" placeholder="City name">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Lead Source</label>
+                <select id="leadSource" class="form-control">
+                    <option value="Website">Website</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Social Media">Social Media</option>
+                    <option value="Email Campaign">Email Campaign</option>
+                    <option value="Cold Call">Cold Call</option>
+                    <option value="Trade Show">Trade Show</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Status & Priority</h3>
+        <div class="row-3">
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select id="leadStatus" class="form-control">
+                    <option value="New Lead">New Lead</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Interested">Interested</option>
+                    <option value="Not Interested">Not Interested</option>
+                    <option value="Call Scheduled">Call Scheduled</option>
+                    <option value="Proposal Sent">Proposal Sent</option>
+                    <option value="Negotiation">Negotiation</option>
+                    <option value="Won">Won</option>
+                    <option value="Lost">Lost</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select id="priority" class="form-control">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Assigned To</label>
+                <select id="assignedTo" class="form-control">
+                    <option value="">Unassigned</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:16px;">
+            <label class="form-label">Notes</label>
+            <textarea id="notes" class="form-control" placeholder="Additional notes about this lead..."></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+const CSRF_TOKEN = "<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>";
+const LEAD_ID = <?= $leadId ?>;
+let currentUsers = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadUsers();
+    if (LEAD_ID) loadLead();
+});
+
+function loadUsers() {
+    fetch('/api/users.php?action=list', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.users) {
+            var select = document.getElementById('assignedTo');
+            data.users.forEach(function(u) {
+                select.innerHTML += '<option value="' + u.user_id + '">' + escapeHtml(u.full_name || u.email) + '</option>';
+            });
+        }
+    });
+}
+
+function loadLead() {
+    fetch('/api/leads.php?action=detail&id=' + LEAD_ID, { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.lead) {
+            var l = data.lead;
+            var fields = ['companyName','leadType','industry','companySize','contactPerson','titlePosition','email','phone','mobile','country','city','leadSource','leadStatus','priority','notes'];
+            fields.forEach(function(f) {
+                var el = document.getElementById(f);
+                if (el && l[f.replace(/([A-Z])/g,'_$1').toLowerCase()]) {
+                    el.value = l[f.replace(/([A-Z])/g,'_$1').toLowerCase()];
+                }
+            });
+            if (l.assigned_to) document.getElementById('assignedTo').value = l.assigned_to;
+        }
+    });
+}
+
+function saveLead() {
+    var companyName = document.getElementById('companyName').value.trim();
+    if (!companyName) { showNotification('Company name is required', 'error'); return; }
     
-    <div class="form-layout-2-1">
-        <!-- Main Information -->
-        <div>
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Contact Details</h2></div>
-                <div class="card-body">
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Contact Person <span class="required">*</span></label>
-                            <input type="text" name="contact_person" class="form-control <?php echo isset($fieldErrors['contact_person']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($lead['contact_person'] ?? ($_POST['contact_person'] ?? '')); ?>">
-                            <?php if (isset($fieldErrors['contact_person'])): ?>
-                                <div class="field-error" style="display:block;"><?php echo htmlspecialchars($fieldErrors['contact_person']); ?></div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Title / Position</label>
-                            <input type="text" name="title_position" class="form-control" value="<?php echo htmlspecialchars($lead['title_position'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Country</label>
-                            <input type="text" name="country" class="form-control" value="<?php echo htmlspecialchars($lead['country'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Phone</label>
-                            <input type="tel" name="phone" class="form-control" value="<?php echo htmlspecialchars($lead['phone'] ?? ''); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Mobile</label>
-                            <input type="tel" name="mobile" class="form-control" value="<?php echo htmlspecialchars($lead['mobile'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="text" name="email" class="form-control" placeholder="email@example.com" value="<?php echo htmlspecialchars($lead['email'] ?? ''); ?>">
-                    </div>
-                </div>
-            </div>
+    var payload = {
+        csrf_token: CSRF_TOKEN,
+        company_name: companyName,
+        lead_type: document.getElementById('leadType').value,
+        industry: document.getElementById('industry').value,
+        company_size: document.getElementById('companySize').value,
+        contact_person: document.getElementById('contactPerson').value,
+        title_position: document.getElementById('titlePosition').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        mobile: document.getElementById('mobile').value,
+        country: document.getElementById('country').value,
+        city: document.getElementById('city').value,
+        lead_source: document.getElementById('leadSource').value,
+        lead_status: document.getElementById('leadStatus').value,
+        priority: document.getElementById('priority').value,
+        notes: document.getElementById('notes').value,
+        assigned_to: document.getElementById('assignedTo').value || null
+    };
+    
+    if (LEAD_ID) {
+        fetch('/api/leads.php?action=update&id=' + LEAD_ID, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            showNotification(data.message || (data.success ? 'Lead updated!' : 'Update failed'), data.success ? 'success' : 'error');
+            if (data.success) window.location.href = '/pages/leads.php';
+        });
+    } else {
+        fetch('/api/leads.php?action=create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            showNotification(data.message || (data.success ? 'Lead created!' : 'Create failed'), data.success ? 'success' : 'error');
+            if (data.success) window.location.href = '/pages/leads.php?saved=1';
+        });
+    }
+}
 
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Company Information</h2></div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label class="form-label">Company Name</label>
-                        <input type="text" name="company_name" class="form-control" value="<?php echo htmlspecialchars($lead['company_name'] ?? ''); ?>">
-                    </div>
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[<>&"]/g, function(c) {
+        return c === '<' ? '<' : c === '>' ? '>' : c === '&' ? '&' : '"';
+    });
+}
+</script>
 
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Lead Type</label>
-                            <select name="lead_type" class="form-control">
-                                <option value="">Select Type</option>
-                                <?php foreach (['Business','Individual','Partner','Reseller','Other'] as $type): ?>
-                                    <option value="<?php echo $type; ?>" <?php echo ($lead['lead_type'] ?? '') === $type ? 'selected' : ''; ?>><?php echo $type; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Specialization</label>
-                            <input type="text" name="specialization" class="form-control" placeholder="e.g., Thoroughbred Breeding" value="<?php echo htmlspecialchars($lead['specialization'] ?? ''); ?>">
-                        </div>
-                    </div>
-
-                    <?php
-                    // Render custom fields
-                    $customFields = getActiveCustomFields();
-                    if (!empty($customFields)) {
-                        echo '<div class="custom-fields-section" style="margin-top:12px;">';
-                        echo '<h4 style="font-size:13px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Custom Fields</h4>';
-                        echo '<div class="grid grid-2">';
-                        foreach ($customFields as $field) {
-                            $fieldValue = '';
-                            if ($isEdit && $lead) {
-                                $fieldValue = getCustomFieldValue($lead['lead_id'], $field['field_id']);
-                            }
-                            echo renderCustomFieldInput($field, $fieldValue);
-                        }
-                        echo '</div>';
-                        echo '</div>';
-                    }
-                    ?>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Location</h2></div>
-                <div class="card-body">
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">City</label>
-                            <input type="text" name="city" class="form-control" value="<?php echo htmlspecialchars($lead['city'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Address</label>
-                        <textarea name="address" class="form-control" rows="3"><?php echo htmlspecialchars($lead['address'] ?? ''); ?></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Social Media &amp; Website</h2></div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label class="form-label">Website</label>
-                        <input type="text" name="website" class="form-control" placeholder="https://" value="<?php echo htmlspecialchars($lead['website'] ?? ''); ?>">
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Facebook URL</label>
-                            <input type="text" name="facebook_url" class="form-control" value="<?php echo htmlspecialchars($lead['facebook_url'] ?? ''); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Instagram URL</label>
-                            <input type="text" name="instagram_url" class="form-control" value="<?php echo htmlspecialchars($lead['instagram_url'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="grid grid-3">
-                        <div class="form-group">
-                            <label class="form-label">LinkedIn URL</label>
-                            <input type="text" name="linkedin_url" class="form-control" value="<?php echo htmlspecialchars($lead['linkedin_url'] ?? ''); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Twitter URL</label>
-                            <input type="text" name="twitter_url" class="form-control" value="<?php echo htmlspecialchars($lead['twitter_url'] ?? ''); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">YouTube URL</label>
-                            <input type="text" name="youtube_url" class="form-control" value="<?php echo htmlspecialchars($lead['youtube_url'] ?? ''); ?>">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Notes</h2></div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <textarea name="notes" class="form-control" rows="5" placeholder="Add any additional information about this lead..."><?php echo htmlspecialchars($lead['notes'] ?? ''); ?></textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar -->
-        <div>
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Lead Details</h2></div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label class="form-label">Lead Status</label>
-                        <select name="lead_status" class="form-control">
-                            <?php foreach (['New Lead','Contacted','Interested','Not Interested','Schedule Call','Call Scheduled','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost','On Hold'] as $s): ?>
-                                <option value="<?php echo $s; ?>" <?php echo ($lead['lead_status'] ?? 'New Lead') === $s ? 'selected' : ''; ?>><?php echo $s; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Priority</label>
-                        <select name="priority" class="form-control">
-                            <?php foreach (['Low','Medium','High','Urgent'] as $p): ?>
-                                <option value="<?php echo $p; ?>" <?php echo ($lead['priority'] ?? 'Medium') === $p ? 'selected' : ''; ?>><?php echo $p; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Lead Source</label>
-                        <select name="lead_source" class="form-control">
-                            <?php foreach (['Website','Facebook','Instagram','Google Ads','LinkedIn','Referral','Cold Outreach','Event','Import','Other'] as $src): ?>
-                                <option value="<?php echo $src; ?>" <?php echo ($lead['lead_source'] ?? 'Other') === $src ? 'selected' : ''; ?>><?php echo $src; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <?php if (hasRole('Admin') || hasRole('Sales Manager')): ?>
-                        <div class="form-group">
-                            <label class="form-label">Assign To</label>
-                            <select name="assigned_to" class="form-control">
-                                <option value="">Unassigned</option>
-                                <?php foreach ($users as $user): ?>
-                                    <option value="<?php echo $user['user_id']; ?>" <?php echo ($lead['assigned_to'] ?? '') == $user['user_id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($user['full_name']); ?> (<?php echo htmlspecialchars($user['role']); ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">
-                        <?php echo $isEdit ? 'Update Lead' : 'Create Lead'; ?>
-                    </button>
-                    <a href="leads.php" class="btn btn-outline btn-block" style="margin-top:0.75rem;">Cancel</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-
-<?php include '../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

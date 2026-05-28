@@ -38,7 +38,7 @@ table.data-table tr:hover { background: #f9fafb; }
 <div class="products-page">
     <div class="page-header">
         <h1>Products</h1>
-        <button class="btn btn-primary" onclick="openProductModal()">+ New Product</button>
+        <a href="/pages/product-form.php" class="btn btn-primary" style="text-decoration:none;">+ New Product</a>
     </div>
     <div class="data-table-wrap">
         <table class="data-table">

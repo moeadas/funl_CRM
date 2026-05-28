@@ -54,10 +54,10 @@ include __DIR__ . '/../includes/header.php';
 
 <div class="page-header">
     <h1 class="page-title">Leads Management</h1>
-    <button type="button" class="btn btn-primary" onclick="openAddModal()">
+    <a href="/pages/lead-form.php" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add New Lead
-    </button>
+    </a>
 </div>
 
 <?php if (isset($_GET['follow_up']) && $_GET['follow_up'] == '1'): ?>
@@ -859,6 +859,13 @@ function moveLeadToContact(leadId, e) {
         }
     })
     .catch(function() { showNotification('Network error', 'error'); });
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 </script>

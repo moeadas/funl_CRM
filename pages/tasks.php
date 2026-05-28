@@ -363,7 +363,7 @@ textarea.form-control { min-height: 80px; resize: vertical; }
                     <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                 <?php endforeach; ?>
             </select>
-            <button class="btn-new-task" onclick="openTaskModal()">+ New Task</button>
+            <a href="/pages/task-form.php" class="btn-new-task" style="text-decoration:none">+ New Task</a>
         </div>
     </div>
 
@@ -517,10 +517,9 @@ function renderCard(task) {
     
     return `
     <div class="task-card" draggable="true" data-id="${task.task_id}"
-         ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"
-         onclick="openTaskModal(${task.task_id})">
+         ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
         <div class="task-card-header">
-            <div class="task-title">${escapeHtml(task.title)}</div>
+            <a href="/pages/task-form.php?id=${task.task_id}" class="task-title-link">${escapeHtml(task.title)}</a>
             <div class="task-actions" onclick="event.stopPropagation()">
                 <button onclick="deleteTask(${task.task_id})" title="Delete">&times;</button>
             </div>
