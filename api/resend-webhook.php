@@ -5,7 +5,7 @@
  * 
  * Setup in Resend Dashboard:
  * 1. Go to https://resend.com/domains → Webhooks
- * 2. Add webhook URL: https://crm.pinpoint.online/api/resend-webhook.php
+ * 2. Add webhook URL: https://app.funl.online/api/resend-webhook.php
  * 3. Select events: delivered, bounced, opened, clicked, complained, delivery_delayed
  */
 

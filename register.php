@@ -128,6 +128,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 $plans = getActivePlans();
+
+// Determine default selected plan from GET or POST parameter
+$defaultPlan = sanitizeInput($_POST['plan'] ?? $_GET['plan'] ?? 'single');
+$validPlans = ['single', 'team', 'enterprise'];
+if (!in_array($defaultPlan, $validPlans)) {
+    $defaultPlan = 'single';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -313,8 +320,8 @@ $plans = getActivePlans();
             <p class="desc"><?php echo htmlspecialchars($plan['description'] ?? ''); ?></p>
             <div class="price">$<?php echo number_format($plan['monthly_price'], 0); ?><span>/month</span></div>
             <p class="price-note">or $<?php echo number_format($plan['yearly_price'] ?? $plan['monthly_price'] * 10, 0); ?>/year (2 months free)</p>
-            <button type="button" class="btn-select <?php echo ($plan['plan_key'] === 'single') ? 'active' : ''; ?>" onclick="selectPlan('<?php echo $plan['plan_key']; ?>', this)">
-                <?php echo ($plan['plan_key'] === 'single') ? 'Selected' : 'Select Plan'; ?>
+            <button type="button" class="btn-select <?php echo ($plan['plan_key'] === $defaultPlan) ? 'active' : ''; ?>" onclick="selectPlan('<?php echo $plan['plan_key']; ?>', this)">
+                <?php echo ($plan['plan_key'] === $defaultPlan) ? 'Selected' : 'Select Plan'; ?>
             </button>
             <ul>
                 <li>Up to <?php echo $plan['user_limit']; ?> <?php echo $plan['user_limit'] > 1 ? 'users' : 'user'; ?></li>
@@ -484,7 +491,7 @@ $plans = getActivePlans();
         <form method="POST">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
             <input type="hidden" name="action" value="register_company">
-            <input type="hidden" name="plan" id="selectedPlan" value="single">
+            <input type="hidden" name="plan" id="selectedPlan" value="<?php echo htmlspecialchars($defaultPlan); ?>">
 
             <div class="form-grid">
                 <div class="form-group">
@@ -515,7 +522,15 @@ $plans = getActivePlans();
 
             <div style="margin-top:8px;">
                 <label class="form-label">Selected Plan</label>
-                <div id="planDisplay" style="padding:10px 14px;background:#f8f9fb;border-radius:8px;font-size:14px;font-weight:600;color:var(--color-primary);">Single User - $10/month</div>
+                <?php
+                $planDisplayNames = [
+                    'single' => 'Single User - $10/month',
+                    'team' => 'Team - $40/month',
+                    'enterprise' => 'Enterprise - $90/month'
+                ];
+                $currentPlanDisplayName = $planDisplayNames[$defaultPlan] ?? 'Single User - $10/month';
+                ?>
+                <div id="planDisplay" style="padding:10px 14px;background:#f8f9fb;border-radius:8px;font-size:14px;font-weight:600;color:var(--color-primary);"><?php echo htmlspecialchars($currentPlanDisplayName); ?></div>
             </div>
 
             <button type="submit" class="btn-submit">Create Account & Start Free Trial</button>
@@ -559,10 +574,19 @@ function selectPlan(key, btn) {
     document.getElementById('signup').scrollIntoView({ behavior: 'smooth' });
 }
 
-// Auto-select first plan button
+// Highlight the pre-selected plan button on load
 window.addEventListener('load', function() {
-    const firstBtn = document.querySelector('.pricing-card .btn-select');
-    if (firstBtn) firstBtn.classList.add('active');
+    const selectedPlan = document.getElementById('selectedPlan').value;
+    document.querySelectorAll('.pricing-card .btn-select').forEach(b => {
+        const onclickAttr = b.getAttribute('onclick') || '';
+        if (onclickAttr.includes(`'${selectedPlan}'`) || onclickAttr.includes(`"${selectedPlan}"`)) {
+            b.textContent = 'Selected';
+            b.classList.add('active');
+        } else {
+            b.textContent = 'Select Plan';
+            b.classList.remove('active');
+        }
+    });
 });
 </script>
 
