@@ -11,7 +11,7 @@ requireLogin();
 // Only admins and sales managers
 if (!hasRole('Admin') && !hasRole('Sales Manager')) {
     $_SESSION['error'] = 'You do not have permission to export data.';
-    header('Location: /dashboard.php');
+    header('Location: /pages/dashboard.php');
     exit;
 }
 

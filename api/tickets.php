@@ -46,6 +46,67 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     jsonSuccess('Ticket created', ['ticket_id' => $ticketId, 'ticket_number' => $ticketNumber]);
 }
 
+if ($action === 'get' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $ticketId = (int)($_GET['id'] ?? 0);
+    $ticket = $db->findOne('support_tickets', ['ticket_id' => $ticketId, 'company_id' => $companyId]);
+    if ($ticket) {
+        // Fetch replies too
+        $replies = $db->query("
+            SELECT r.*, u.full_name as user_name
+            FROM ticket_replies r
+            LEFT JOIN users u ON r.user_id = u.user_id
+            WHERE r.ticket_id = ?
+            ORDER BY r.created_at ASC", [$ticketId])->fetchAll();
+        $ticket['replies'] = $replies;
+        jsonSuccess('Ticket loaded', $ticket);
+    } else {
+        jsonError('Ticket not found');
+    }
+}
+
+if ($action === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCSRF();
+    $input = json_decode(file_get_contents('php://input'), true);
+    $ticketId = (int)($input['ticket_id'] ?? 0);
+    
+    $ticket = $db->findOne('support_tickets', ['ticket_id' => $ticketId, 'company_id' => $companyId]);
+    if (!$ticket) jsonError('Ticket not found');
+    
+    $status = sanitizeInput($input['status'] ?? 'open');
+    $resolvedAt = ($status === 'resolved' && $ticket['status'] !== 'resolved') ? date('Y-m-d H:i:s') : $ticket['resolved_at'];
+    
+    $db->update('support_tickets', [
+        'subject'     => sanitizeInput($input['subject'] ?? ''),
+        'description' => sanitizeInput($input['description'] ?? ''),
+        'priority'    => sanitizeInput($input['priority'] ?? 'medium'),
+        'category'    => sanitizeInput($input['category'] ?? ''),
+        'contact_id'  => !empty($input['contact_id']) ? (int)$input['contact_id'] : null,
+        'account_id'  => !empty($input['account_id']) ? (int)$input['account_id'] : null,
+        'assigned_to' => !empty($input['assigned_to']) ? (int)$input['assigned_to'] : null,
+        'status'      => $status,
+        'resolved_at' => $resolvedAt
+    ], ['ticket_id' => $ticketId, 'company_id' => $companyId]);
+    
+    jsonSuccess('Ticket updated');
+}
+
+if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCSRF();
+    $input = json_decode(file_get_contents('php://input'), true);
+    $ticketId = (int)($input['ticket_id'] ?? 0);
+    
+    $ticket = $db->findOne('support_tickets', ['ticket_id' => $ticketId, 'company_id' => $companyId]);
+    if (!$ticket) jsonError('Ticket not found');
+    
+    // Delete replies first
+    $db->query("DELETE FROM ticket_replies WHERE ticket_id = ?", [$ticketId]);
+    
+    // Delete ticket
+    $db->delete('support_tickets', ['ticket_id' => $ticketId, 'company_id' => $companyId]);
+    
+    jsonSuccess('Ticket deleted');
+}
+
 if ($action === 'update_status' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);

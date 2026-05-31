@@ -21,3 +21,7 @@ uploads/*
 
 # Dependencies
 vendor/
+scratch/
+config/.env.production
+*.db
+composer.phar

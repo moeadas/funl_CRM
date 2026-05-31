@@ -105,7 +105,7 @@ if ($action === 'create_list' && $method === 'POST') {
     if (empty($input['name'])) jsonError('List name is required');
     $stmt = $db->prepare("INSERT INTO email_lists (name, description, created_by) VALUES (?, ?, ?)");
     $stmt->execute([$input['name'], $input['description'] ?? '', $currentUser['user_id']]);
-    jsonSuccess('List created', ['list_id' => $db->getConnection()->lastInsertId()]);
+    jsonSuccess('List created', ['list_id' => $db->lastInsertId()]);
 }
 
 // ─── UPDATE LIST ───
@@ -229,7 +229,7 @@ if ($action === 'create_campaign' && $method === 'POST') {
         $input['reply_to'] ?? '', $input['template_id'] ?? null, $input['list_id'] ?? null,
         json_encode($input['content_json'] ?? []), $input['content_html'] ?? '', $currentUser['user_id']
     ]);
-    jsonSuccess('Campaign created', ['campaign_id' => $db->getConnection()->lastInsertId()]);
+    jsonSuccess('Campaign created', ['campaign_id' => $db->lastInsertId()]);
 }
 
 // ─── UPDATE CAMPAIGN ───
@@ -415,7 +415,7 @@ if (($action === 'create_template' || $action === 'template_save') && $method ==
     $input = json_decode(file_get_contents('php://input'), true);
     $stmt = $db->prepare("INSERT INTO email_templates (name, subject, content_html, created_by) VALUES (?, ?, ?, ?)");
     $stmt->execute([$input['name'], $input['subject'] ?? '', $input['content_html'] ?? '', $currentUser['user_id']]);
-    jsonSuccess('Template created', ['template_id' => $db->getConnection()->lastInsertId()]);
+    jsonSuccess('Template created', ['template_id' => $db->lastInsertId()]);
 }
 
 if ($action === 'update_template' && $method === 'POST') {

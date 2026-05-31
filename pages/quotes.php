@@ -372,17 +372,20 @@ function viewQuote(quoteId) {
 }
 
 function deleteQuote(quoteId) {
-    if (!confirm('Delete this quote?')) return;
-    fetch(`${API}?action=delete`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quote_id: quoteId, csrf_token: CSRF_TOKEN })
-    }).then(r => r.json()).then(resp => {
-        if (resp.success) {
-            loadQuotes();
-            showNotification('Quote deleted', 'success');
-        }
+    showConfirm('Delete this quote?', function() {
+        fetch(`${API}?action=delete`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quote_id: quoteId, csrf_token: CSRF_TOKEN })
+        }).then(r => r.json()).then(resp => {
+            if (resp.success) {
+                loadQuotes();
+                showNotification('Quote deleted', 'success');
+            } else {
+                showNotification(resp.message || 'Failed to delete quote', 'error');
+            }
+        });
     });
 }
 

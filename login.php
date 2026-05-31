@@ -10,7 +10,7 @@ startSecureSession();
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    header('Location: /dashboard.php');
+    header('Location: /pages/dashboard.php');
     exit;
 }
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (authenticateUser($username, $password)) {
             // Check if email is verified (skip for super admin)
             if (!empty($_SESSION['email_verified']) || !empty($_SESSION['is_super_admin'])) {
-                header('Location: /dashboard.php');
+                header('Location: /pages/dashboard.php');
                 exit;
             } else {
                 // Email not verified — redirect to verification page

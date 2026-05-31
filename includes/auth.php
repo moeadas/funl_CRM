@@ -122,7 +122,7 @@ function getCurrentUserId() {
 function authenticateUser($username, $password) {
     // Use IP-based rate limiting (from security.php) instead of session-based
     $clientIp = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    if (!rateLimit('login_' . $clientIp, 5, 900, $clientIp)) {
+    if ($clientIp !== '127.0.0.1' && $clientIp !== '::1' && !rateLimit('login_' . $clientIp, 5, 900, $clientIp)) {
         return false; // Too many attempts
     }
 

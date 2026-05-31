@@ -12,7 +12,7 @@ requireLogin();
 // Only admins and sales managers can access reports
 if (!hasRole('Sales Manager')) {
     $_SESSION['error'] = 'You do not have permission to view reports.';
-    header('Location: /dashboard.php');
+    header('Location: /pages/dashboard.php');
     exit;
 }
 

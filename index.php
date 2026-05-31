@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/auth.php';
 startSecureSession();
 
 if (isLoggedIn()) {
-    header('Location: /dashboard.php');
+    header('Location: /pages/dashboard.php');
 } else {
     header('Location: /login.php');
 }

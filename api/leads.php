@@ -330,7 +330,11 @@ function getLeadStats($db, $currentUser) {
     $stmt->execute($params);
     $stats['by_country'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     
-    $monthWhere = $where ? $whereClause . " AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())" : "WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())";
+    if ($db->isSQLite()) {
+        $monthWhere = $where ? $whereClause . " AND strftime('%m', created_at) = strftime('%m', 'now') AND strftime('%Y', created_at) = strftime('%Y', 'now')" : "WHERE strftime('%m', created_at) = strftime('%m', 'now') AND strftime('%Y', created_at) = strftime('%Y', 'now')";
+    } else {
+        $monthWhere = $where ? $whereClause . " AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())" : "WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())";
+    }
     $stmt = $db->prepare("SELECT COUNT(*) as c FROM leads $monthWhere");
     $stmt->execute($params);
     $stats['this_month'] = $stmt->fetch()['c'] ?? 0;

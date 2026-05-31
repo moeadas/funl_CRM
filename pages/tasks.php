@@ -372,84 +372,6 @@ textarea.form-control { min-height: 80px; resize: vertical; }
     </div>
 </div>
 
-<!-- Task Modal -->
-<div class="modal-overlay" id="task-modal">
-    <div class="modal">
-        <div class="modal-header">
-            <h2 id="modal-title">New Task</h2>
-            <button class="modal-close" onclick="closeTaskModal()">&times;</button>
-        </div>
-        <form id="task-form" onsubmit="saveTask(event)">
-            <div class="modal-body">
-                <input type="hidden" id="task-id" value="">
-                <div class="form-group">
-                    <label class="form-label">Title *</label>
-                    <input type="text" id="task-title" class="form-control" required placeholder="What needs to be done?">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea id="task-description" class="form-control" placeholder="Additional details..."></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Priority</label>
-                        <select id="task-priority" class="form-control">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select id="task-status" class="form-control">
-                            <option value="todo">To Do</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="review">Review</option>
-                            <option value="done">Done</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Assigned To</label>
-                        <select id="task-assigned-to" class="form-control">
-                            <option value="">Unassigned</option>
-                            <?php foreach ($db->query("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId]) as $u): ?>
-                                <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Linked Lead</label>
-                        <select id="task-lead-id" class="form-control">
-                            <option value="">None</option>
-                            <?php foreach ($db->query("SELECT lead_id, company_name FROM leads WHERE company_id = ? ORDER BY company_name LIMIT 100", [$companyId]) as $l): ?>
-                                <option value="<?= $l['lead_id'] ?>"><?= htmlspecialchars($l['company_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Due Date</label>
-                        <input type="date" id="task-due-date" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Follow-up Date</label>
-                        <input type="date" id="task-follow-up" class="form-control">
-                    </div>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn-secondary" onclick="closeTaskModal()">Cancel</button>
-                <button type="submit" class="btn-primary" id="task-save-btn">Create Task</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
 const USER_ID = <?= json_encode($userId) ?>;
@@ -519,7 +441,7 @@ function renderCard(task) {
     <div class="task-card" draggable="true" data-id="${task.task_id}"
          ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
         <div class="task-card-header">
-            <a href="/pages/task-form.php?id=${task.task_id}" class="task-title-link">${escapeHtml(task.title)}</a>
+            <a href="/pages/task-form.php?id=${task.task_id}" class="task-title" style="text-decoration:none;">${escapeHtml(task.title)}</a>
             <div class="task-actions" onclick="event.stopPropagation()">
                 <button onclick="deleteTask(${task.task_id})" title="Delete">&times;</button>
             </div>
@@ -546,7 +468,6 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// ── CRITICAL FIX: dueLabel() was called but never defined ──
 function dueLabel(dateStr) {
     if (!dateStr) return null;
     const today = new Date();
@@ -577,11 +498,13 @@ function onDragEnd(e) {
     draggedCard = null;
 }
 
+// Drag over handler
 function onDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 }
 
+// Drop handler
 function onDrop(e, newStatus) {
     e.preventDefault();
     if (!draggedCard) return;
@@ -610,102 +533,26 @@ function moveTask(taskId, newStatus) {
     });
 }
 
-// Modal
-function openTaskModal(taskId) {
-    const modal = document.getElementById('task-modal');
-    const form = document.getElementById('task-form');
-    const title = document.getElementById('modal-title');
-    const saveBtn = document.getElementById('task-save-btn');
-    
-    form.reset();
-    document.getElementById('task-id').value = '';
-    
-    if (taskId) {
-        const task = tasks.find(t => t.task_id == taskId);
-        if (task) {
-            title.textContent = 'Edit Task';
-            saveBtn.textContent = 'Save Changes';
-            document.getElementById('task-id').value = task.task_id;
-            document.getElementById('task-title').value = task.title || '';
-            document.getElementById('task-description').value = task.description || '';
-            document.getElementById('task-priority').value = task.priority || 'medium';
-            document.getElementById('task-status').value = task.status || 'todo';
-            document.getElementById('task-assigned-to').value = task.assigned_to || '';
-            document.getElementById('task-lead-id').value = task.lead_id || '';
-            document.getElementById('task-due-date').value = task.due_date || '';
-            document.getElementById('task-follow-up').value = task.follow_up_date || '';
-        }
-    } else {
-        title.textContent = 'New Task';
-        saveBtn.textContent = 'Create Task';
-    }
-    
-    modal.classList.add('active');
-}
-
-function closeTaskModal() {
-    document.getElementById('task-modal').classList.remove('active');
-}
-
-function saveTask(e) {
-    e.preventDefault();
-    const taskId = document.getElementById('task-id').value;
-    const action = taskId ? 'update' : 'create';
-    
-    const data = {
-        csrf_token: CSRF_TOKEN,
-        title: document.getElementById('task-title').value,
-        description: document.getElementById('task-description').value,
-        priority: document.getElementById('task-priority').value,
-        status: document.getElementById('task-status').value,
-        assigned_to: document.getElementById('task-assigned-to').value || null,
-        lead_id: document.getElementById('task-lead-id').value || null,
-        due_date: document.getElementById('task-due-date').value || null,
-        follow_up_date: document.getElementById('task-follow-up').value || null,
-    };
-    if (taskId) data.task_id = taskId;
-    
-    fetch(`${API}?action=${action}`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(resp => {
-        if (resp.success) {
-            closeTaskModal();
-            loadTasks();
-            showNotification(taskId ? 'Task updated' : 'Task created', 'success');
-        } else {
-            showNotification(resp.message || 'Failed to save task', 'error');
-        }
-    });
-}
-
 function deleteTask(taskId) {
-    if (!confirm('Delete this task?')) return;
-    fetch(`${API}?action=delete`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task_id: taskId, csrf_token: CSRF_TOKEN })
-    })
-    .then(r => r.json())
-    .then(resp => {
-        if (resp.success) {
-            tasks = tasks.filter(t => t.task_id != taskId);
-            renderBoard();
-            showNotification('Task deleted', 'success');
-        } else {
-            showNotification(resp.message || 'Failed to delete', 'error');
-        }
+    showConfirm('Delete this task?', function() {
+        fetch(`${API}?action=delete`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task_id: taskId, csrf_token: CSRF_TOKEN })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                tasks = tasks.filter(t => t.task_id != taskId);
+                renderBoard();
+                showNotification('Task deleted', 'success');
+            } else {
+                showNotification(resp.message || 'Failed to delete task', 'error');
+            }
+        });
     });
 }
-
-// Close modal on escape / overlay click
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTaskModal(); });
-document.querySelector('.modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeTaskModal(); });
 
 // Notification fallback
 if (typeof showNotification !== 'function') {

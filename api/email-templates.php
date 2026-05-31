@@ -61,7 +61,7 @@ try {
                 $input['content_html'] ?? '',
                 $currentUser['user_id']
             ]);
-            jsonSuccess('Template created', ['template_id' => $db->getConnection()->lastInsertId()]);
+            jsonSuccess('Template created', ['template_id' => $db->lastInsertId()]);
             break;
 
         case 'update':

@@ -251,104 +251,13 @@ select.filter-select {
     color: var(--text-secondary, #9ca3af);
     font-size: 13px;
 }
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-.modal-overlay.active { display: flex; }
-.modal {
-    background: white;
-    border-radius: 12px;
-    width: 580px;
-    max-width: 95vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-}
-.modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border, #e5e7eb);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.modal-header h2 {
-    font-size: 17px;
-    font-weight: 600;
-    margin: 0;
-}
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: var(--text-secondary, #9ca3af);
-}
-.modal-close:hover { color: var(--text-primary, #1f2937); }
-.modal-body { padding: 20px 24px; }
-.form-group { margin-bottom: 14px; }
-.form-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 5px;
-    color: var(--text-primary, #374151);
-}
-.form-control {
-    width: 100%;
-    padding: 9px 12px;
-    border: 1px solid var(--border, #d1d5db);
-    border-radius: 6px;
-    font-size: 13px;
-    box-sizing: border-box;
-    font-family: inherit;
-    color: var(--text-primary, #1f2937);
-    background: white;
-}
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary, #2563eb);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-}
-textarea.form-control { min-height: 70px; resize: vertical; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form-actions {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border, #e5e7eb);
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-.form-actions .btn { padding: 9px 18px; }
-
-.currency-input {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.currency-input select {
-    width: 80px;
-    padding: 9px 8px;
-    border: 1px solid var(--border, #d1d5db);
-    border-radius: 6px;
-    font-size: 13px;
-    background: white;
-}
-.currency-input input { flex: 1; }
 </style>
 
 <div class="deals-page">
     <div class="page-header">
         <h1>Pipeline</h1>
         <div class="header-actions">
-            <button class="btn btn-primary" onclick="openDealModal()">+ New Deal</button>
+            <a href="/pages/deal-form.php" class="btn btn-primary" style="text-decoration:none;">+ New Deal</a>
         </div>
     </div>
 
@@ -386,105 +295,6 @@ textarea.form-control { min-height: 70px; resize: vertical; }
     <!-- Kanban Board -->
     <div class="pipeline-board" id="pipeline-board">
         <!-- Columns rendered by JS -->
-    </div>
-</div>
-
-<!-- Deal Modal -->
-<div class="modal-overlay" id="deal-modal">
-    <div class="modal">
-        <div class="modal-header">
-            <h2 id="deal-modal-title">New Deal</h2>
-            <button class="modal-close" onclick="closeDealModal()">&times;</button>
-        </div>
-        <form id="deal-form" onsubmit="saveDeal(event)">
-            <div class="modal-body">
-                <input type="hidden" id="deal-id" value="">
-                <div class="form-group">
-                    <label class="form-label">Deal Name *</label>
-                    <input type="text" id="deal-name" class="form-control" required placeholder="e.g. Acme Corp - Enterprise License">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Value</label>
-                    <div class="currency-input">
-                        <select id="deal-currency" class="form-control">
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                            <option value="AED">AED</option>
-                            <option value="SAR">SAR</option>
-                            <option value="CAD">CAD</option>
-                            <option value="AUD">AUD</option>
-                        </select>
-                        <input type="number" id="deal-value" class="form-control" placeholder="0.00" min="0" step="0.01">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Stage</label>
-                        <select id="deal-stage" class="form-control">
-                            <?php foreach ($stages as $s): ?>
-                                <option value="<?= $s['stage_name'] ?>"><?= htmlspecialchars($s['stage_label']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Probability %</label>
-                        <input type="number" id="deal-probability" class="form-control" min="0" max="100" value="10">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Expected Close</label>
-                        <input type="date" id="deal-close-date" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Type</label>
-                        <select id="deal-type" class="form-control">
-                            <option value="New Business">New Business</option>
-                            <option value="Renewal">Renewal</option>
-                            <option value="Upsell">Upsell</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Account</label>
-                        <select id="deal-account-id" class="form-control">
-                            <option value="">None</option>
-                            <?php foreach ($accounts as $a): ?>
-                                <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Primary Contact</label>
-                        <select id="deal-contact-id" class="form-control">
-                            <option value="">None</option>
-                            <?php foreach ($contacts as $c): ?>
-                                <option value="<?= $c['contact_id'] ?>"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Assigned To</label>
-                    <select id="deal-assigned-to" class="form-control">
-                        <option value="">Unassigned</option>
-                        <?php foreach ($users as $u): ?>
-                            <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea id="deal-description" class="form-control" placeholder="Deal details..."></textarea>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeDealModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="deal-save-btn">Create Deal</button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -591,7 +401,7 @@ function renderDealCard(deal, stage, cardClass) {
     return `
     <div class="deal-card ${cardClass}" draggable="true" data-id="${deal.deal_id}"
          ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"
-         onclick="openDealModal(${deal.deal_id})">
+         onclick="window.location.href='/pages/deal-form.php?id=${deal.deal_id}'">
         <div class="deal-card-header">
             <div class="deal-name">${escapeHtml(deal.deal_name)}</div>
         </div>
@@ -611,7 +421,6 @@ function renderDealCard(deal, stage, cardClass) {
         </div>
     </div>`;
 }
-
 
 // Drag & Drop
 function onDragStart(e) {
@@ -645,7 +454,14 @@ function moveDeal(dealId, newStage) {
     .then(resp => {
         if (resp.success) {
             const deal = deals.find(d => d.deal_id == dealId);
-            if (deal) deal.stage = newStage;
+            if (deal) {
+                deal.stage = newStage;
+                if (newStage === 'closed_won') {
+                    deal.probability = 100;
+                } else if (newStage === 'closed_lost') {
+                    deal.probability = 0;
+                }
+            }
             renderBoard();
             loadSummary();
             showNotification('Deal moved', 'success');
@@ -654,81 +470,6 @@ function moveDeal(dealId, newStage) {
         }
     });
 }
-
-// Modal
-function openDealModal(dealId) {
-    const modal = document.getElementById('deal-modal');
-    const form = document.getElementById('deal-form');
-    form.reset();
-    document.getElementById('deal-id').value = '';
-    
-    if (dealId) {
-        const deal = deals.find(d => d.deal_id == dealId);
-        if (!deal) return;
-        document.getElementById('deal-id').value = deal.deal_id;
-        document.getElementById('deal-name').value = deal.deal_name || '';
-        document.getElementById('deal-currency').value = deal.currency || 'USD';
-        document.getElementById('deal-value').value = deal.deal_value || '';
-        document.getElementById('deal-stage').value = deal.stage || 'prospecting';
-        document.getElementById('deal-probability').value = deal.probability || 10;
-        document.getElementById('deal-close-date').value = deal.expected_close || '';
-        document.getElementById('deal-type').value = deal.type || 'New Business';
-        document.getElementById('deal-account-id').value = deal.account_id || '';
-        document.getElementById('deal-contact-id').value = deal.contact_id || '';
-        document.getElementById('deal-assigned-to').value = deal.assigned_to || '';
-        document.getElementById('deal-description').value = deal.description || '';
-        document.getElementById('deal-modal-title').textContent = 'Edit Deal';
-        document.getElementById('deal-save-btn').textContent = 'Save Changes';
-    } else {
-        document.getElementById('deal-modal-title').textContent = 'New Deal';
-        document.getElementById('deal-save-btn').textContent = 'Create Deal';
-    }
-    
-    modal.classList.add('active');
-}
-
-function closeDealModal() {
-    document.getElementById('deal-modal').classList.remove('active');
-}
-
-function saveDeal(e) {
-    e.preventDefault();
-    const dealId = document.getElementById('deal-id').value;
-    const action = dealId ? 'update' : 'create';
-    
-    const data = {
-        csrf_token: CSRF_TOKEN,
-        deal_name: document.getElementById('deal-name').value,
-        currency: document.getElementById('deal-currency').value,
-        deal_value: document.getElementById('deal-value').value || 0,
-        stage: document.getElementById('deal-stage').value,
-        probability: document.getElementById('deal-probability').value || 10,
-        expected_close: document.getElementById('deal-close-date').value || null,
-        type: document.getElementById('deal-type').value,
-        account_id: document.getElementById('deal-account-id').value || null,
-        contact_id: document.getElementById('deal-contact-id').value || null,
-        assigned_to: document.getElementById('deal-assigned-to').value || null,
-        description: document.getElementById('deal-description').value,
-    };
-    if (dealId) data.deal_id = dealId;
-    
-    fetch(`${API}?action=${action}`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    }).then(r => r.json()).then(resp => {
-        if (resp.success) {
-            closeDealModal();
-            loadDeals();
-            loadSummary();
-            showNotification(dealId ? 'Deal updated' : 'Deal created', 'success');
-        } else {
-            showNotification(resp.message || 'Failed to save', 'error');
-        }
-    });
-}
-
 
 function formatDate(dateStr) {
     if (!dateStr) return '-';
@@ -742,10 +483,5 @@ function escapeHtml(str) {
     div.textContent = str;
     return div.innerHTML;
 }
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDealModal(); });
-document.querySelector('.modal-overlay').addEventListener('click', e => { 
-    if (e.target === e.currentTarget) closeDealModal(); 
-});
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

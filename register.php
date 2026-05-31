@@ -9,11 +9,7 @@ require_once __DIR__ . '/includes/company-functions.php';
 
 startSecureSession();
 
-// Redirect if already logged in
-if (isLoggedIn()) {
-    header('Location: /dashboard.php');
-    exit;
-}
+// Do not force redirect logged-in users so they can access/review the registration page
 
 $error = '';
 $csrf_token = generateCSRFToken();
@@ -53,7 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         if ($existingUser) {
                             $error = 'This email address is already registered. Please use a different email or sign in.';
                         } else {
-                    if (!$plan) $plan = getPlan('single');
+                            $plan = getPlan($planKey);
+                            if (!$plan) $plan = getPlan('single');
 
                     $trialEnds = date('Y-m-d H:i:s', strtotime('+14 days'));
                     $companyId = $db->insert('companies', [
@@ -118,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     // Redirect to verification page instead of dashboard
                     header('Location: /verify-email.php');
                     exit;
+                }
                 }
             } catch (Exception $e) {
                 $error = 'Registration failed: ' . $e->getMessage();
@@ -259,11 +257,22 @@ $plans = getActivePlans();
             <a href="#pricing">Pricing</a>
             <a href="#features">Features</a>
             <a href="#compare">Compare</a>
-            <a href="/login.php" class="nav-signin">Sign In</a>
-            <a href="#signup" class="nav-cta">Try it free</a>
+            <?php if (isLoggedIn()): ?>
+                <a href="/pages/dashboard.php" class="nav-cta">Dashboard</a>
+            <?php else: ?>
+                <a href="/login.php" class="nav-signin">Sign In</a>
+                <a href="#signup" class="nav-cta">Try it free</a>
+            <?php endif; ?>
         </div>
     </div>
 </nav>
+
+<?php if (isLoggedIn()): ?>
+    <div style="max-width: 1000px; margin: 90px auto -50px; padding: 14px 20px; background: #fff8eb; border: 1px solid #ffe8cc; border-radius: 10px; color: #b45309; font-size: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.03); z-index: 50; position: relative;">
+        <span>👋 You are currently signed in as <strong><?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Administrator'); ?></strong>. You can view this page for testing, or return to your dashboard.</span>
+        <a href="/pages/dashboard.php" style="background: #d97706; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 12px; margin-left: 16px;">Go to Dashboard</a>
+    </div>
+<?php endif; ?>
 
 <!-- Hero -->
 <section class="hero">
@@ -271,8 +280,12 @@ $plans = getActivePlans();
     <h1>The CRM that <span>supercharges</span> your sales team</h1>
     <p>Pinpoint CRM gives your team the tools to manage leads, close deals faster, and grow revenue - all in one intuitive platform.</p>
     <div class="hero-cta">
-        <a href="#signup" class="btn-hero">Start Free Trial</a>
-        <a href="#pricing" class="btn-hero-outline">See Plans</a>
+        <?php if (isLoggedIn()): ?>
+            <a href="/pages/dashboard.php" class="btn-hero">Go to Dashboard</a>
+        <?php else: ?>
+            <a href="#signup" class="btn-hero">Start Free Trial</a>
+            <a href="#pricing" class="btn-hero-outline">See Plans</a>
+        <?php endif; ?>
     </div>
     <div class="hero-trust">
         <span class="stars">★★★★★</span>

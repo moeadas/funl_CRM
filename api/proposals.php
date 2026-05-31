@@ -15,7 +15,12 @@ $method = $_SERVER['REQUEST_METHOD'];
 // ── Helper: get next estimate number ─────────────────────────
 function getNextEstimateNumber($pdo, $companyId) {
     $year = date('Y');
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM proposals WHERE company_id = ? AND YEAR(created_at) = ?");
+    $db = Database::getInstance();
+    if ($db->isSQLite()) {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM proposals WHERE company_id = ? AND strftime('%Y', created_at) = ?");
+    } else {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM proposals WHERE company_id = ? AND YEAR(created_at) = ?");
+    }
     $stmt->execute([$companyId, $year]);
     $count = (int)$stmt->fetchColumn();
     return sprintf('EST-%s-%04d', $year, $count + 1);

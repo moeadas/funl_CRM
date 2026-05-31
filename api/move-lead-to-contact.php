@@ -53,28 +53,42 @@ try {
             $accountId = $account['account_id'];
         } else {
             // Create account
-            $db->query("INSERT INTO accounts (company_id, account_name, industry, country, city, website, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'Active', NOW())", [
+            $db->query("INSERT INTO accounts (company_id, account_name, industry, country, city, website, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, NOW())", [
                 $companyId,
                 $lead['company_name'],
                 $lead['industry'] ?? null,
                 $lead['country'] ?? null,
                 $lead['city'] ?? null,
-                $lead['website'] ?? null
+                $lead['website'] ?? null,
+                $_SESSION['user_id'] ?? 1
             ]);
             $accountId = $db->getConnection()->lastInsertId();
         }
     }
     
+    // Parse first name and last name safely
+    $firstName = '';
+    $lastName = '';
+    if (!empty($lead['contact_person'])) {
+        $parts = explode(' ', trim($lead['contact_person']));
+        $firstName = array_shift($parts);
+        $lastName = implode(' ', $parts);
+    }
+    if (empty($firstName)) {
+        $firstName = $lead['company_name'] ?: 'Contact';
+    }
+    
     // Create contact
-    $db->query("INSERT INTO contacts (company_id, account_id, first_name, last_name, email, phone, mobile, title, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', NOW())", [
+    $db->query("INSERT INTO contacts (company_id, account_id, first_name, last_name, email, phone, mobile, title, status, contact_status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', 'Active', ?, NOW())", [
         $companyId,
         $accountId,
-        $lead['contact_person'] ? explode(' ', $lead['contact_person'])[0] : null,
-        $lead['contact_person'] ? (strpos($lead['contact_person'], ' ') !== false ? substr($lead['contact_person'], strpos($lead['contact_person'], ' ') + 1) : null) : null,
-        $lead['email'],
-        $lead['phone'],
-        $lead['phone_2'] ?? null,
-        $lead['title_position'] ?? null
+        $firstName,
+        $lastName,
+        $lead['email'] ?? null,
+        $lead['phone'] ?? null,
+        $lead['mobile'] ?? null,
+        $lead['title_position'] ?? null,
+        $_SESSION['user_id'] ?? 1
     ]);
     $contactId = $db->getConnection()->lastInsertId();
     
@@ -82,9 +96,9 @@ try {
     $db->query("UPDATE leads SET lead_status = 'Won', updated_at = NOW() WHERE lead_id = ?", [$leadId]);
     
     // Log activity
-    logActivity($_SESSION['user_id'] ?? null, 'convert', 'Lead', $leadId, "Lead converted to contact #{$contactId}");
+    logActivity($_SESSION['user_id'] ?? 1, 'convert', 'Lead', $leadId, "Lead converted to contact #{$contactId}");
     
-    jsonSuccess(['contact_id' => $contactId, 'message' => 'Lead successfully converted to contact']);
+    jsonSuccess('Lead successfully converted to contact', ['contact_id' => $contactId]);
 } catch (Exception $e) {
     jsonError('Failed to convert lead: ' . $e->getMessage());
 }

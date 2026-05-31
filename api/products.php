@@ -48,6 +48,8 @@ if ($action === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'description'  => sanitizeInput($input['description'] ?? ''),
         'category'     => sanitizeInput($input['category'] ?? ''),
         'price'        => (float)($input['price'] ?? 0),
+        'cost'         => !empty($input['cost']) ? (float)$input['cost'] : null,
+        'currency'     => sanitizeInput($input['currency'] ?? 'USD'),
         'quantity_in_stock' => !empty($input['quantity_in_stock']) ? (int)$input['quantity_in_stock'] : null,
     ], ['product_id' => $productId, 'company_id' => $companyId]);
     jsonSuccess('Product updated');
@@ -58,6 +60,13 @@ if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $db->query("DELETE FROM products WHERE product_id = ? AND company_id = ?", [(int)$input['product_id'], $companyId]);
     jsonSuccess('Product deleted');
+}
+
+if ($action === 'detail' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $productId = (int)($_GET['id'] ?? 0);
+    $product = $db->query("SELECT * FROM products WHERE product_id = ? AND company_id = ?", [$productId, $companyId])->fetch();
+    if (!$product) jsonError('Product not found', 404);
+    jsonSuccess('Product loaded', $product);
 }
 
 jsonError('Unknown action');

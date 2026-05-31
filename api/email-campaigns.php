@@ -61,7 +61,7 @@ try {
                 $input['content_html'] ?? $input['html_content'] ?? '',
                 $currentUser['user_id']
             ]);
-            jsonSuccess('Campaign created', ['campaign_id' => $db->getConnection()->lastInsertId()]);
+            jsonSuccess('Campaign created', ['campaign_id' => $db->lastInsertId()]);
             break;
 
         case 'update':

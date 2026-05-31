@@ -186,4 +186,18 @@ if ($action === 'move' && $method === 'POST') {
     jsonSuccess('Task moved');
 }
 
+// ── DETAIL
+if ($action === 'detail' && $method === 'GET') {
+    $taskId = (int)($_GET['id'] ?? 0);
+    if (!$taskId) { jsonError('Task ID required'); }
+    $task = $db->query("
+        SELECT t.*, u.full_name as assigned_name, l.company_name as lead_name
+        FROM tasks t
+        LEFT JOIN users u ON t.assigned_to = u.user_id
+        LEFT JOIN leads l ON t.lead_id = l.lead_id
+        WHERE t.task_id = ? AND t.company_id = ?", [$taskId, $companyId])->fetch(PDO::FETCH_ASSOC);
+    if (!$task) { jsonError('Task not found', 404); }
+    jsonSuccess('Task loaded', ['task' => $task]);
+}
+
 jsonError('Unknown action');

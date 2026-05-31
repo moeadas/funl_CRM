@@ -14,36 +14,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 $db = Database::getInstance();
-$conn = $db->getConnection();
 
 $input = json_decode(file_get_contents('php://input'), true);
-$slug = sanitizeInput($input['form_slug'] ?? '');
+$formId = intval($input['form_id'] ?? 0);
 
-if (empty($slug)) {
-    echo json_encode(['success' => false, 'message' => 'Form not found']);
+if (empty($formId)) {
+    echo json_encode(['success' => false, 'message' => 'Form ID is required']);
     exit;
 }
 
-// Find form by slug
-$form = $db->query("SELECT * FROM web_forms WHERE form_slug = ? AND is_active = 1", [$slug])->fetch();
+// Find form by ID
+$form = $db->query("SELECT * FROM webforms WHERE form_id = ? AND status = 'active'", [$formId])->fetch();
 if (!$form) {
     echo json_encode(['success' => false, 'message' => 'Form not found or inactive']);
     exit;
 }
 
 $companyId = $form['company_id'];
-$formId = $form['form_id'];
-$fieldsConfig = json_decode($form['fields_config'] ?? '[]', true);
 
-// Validate required fields
+// Get fields schema
+$fields = $db->query("SELECT * FROM webform_fields WHERE form_id = ? ORDER BY position ASC", [$formId])->fetchAll();
+
 $submittedData = $input['data'] ?? [];
 $errors = [];
-foreach ($fieldsConfig as $field) {
-    if (!empty($field['required']) && empty($submittedData[$field['name']])) {
-        $errors[] = $field['label'] . ' is required';
+
+// Validate required fields
+foreach ($fields as $field) {
+    if (!empty($field['required']) && empty($submittedData[$field['crm_field']])) {
+        $errors[] = $field['field_label'] . ' is required';
     }
 }
 
@@ -52,58 +53,70 @@ if (!empty($errors)) {
     exit;
 }
 
-// Create lead from form data
+// Extract and map fields to Leads table schema
+$companyName = '';
+$contactPerson = '';
+$email = '';
+$phone = '';
+$mobile = '';
+$country = '';
+$city = '';
+$address = '';
+$website = '';
+$industry = '';
+$notes = '';
+
+foreach ($fields as $field) {
+    $val = trim($submittedData[$field['crm_field']] ?? '');
+    switch ($field['crm_field']) {
+        case 'company_name': $companyName = $val; break;
+        case 'contact_name': $contactPerson = $val; break;
+        case 'email': $email = $val; break;
+        case 'phone': $phone = $val; break;
+        case 'mobile': $mobile = $val; break;
+        case 'country': $country = $val; break;
+        case 'city': $city = $val; break;
+        case 'address': $address = $val; break;
+        case 'website': $website = $val; break;
+        case 'industry': $industry = $val; break;
+        case 'notes': $notes = $val; break;
+    }
+}
+
+if (empty($contactPerson)) $contactPerson = 'Web submission';
+if (empty($companyName)) $companyName = 'Unknown Company';
+
+// Create lead
 $leadData = [
     'company_id'     => $companyId,
-    'company_name'   => sanitizeInput($submittedData['company_name'] ?? 'Unknown'),
-    'contact_person' => sanitizeInput($submittedData['contact_person'] ?? ''),
-    'email'          => sanitizeInput($submittedData['email'] ?? ''),
-    'phone'          => sanitizeInput($submittedData['phone'] ?? ''),
-    'mobile'         => sanitizeInput($submittedData['mobile'] ?? ''),
-    'country'        => sanitizeInput($submittedData['country'] ?? 'Other'),
-    'city'           => sanitizeInput($submittedData['city'] ?? ''),
-    'address'        => sanitizeInput($submittedData['address'] ?? ''),
-    'specialization' => sanitizeInput($submittedData['message'] ?? ''),
-    'lead_source'    => $form['lead_source'] ?? 'Web Form',
+    'company_name'   => sanitizeInput($companyName),
+    'contact_person' => sanitizeInput($contactPerson),
+    'email'          => sanitizeInput($email),
+    'phone'          => sanitizeInput($phone),
+    'mobile'         => sanitizeInput($mobile),
+    'country'        => sanitizeInput($country ?: 'Unknown'),
+    'city'           => sanitizeInput($city),
+    'address'        => sanitizeInput($address),
+    'website'        => sanitizeInput($website),
+    'industry'       => sanitizeInput($industry),
+    'notes'          => sanitizeInput($notes),
+    'lead_source'    => 'Website',
     'lead_status'    => 'New Lead',
-    'assigned_to'    => $form['auto_assign_to'] ?? null,
-    'created_by'     => 0, // System
+    'created_by'     => !empty($form['created_by']) ? (int)$form['created_by'] : 1,
 ];
 
 try {
     $leadId = $db->insert('leads', $leadData);
     
-    // Log submission
-    $db->insert('web_form_submissions', [
-        'form_id'     => $formId,
-        'company_id'  => $companyId,
-        'lead_id'     => $leadId,
-        'data'        => json_encode($submittedData),
-        'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? null,
-        'user_agent'  => $_SERVER['HTTP_USER_AGENT'] ?? null,
-        'referrer'    => $_SERVER['HTTP_REFERER'] ?? null,
+    // Log submission in webform_submissions
+    $db->insert('webform_submissions', [
+        'form_id'        => $formId,
+        'company_id'     => $companyId,
+        'lead_id'        => $leadId,
+        'submitted_data' => json_encode($submittedData),
+        'ip_address'     => $_SERVER['REMOTE_ADDR'] ?? null,
+        'user_agent'     => $_SERVER['HTTP_USER_AGENT'] ?? null,
     ]);
-    
-    // Update form submit count
-    $db->query("UPDATE web_forms SET submit_count = submit_count + 1 WHERE form_id = ?", [$formId]);
-    
-    // Send notifications
-    if (!empty($form['notify_emails'])) {
-        $emails = array_map('trim', explode(',', $form['notify_emails']));
-        $subject = "New form submission: {$form['form_name']}";
-        $body = "<h2>New Lead from {$form['form_name']}</h2>";
-        foreach ($submittedData as $key => $value) {
-            $body .= "<p><strong>" . ucfirst(str_replace('_', ' ', $key)) . ":</strong> " . htmlspecialchars($value) . "</p>";
-        }
-        
-        if (function_exists('sendEmailViaSMTP')) {
-            foreach ($emails as $email) {
-                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    sendEmailViaSMTP($email, $subject, $body);
-                }
-            }
-        }
-    }
     
     // Run automation rules
     $rules = $db->query("SELECT * FROM automation_rules WHERE company_id = ? AND is_active = 1 AND trigger_type = 'lead_created'", [$companyId])->fetchAll();
@@ -116,7 +129,7 @@ try {
             $dueDate = date('Y-m-d', strtotime('+' . ($actionConfig['due_days'] ?? 1) . ' days'));
             $db->insert('tasks', [
                 'company_id' => $companyId,
-                'title'      => $actionConfig['title'] ?? 'Follow up',
+                'title'      => $actionConfig['title'] ?? 'Follow up webform submission',
                 'status'     => 'todo',
                 'priority'   => $actionConfig['priority'] ?? 'medium',
                 'due_date'   => $dueDate,
@@ -128,11 +141,10 @@ try {
     
     echo json_encode([
         'success' => true,
-        'message' => $form['success_message'] ?? 'Thank you!',
-        'redirect_url' => $form['redirect_url'] ?? null,
+        'message' => 'Thank you! Your submission has been received.',
     ]);
     
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Failed to process submission']);
+    echo json_encode(['success' => false, 'message' => 'Failed to process submission: ' . $e->getMessage()]);
 }
 ?>

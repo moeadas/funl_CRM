@@ -11,20 +11,20 @@ require_once __DIR__ . '/../includes/header.php';
 
 <style>
 .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; }
-.card { background:#fff; border:1px solid #e5e5e7; border-radius:12px; padding:24px; margin-bottom:16px; }
-.card-title { font-size:15px; font-weight:600; color:#1d1d1f; margin:0 0 20px; }
-.form-label { display:block; font-size:13px; font-weight:500; color:#424245; margin-bottom:6px; }
-.form-control { width:100%; padding:10px 12px; border:1px solid #d2d2d7; border-radius:8px; font-size:14px; color:#1d1d1f; background:#fff; box-sizing:border-box; transition:border-color 0.2s; }
-.form-control:focus { outline:none; border-color:#0071e3; box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
+.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; color: var(--color-text); }
+.card { background: var(--color-surface); border:1px solid var(--color-border); border-radius: var(--radius-md); padding:24px; margin-bottom:16px; box-shadow: var(--shadow-xs); }
+.card-title { font-size:15px; font-weight:600; color: var(--color-text); margin:0 0 20px; }
+.form-label { display:block; font-size:13px; font-weight:500; color: var(--color-text); margin-bottom:6px; }
+.form-control { width:100%; padding:10px 12px; border:1px solid var(--color-border); border-radius: var(--radius-sm); font-size:14px; color: var(--color-text); background: var(--color-surface); box-sizing:border-box; transition: border-color var(--transition); }
+.form-control:focus { outline:none; border-color: var(--color-accent); box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
 textarea.form-control { min-height:80px; resize:vertical; }
 .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
-.btn { padding:10px 18px; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; border:none; text-decoration:none; display:inline-block; }
-.btn-primary { background:#0071e3; color:#fff; }
-.btn-primary:hover { background:#0077ed; }
-.btn-outline { background:#fff; color:#0071e3; border:1px solid #0071e3; }
-.btn-outline:hover { background:#f5f5f7; }
+.btn { padding:10px 18px; border-radius: var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--transition); border:none; text-decoration:none; display:inline-block; }
+.btn-primary { background: var(--color-accent); color:#fff; }
+.btn-primary:hover { background: var(--color-accent-hover); }
+.btn-outline { background: var(--color-surface); color: var(--color-accent); border:1px solid var(--color-border); }
+.btn-outline:hover { background: var(--color-bg); }
 </style>
 
 <div class="page-header">
@@ -48,10 +48,10 @@ textarea.form-control { min-height:80px; resize:vertical; }
             <div class="form-group">
                 <label class="form-label">Lead Type</label>
                 <select id="leadType" class="form-control">
-                    <option value="Prospect">Prospect</option>
-                    <option value="Customer">Customer</option>
+                    <option value="Business">Business</option>
+                    <option value="Individual">Individual</option>
                     <option value="Partner">Partner</option>
-                    <option value="Competitor">Competitor</option>
+                    <option value="Reseller">Reseller</option>
                     <option value="Other">Other</option>
                 </select>
             </div>
@@ -108,26 +108,7 @@ textarea.form-control { min-height:80px; resize:vertical; }
         <div class="row-3">
             <div class="form-group">
                 <label class="form-label">Country</label>
-                <select id="country" class="form-control">
-                    <option value="">Select Country...</option>
-                    <option value="United States">United States</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Germany">Germany</option>
-                    <option value="France">France</option>
-                    <option value="Spain">Spain</option>
-                    <option value="Jordan">Jordan</option>
-                    <option value="UAE">UAE</option>
-                    <option value="Saudi Arabia">Saudi Arabia</option>
-                    <option value="Egypt">Egypt</option>
-                    <option value="India">India</option>
-                    <option value="China">China</option>
-                    <option value="Japan">Japan</option>
-                    <option value="Australia">Australia</option>
-                    <option value="Brazil">Brazil</option>
-                    <option value="Mexico">Mexico</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Other">Other</option>
-                </select>
+                <input type="text" id="countryInput" class="form-control" placeholder="e.g., United States" autocomplete="off">
             </div>
             <div class="form-group">
                 <label class="form-label">City</label>
@@ -219,7 +200,7 @@ function loadLead() {
             var l = data.lead;
             var fields = ['companyName','leadType','industry','companySize','contactPerson','titlePosition','email','phone','mobile','country','city','leadSource','leadStatus','priority','notes'];
             fields.forEach(function(f) {
-                var el = document.getElementById(f);
+                var el = document.getElementById(f === 'country' ? 'countryInput' : f);
                 if (el && l[f.replace(/([A-Z])/g,'_$1').toLowerCase()]) {
                     el.value = l[f.replace(/([A-Z])/g,'_$1').toLowerCase()];
                 }
@@ -244,7 +225,7 @@ function saveLead() {
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
         mobile: document.getElementById('mobile').value,
-        country: document.getElementById('country').value,
+        country: document.getElementById('countryInput').value,
         city: document.getElementById('city').value,
         lead_source: document.getElementById('leadSource').value,
         lead_status: document.getElementById('leadStatus').value,

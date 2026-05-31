@@ -315,7 +315,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
                     <div class="step-label when">When this happens...</div>
                     <div class="form-group" style="margin-bottom:0">
                         <label class="form-label">Trigger</label>
-                        <select id="rule-trigger" class="form-control" onchange="updateTriggerOptions()">
+                        <select id="rule-trigger" class="form-control">
                             <option value="lead_created">New lead is created</option>
                             <option value="lead_status_changed">Lead status changes</option>
                             <option value="deal_stage_changed">Deal moves to stage</option>
@@ -354,7 +354,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
-const CSRF_TOKEN = 003c?php echo json_encode($_SESSION['csrf_token'] ?? '') ?>;
+const CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/automation.php';
 const USERS = <?= json_encode($users) ?>;
 
@@ -624,19 +624,20 @@ function toggleRule(ruleId, el) {
 }
 
 function deleteRule(ruleId) {
-    if (!confirm('Delete this automation rule?')) return;
-    fetch(`${API}?action=delete`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rule_id: ruleId, csrf_token: CSRF_TOKEN })
-    }).then(r => r.json()).then(resp => {
-        if (resp.success) {
-            loadRules();
-            showNotification('Rule deleted', 'success');
-        } else {
-            showNotification(resp.message || 'Failed to delete', 'error');
-        }
+    showConfirm('Delete this automation rule?', function() {
+        fetch(`${API}?action=delete`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rule_id: ruleId, csrf_token: CSRF_TOKEN })
+        }).then(r => r.json()).then(resp => {
+            if (resp.success) {
+                loadRules();
+                showNotification('Rule deleted', 'success');
+            } else {
+                showNotification(resp.message || 'Failed to delete', 'error');
+            }
+        });
     });
 }
 

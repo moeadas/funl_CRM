@@ -124,6 +124,13 @@ function removeLineItem(idx) { if (lineItems.length <= 1) return; lineItems.spli
 
 function updateLineItem(idx, field, value) {
     lineItems[idx][field] = field === 'qty' || field === 'rate' ? parseFloat(value) || 0 : value;
+    if (field === 'qty' || field === 'rate') {
+        const amt = (lineItems[idx].qty || 0) * (lineItems[idx].rate || 0);
+        const amtElem = document.getElementById(`line-item-amount-${idx}`);
+        if (amtElem) {
+            amtElem.textContent = '$' + amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
     updateTotals();
 }
 
@@ -154,7 +161,7 @@ function renderLineItems() {
                     </div>
                     <div class="form-group" style="margin:0;">
                         <label style="font-size:11px;color:#6b7280;">Amount</label>
-                        <div class="form-control" style="background:#f0f0f5;font-weight:600;font-size:13px;">$${parseFloat(amt).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                        <div id="line-item-amount-${i}" class="form-control" style="background:#f0f0f5;font-weight:600;font-size:13px;">$${parseFloat(amt).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                     </div>
                     <button type="button" class="btn btn-outline btn-xs" onclick="removeLineItem(${i})" title="Remove" style="margin-bottom:2px;${lineItems.length <= 1 ? 'visibility:hidden;' : ''}">×</button>
                 </div>

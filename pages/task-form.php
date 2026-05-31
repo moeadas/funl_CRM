@@ -7,55 +7,59 @@ $pageTitle = 'Task';
 $currentPage = 'tasks';
 $taskId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
+
+$db = Database::getInstance();
+$companyId = $_SESSION["company_id"] ?? null;
+
+// Fetch users & leads directly in PHP to render options
+$users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId])->fetchAll();
+$leads = $db->query("SELECT lead_id, company_name FROM leads WHERE company_id = ? ORDER BY company_name", [$companyId])->fetchAll();
 ?>
 
 <style>
 .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; padding:0; }
-.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; }
+.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; color: var(--color-text); }
 .page-header .header-actions { display:flex; gap:10px; }
-.card { background:#fff; border:1px solid #e5e5e7; border-radius:12px; padding:24px; margin-bottom:16px; }
-.card-title { font-size:15px; font-weight:600; color:#1d1d1f; margin:0 0 20px; }
-.form-label { display:block; font-size:13px; font-weight:500; color:#424245; margin-bottom:6px; }
-.form-control { width:100%; padding:10px 12px; border:1px solid #d2d2d7; border-radius:8px; font-size:14px; color:#1d1d1f; background:#fff; box-sizing:border-box; transition:border-color 0.2s; }
-.form-control:focus { outline:none; border-color:#0071e3; box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
+.card { background: var(--color-surface); border:1px solid var(--color-border); border-radius: var(--radius-md); padding:24px; margin-bottom:16px; box-shadow: var(--shadow-xs); }
+.card-title { font-size:15px; font-weight:600; color: var(--color-text); margin:0 0 20px; }
+.form-label { display:block; font-size:13px; font-weight:500; color: var(--color-text); margin-bottom:6px; }
+.form-control { width:100%; padding:10px 12px; border:1px solid var(--color-border); border-radius: var(--radius-sm); font-size:14px; color: var(--color-text); background: var(--color-surface); box-sizing:border-box; transition: border-color var(--transition); }
+.form-control:focus { outline:none; border-color: var(--color-accent); box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
 textarea.form-control { min-height:80px; resize:vertical; }
 .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
-.btn { padding:10px 18px; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; border:none; }
-.btn-primary { background:#0071e3; color:#fff; }
-.btn-primary:hover { background:#0077ed; }
-.btn-primary:active { background:#006bd4; }
-.btn-outline { background:#fff; color:#0071e3; border:1px solid #0071e3; }
-.btn-outline:hover { background:#f5f5f7; }
-.btn-danger { background:#fff; color:#ff3b30; border:1px solid #ff3b30; }
-.btn-danger:hover { background:#fff5f5; }
-.help-text { font-size:12px; color:#86868b; margin-top:4px; }
-.status-option { padding:8px 12px; border-radius:6px; margin-bottom:6px; cursor:pointer; border:1px solid transparent; }
-.status-option:hover { background:#f5f5f7; }
-.status-option.selected { border-color:#0071e3; background:rgba(0,113,227,0.05); }
+.btn { padding:10px 18px; border-radius: var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--transition); border:none; text-decoration:none; display:inline-block; }
+.btn-primary { background: var(--color-accent); color:#fff; }
+.btn-primary:hover { background: var(--color-accent-hover); }
+.btn-outline { background: var(--color-surface); color: var(--color-accent); border:1px solid var(--color-border); }
+.btn-outline:hover { background: var(--color-bg); }
+.btn-danger { background: var(--color-surface); color: #dc2626; border:1px solid #fca5a5; }
+.btn-danger:hover { background: #fef2f2; }
 </style>
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/tasks.php" class="btn btn-outline" style="padding:8px 14px;">← Back</a>
+        <a href="/pages/tasks.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Board</a>
         <h1><?= $taskId ? 'Edit Task' : 'New Task' ?></h1>
     </div>
     <div class="header-actions">
-        <a href="/pages/tasks.php" class="btn btn-outline" onclick="return confirm('Discard changes?')">Cancel</a>
+        <?php if ($taskId): ?>
+            <button type="button" class="btn btn-danger" onclick="deleteTask()">Delete Task</button>
+        <?php endif; ?>
         <button type="button" class="btn btn-primary" onclick="saveTask()">Save Task</button>
     </div>
 </div>
 
 <div style="max-width:900px;">
     <div class="card">
-        <h3 class="card-title">Task Information</h3>
+        <h3 class="card-title">Task Details</h3>
         <div class="row-2">
             <div class="form-group">
                 <label class="form-label">Task Title *</label>
-                <input type="text" id="taskTitle" class="form-control" placeholder="What needs to be done?">
+                <input type="text" id="taskTitle" class="form-control" placeholder="What needs to be done?" required>
             </div>
             <div class="form-group">
-                <label class="form-labelStatus">Status</label>
+                <label class="form-label">Status</label>
                 <select id="taskStatus" class="form-control">
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
@@ -72,7 +76,7 @@ textarea.form-control { min-height:80px; resize:vertical; }
     </div>
 
     <div class="card">
-        <h3 class="card-title">Assignment& Due Date</h3>
+        <h3 class="card-title">Assignment & Due Date</h3>
         <div class="row-3">
             <div class="form-group">
                 <label class="form-label">Priority</label>
@@ -87,12 +91,29 @@ textarea.form-control { min-height:80px; resize:vertical; }
                 <label class="form-label">Assigned To</label>
                 <select id="taskAssignedTo" class="form-control">
                     <option value="">Unassigned</option>
-                    <option value="1">Pinpoint Admin</option>
+                    <?php foreach ($users as $u): ?>
+                        <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
                 <label class="form-label">Due Date</label>
                 <input type="date" id="taskDueDate" class="form-control">
+            </div>
+        </div>
+        <div class="row-2" style="margin-top: 16px;">
+            <div class="form-group">
+                <label class="form-label">Linked Lead</label>
+                <select id="taskLeadId" class="form-control">
+                    <option value="">None</option>
+                    <?php foreach ($leads as $l): ?>
+                        <option value="<?= $l['lead_id'] ?>"><?= htmlspecialchars($l['company_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Follow-up Date</label>
+                <input type="date" id="taskFollowUp" class="form-control">
             </div>
         </div>
     </div>
@@ -101,48 +122,32 @@ textarea.form-control { min-height:80px; resize:vertical; }
 <script>
 const CSRF_TOKEN = "<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>";
 const TASK_ID = <?= $taskId ?>;
-let currentUsers = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-    loadUsers();
     if (TASK_ID) {
         loadTask();
     } else {
+        // Set default due date to 7 days from now for new tasks
         document.getElementById('taskDueDate').value = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
     }
 });
 
-function loadUsers() {
-    fetch('/api/users.php?action=list', { credentials: 'same-origin' })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success && data.users) {
-            currentUsers = data.users;
-            var select = document.getElementById('taskAssignedTo');
-            select.innerHTML = '<option value="">Unassigned</option>';
-            currentUsers.forEach(function(u) {
-                select.innerHTML += '<option value="' + u.user_id + '">' + escapeHtml(u.full_name || u.email) + '</option>';
-            });
-        }
-    });
-}
-
 function loadTask() {
-    fetch('/api/tasks.php?id=' + TASK_ID, { credentials: 'same-origin' })
+    fetch('/api/tasks.php?action=detail&id=' + TASK_ID, { credentials: 'same-origin' })
     .then(r => r.json())
-    .then(data => {
-        if (data.success && data.task) {
-            var t = data.task;
+    .then(resp => {
+        if (resp.success && resp.data && resp.data.task) {
+            var t = resp.data.task;
             document.getElementById('taskTitle').value = t.title || '';
             document.getElementById('taskStatus').value = t.status || 'todo';
             document.getElementById('taskPriority').value = t.priority || 'medium';
             document.getElementById('taskDescription').value = t.description || '';
             document.getElementById('taskDueDate').value = t.due_date || '';
-            if (t.assigned_to) {
-                document.getElementById('taskAssignedTo').value = t.assigned_to;
-            }
+            document.getElementById('taskFollowUp').value = t.follow_up_date || '';
+            document.getElementById('taskAssignedTo').value = t.assigned_to || '';
+            document.getElementById('taskLeadId').value = t.lead_id || '';
         } else {
-            showNotification('Failed to load task', 'error');
+            showNotification(resp.message || 'Failed to load task', 'error');
         }
     });
 }
@@ -160,15 +165,18 @@ function saveTask() {
         status: document.getElementById('taskStatus').value,
         priority: document.getElementById('taskPriority').value,
         description: document.getElementById('taskDescription').value,
-        due_date: document.getElementById('taskDueDate').value,
-        assigned_to: document.getElementById('taskAssignedTo').value || null
+        due_date: document.getElementById('taskDueDate').value || null,
+        follow_up_date: document.getElementById('taskFollowUp').value || null,
+        assigned_to: document.getElementById('taskAssignedTo').value || null,
+        lead_id: document.getElementById('taskLeadId').value || null
     };
     
+    var url = '/api/tasks.php?action=' + (TASK_ID ? 'update' : 'create');
     if (TASK_ID) {
         payload.task_id = TASK_ID;
     }
     
-    fetch('/api/tasks.php?action=save', {
+    fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -177,18 +185,33 @@ function saveTask() {
     .then(r => r.json())
     .then(data => {
         showNotification(data.message || (data.success ? 'Task saved!' : 'Save failed'), data.success ? 'success' : 'error');
-        if (data.success && !TASK_ID) {
-            window.location.href = '/pages/tasks.php?saved=1';
-        } else if (data.success) {
-            window.location.href = '/pages/tasks.php';
+        if (data.success) {
+            setTimeout(() => {
+                window.location.href = '/pages/tasks.php';
+            }, 500);
         }
     })
     .catch(() => showNotification('Network error', 'error'));
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[<&]/g, function(c) { return c === '<' ? '<' : '&'; });
+function deleteTask() {
+    showConfirm('Are you sure you want to delete this task?', function() {
+        fetch('/api/tasks.php?action=delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ task_id: TASK_ID, csrf_token: CSRF_TOKEN })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            showNotification(resp.message || (resp.success ? 'Task deleted' : 'Failed to delete'), resp.success ? 'success' : 'error');
+            if (resp.success) {
+                setTimeout(() => {
+                    window.location.href = '/pages/tasks.php';
+                }, 500);
+            }
+        });
+    });
 }
 </script>
 

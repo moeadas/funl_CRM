@@ -11,20 +11,22 @@ require_once __DIR__ . '/../includes/header.php';
 
 <style>
 .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; }
-.card { background:#fff; border:1px solid #e5e5e7; border-radius:12px; padding:24px; margin-bottom:16px; }
-.card-title { font-size:15px; font-weight:600; color:#1d1d1f; margin:0 0 20px; }
-.form-label { display:block; font-size:13px; font-weight:500; color:#424245; margin-bottom:6px; }
-.form-control { width:100%; padding:10px 12px; border:1px solid #d2d2d7; border-radius:8px; font-size:14px; color:#1d1d1f; background:#fff; box-sizing:border-box; transition:border-color 0.2s; }
-.form-control:focus { outline:none; border-color:#0071e3; box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
+.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; color: var(--color-text); }
+.card { background: var(--color-surface); border:1px solid var(--color-border); border-radius: var(--radius-md); padding:24px; margin-bottom:16px; box-shadow: var(--shadow-xs); }
+.card-title { font-size:15px; font-weight:600; color: var(--color-text); margin:0 0 20px; }
+.form-label { display:block; font-size:13px; font-weight:500; color: var(--color-text); margin-bottom:6px; }
+.form-control { width:100%; padding:10px 12px; border:1px solid var(--color-border); border-radius: var(--radius-sm); font-size:14px; color: var(--color-text); background: var(--color-surface); box-sizing:border-box; transition: border-color var(--transition); }
+.form-control:focus { outline:none; border-color: var(--color-accent); box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
 textarea.form-control { min-height:80px; resize:vertical; }
 .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
-.btn { padding:10px 18px; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; border:none; text-decoration:none; display:inline-block; }
-.btn-primary { background:#0071e3; color:#fff; }
-.btn-primary:hover { background:#0077ed; }
-.btn-outline { background:#fff; color:#0071e3; border:1px solid #0071e3; }
-.btn-outline:hover { background:#f5f5f7; }
+.btn { padding:10px 18px; border-radius: var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--transition); border:none; text-decoration:none; display:inline-block; }
+.btn-primary { background: var(--color-accent); color:#fff; }
+.btn-primary:hover { background: var(--color-accent-hover); }
+.btn-outline { background: var(--color-surface); color: var(--color-accent); border:1px solid var(--color-border); }
+.btn-outline:hover { background: var(--color-bg); }
+.btn-danger { background: var(--color-surface); color: #dc2626; border:1px solid #fca5a5; }
+.btn-danger:hover { background: #fef2f2; }
 </style>
 
 <div class="page-header">
@@ -32,7 +34,10 @@ textarea.form-control { min-height:80px; resize:vertical; }
         <a href="/pages/products.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Products</a>
         <h1><?= $productId ? 'Edit Product' : 'New Product' ?></h1>
     </div>
-    <div>
+    <div style="display:flex; gap:10px;">
+        <?php if ($productId): ?>
+            <button type="button" class="btn btn-danger" onclick="deleteProduct()">Delete Product</button>
+        <?php endif; ?>
         <button type="button" class="btn btn-primary" onclick="saveProduct()">Save Product</button>
     </div>
 </div>
@@ -42,7 +47,7 @@ textarea.form-control { min-height:80px; resize:vertical; }
         <h3 class="card-title">Product Details</h3>
         <div class="form-group">
             <label class="form-label">Product Name *</label>
-            <input type="text" id="productName" class="form-control" placeholder="e.g., Premium Plan">
+            <input type="text" id="productName" class="form-control" placeholder="e.g., Premium Plan" required>
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
@@ -51,7 +56,7 @@ textarea.form-control { min-height:80px; resize:vertical; }
             </div>
             <div class="form-group">
                 <label class="form-label">Category</label>
-                <input type="text" id="category" class="form-control" placeholder="e.g., Software">
+                <input type="text" id="category" class="form-control" placeholder="e.g., Software, Services">
             </div>
         </div>
         <div style="margin-top:16px;">
@@ -65,11 +70,11 @@ textarea.form-control { min-height:80px; resize:vertical; }
         <div class="row-3">
             <div class="form-group">
                 <label class="form-label">Unit Price *</label>
-                <input type="number" id="unitPrice" class="form-control" placeholder="0.00" step="0.01" min="0">
+                <input type="number" id="price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
             </div>
             <div class="form-group">
                 <label class="form-label">Cost Price</label>
-                <input type="number" id="costPrice" class="form-control" placeholder="0.00" step="0.01" min="0">
+                <input type="number" id="cost" class="form-control" placeholder="0.00" step="0.01" min="0">
             </div>
             <div class="form-group">
                 <label class="form-label">Currency</label>
@@ -82,26 +87,10 @@ textarea.form-control { min-height:80px; resize:vertical; }
                 </select>
             </div>
         </div>
-        <div class="row-3" style="margin-top:16px;">
+        <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
                 <label class="form-label">Stock Quantity</label>
-                <input type="number" id="stockQuantity" class="form-control" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Stock Status</label>
-                <select id="stockStatus" class="form-control">
-                    <option value="In Stock">In Stock</option>
-                    <option value="Low Stock">Low Stock</option>
-                    <option value="Out of Stock">Out of Stock</option>
-                    <option value="Discontinued">Discontinued</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Status</label>
-                <select id="status" class="form-control">
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                </select>
+                <input type="number" id="stock" class="form-control" placeholder="e.g., 100" min="0">
             </div>
         </div>
     </div>
@@ -116,20 +105,21 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadProduct() {
-    fetch('/api/products.php?id=' + PRODUCT_ID, { credentials: 'same-origin' })
+    fetch('/api/products.php?action=detail&id=' + PRODUCT_ID, { credentials: 'same-origin' })
     .then(r => r.json())
-    .then(data => {
-        if (data.success && data.product) {
-            var p = data.product;
-            ['productName','sku','category','description','unitPrice','costPrice','stockQuantity'].forEach(function(f) {
-                var el = document.getElementById(f);
-                if (el && p[f.replace(/([A-Z])/g,'_$1').toLowerCase()]) {
-                    el.value = p[f.replace(/([A-Z])/g,'_$1').toLowerCase()];
-                }
-            });
-            if (p.currency) document.getElementById('currency').value = p.currency;
-            if (p.stock_status) document.getElementById('stockStatus').value = p.stock_status;
-            if (p.status) document.getElementById('status').value = p.status;
+    .then(resp => {
+        if (resp.success && resp.data) {
+            var p = resp.data;
+            document.getElementById('productName').value = p.product_name || '';
+            document.getElementById('sku').value = p.sku || '';
+            document.getElementById('category').value = p.category || '';
+            document.getElementById('description').value = p.description || '';
+            document.getElementById('price').value = p.price || '';
+            document.getElementById('cost').value = p.cost || '';
+            document.getElementById('currency').value = p.currency || 'USD';
+            document.getElementById('stock').value = p.quantity_in_stock || '';
+        } else {
+            showNotification(resp.message || 'Failed to load product', 'error');
         }
     });
 }
@@ -137,27 +127,27 @@ function loadProduct() {
 function saveProduct() {
     var name = document.getElementById('productName').value.trim();
     if (!name) { showNotification('Product name is required', 'error'); return; }
-    var price = parseFloat(document.getElementById('unitPrice').value) || 0;
+    var priceVal = parseFloat(document.getElementById('price').value) || 0;
     
     var payload = {
         csrf_token: CSRF_TOKEN,
-        name: name,
-        sku: document.getElementById('sku').value,
-        category: document.getElementById('category').value,
-        description: document.getElementById('description').value,
-        unit_price: price,
-        cost_price: parseFloat(document.getElementById('costPrice').value) || 0,
+        product_name: name,
+        sku: document.getElementById('sku').value.trim(),
+        category: document.getElementById('category').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        price: priceVal,
+        cost: parseFloat(document.getElementById('cost').value) || null,
         currency: document.getElementById('currency').value,
-        stock_quantity: parseInt(document.getElementById('stockQuantity').value) || 0,
-        stock_status: document.getElementById('stockStatus').value,
-        status: document.getElementById('status').value
+        quantity_in_stock: document.getElementById('stock').value ? parseInt(document.getElementById('stock').value) : null
     };
     
-    var url = PRODUCT_ID ? '/api/products.php?action=update&id=' + PRODUCT_ID : '/api/products.php?action=create';
-    var method = PRODUCT_ID ? 'PUT' : 'POST';
+    var url = '/api/products.php?action=' + (PRODUCT_ID ? 'update' : 'create');
+    if (PRODUCT_ID) {
+        payload.product_id = PRODUCT_ID;
+    }
     
     fetch(url, {
-        method: method,
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify(payload)
@@ -165,9 +155,33 @@ function saveProduct() {
     .then(r => r.json())
     .then(function(data) {
         showNotification(data.message || (data.success ? 'Product saved!' : 'Save failed'), data.success ? 'success' : 'error');
-        if (data.success) window.location.href = '/pages/products.php';
+        if (data.success) {
+            setTimeout(() => {
+                window.location.href = '/pages/products.php';
+            }, 500);
+        }
     })
     .catch(function() { showNotification('Network error', 'error'); });
+}
+
+function deleteProduct() {
+    showConfirm('Are you sure you want to delete this product?', function() {
+        fetch('/api/products.php?action=delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ product_id: PRODUCT_ID, csrf_token: CSRF_TOKEN })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            showNotification(resp.message || (resp.success ? 'Product deleted' : 'Delete failed'), resp.success ? 'success' : 'error');
+            if (resp.success) {
+                setTimeout(() => {
+                    window.location.href = '/pages/products.php';
+                }, 500);
+            }
+        });
+    });
 }
 </script>
 

@@ -203,128 +203,8 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<!-- Add/Edit Lead Modal -->
-<div id="leadModal" class="modal" style="display: none;">
-    <div class="modal-backdrop" onclick="closeModal()"></div>
-    <div class="modal-content modal-lg">
-        <div class="modal-header">
-            <h3 id="modalTitle">Add New Lead</h3>
-            <button type="button" class="btn-close" onclick="closeModal()">&times;</button>
-        </div>
-        <form id="leadForm" onsubmit="saveLead(event)">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-            <input type="hidden" name="lead_id" id="lead_id">
-            
-            <div class="modal-body">
-                <!-- Basic Info -->
-                <h4 class="form-section-title">Basic Information</h4>
-                <div class="grid grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Lead Type</label>
-                        <select name="lead_type" id="lead_type" class="form-control">
-                            <?php foreach ($leadTypes as $type): ?>
-                                <option value="<?php echo $type; ?>"><?php echo $type; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Company Name</label>
-                        <input type="text" name="company_name" id="company_name" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Title/Position</label>
-                        <input type="text" name="title_position" id="title_position" class="form-control">
-                    </div>
-                </div>
 
-                <!-- Contact Details -->
-                <h4 class="form-section-title">Contact Details</h4>
-                <div class="grid grid-2">
-                    <div class="form-group" id="fg_contact_person">
-                        <label class="form-label">Contact Person <span class="required">*</span></label>
-                        <input type="text" name="contact_person" id="contact_person" class="form-control">
-                        <div class="field-error" id="err_contact_person"></div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Country</label>
-                        <input type="text" name="country" id="country" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" name="phone" id="phone" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Mobile</label>
-                        <input type="tel" name="mobile" id="mobile" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" id="email" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">City</label>
-                        <input type="text" name="city" id="city" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Website</label>
-                        <input type="url" name="website" id="website" class="form-control">
-                    </div>
-                </div>
 
-                <!-- Status -->
-                <h4 class="form-section-title">Lead Status</h4>
-                <div class="grid grid-<?php echo $isSalesRep ? '3' : '4'; ?>">
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select name="lead_status" id="lead_status" class="form-control">
-                            <?php foreach ($statuses as $status): ?>
-                                <option value="<?php echo $status; ?>"><?php echo $status; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Priority</label>
-                        <select name="priority" id="priority" class="form-control">
-                            <?php foreach ($priorities as $priority): ?>
-                                <option value="<?php echo $priority; ?>" <?php echo $priority === 'Medium' ? 'selected' : ''; ?>><?php echo $priority; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Source</label>
-                        <select name="lead_source" id="lead_source" class="form-control">
-                            <?php foreach ($sources as $source): ?>
-                                <option value="<?php echo $source; ?>"><?php echo $source; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <?php if (!$isSalesRep): ?>
-                    <div class="form-group">
-                        <label class="form-label">Assigned To</label>
-                        <select name="assigned_to" id="assigned_to" class="form-control">
-                            <option value="">Unassigned</option>
-                            <?php foreach ($users as $user): ?>
-                                <option value="<?php echo $user['user_id']; ?>"><?php echo htmlspecialchars($user['full_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Notes -->
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <textarea name="notes" id="notes" class="form-control" rows="3"></textarea>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Lead</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <script>
 // Escape HTML to prevent XSS
@@ -349,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleView(currentView, false);
     initSortHeaders();
     updateSortIndicators();
-    initColumnResize();
     loadLeads();
 });
 
@@ -495,7 +374,7 @@ function renderLeadsList(leads) {
         row += '<td><small class="text-muted">' + formatDate(lead.created_at) + '</small></td>' +
             '<td><small class="text-muted">' + formatDate(lead.updated_at) + '</small></td>' +
             '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;justify-content:center">' +
-            '<button class="btn btn-sm btn-outline" onclick="editLead(' + lead.lead_id + ')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+            '<a href="/pages/lead-form.php?id=' + lead.lead_id + '" class="btn btn-sm btn-outline" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>' +
             '<button onclick="moveLeadToContact(' + lead.lead_id + ', event)" title="Convert to Contact" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;color:#15803d;white-space:nowrap">→ Contact</button>' +
             '</div></td>' +
         '</tr>';
@@ -670,195 +549,29 @@ function getPriorityClass(priority) {
     return classes[priority] || 'bg-gray-100 text-gray-800';
 }
 
-function openAddModal() {
-    document.getElementById('modalTitle').textContent = 'Add New Lead';
-    document.getElementById('leadForm').reset();
-    document.getElementById('lead_id').value = '';
-    clearFieldErrors();
-    document.getElementById('leadModal').style.display = 'flex';
-}
+// Form modal handlers removed in favor of standalone lead-form.php
 
-function closeModal() {
-    document.getElementById('leadModal').style.display = 'none';
-}
-
-function editLead(id) {
-    fetch('/api/leads.php?action=detail&_cb=' + Date.now() + '&id=' + id, { credentials: 'same-origin' })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.success) {
-                var lead = data.data.lead;
-                document.getElementById('modalTitle').textContent = 'Edit Lead';
-                document.getElementById('lead_id').value = lead.lead_id;
-                Object.keys(lead).forEach(function(key) {
-                    var field = document.getElementById(key);
-                    if (field) field.value = lead[key] || '';
-                });
-                document.getElementById('leadModal').style.display = 'flex';
-            }
-        });
-}
-
-function clearFieldErrors() {
-    var errors = document.querySelectorAll('#leadForm .field-error');
-    for (var i = 0; i < errors.length; i++) {
-        errors[i].textContent = '';
-        errors[i].style.display = 'none';
-    }
-    var inputs = document.querySelectorAll('#leadForm .form-control.is-invalid');
-    for (var i = 0; i < inputs.length; i++) {
-        inputs[i].classList.remove('is-invalid');
-    }
-}
-
-function showFieldError(fieldName, message) {
-    var errEl = document.getElementById('err_' + fieldName);
-    var input = document.getElementById(fieldName);
-    if (errEl) {
-        errEl.textContent = message;
-        errEl.style.display = 'block';
-    }
-    if (input) {
-        input.classList.add('is-invalid');
-        input.focus();
-    }
-}
-
-// ─── Column Resize ──────────────────────────────────────────
-function initColumnResize() {
-    var table = document.getElementById('leadsTable');
-    if (!table) return;
-
-    var thead = table.querySelector('thead');
-    var ths = thead.querySelectorAll('th.th-resizable');
-
-    // Restore saved widths
-    var saved = null;
-    try { saved = JSON.parse(localStorage.getItem('leadsColWidths')); } catch(e) {}
-
-    // Set table to fixed layout so widths are respected
-    table.style.tableLayout = 'fixed';
-
-    if (saved && typeof saved === 'object') {
-        ths.forEach(function(th) {
-            var key = th.getAttribute('data-sort') || th.textContent.trim();
-            if (saved[key]) th.style.width = saved[key] + 'px';
-        });
-    }
-
-    ths.forEach(function(th) {
-        // Create resize handle
-        var handle = document.createElement('div');
-        handle.className = 'col-resize-handle';
-        th.appendChild(handle);
-        th.style.position = 'relative';
-
-        var startX, startW, thEl;
-
-        handle.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            thEl = th;
-            startX = e.pageX;
-            startW = th.offsetWidth;
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-
-            function onMove(ev) {
-                var diff = ev.pageX - startX;
-                var newW = Math.max(50, startW + diff);
-                thEl.style.width = newW + 'px';
-            }
-            function onUp() {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
-                saveColumnWidths();
-            }
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-        });
-    });
-}
-
-function saveColumnWidths() {
-    var table = document.getElementById('leadsTable');
-    if (!table) return;
-    var ths = table.querySelectorAll('thead th.th-resizable');
-    var widths = {};
-    ths.forEach(function(th) {
-        var key = th.getAttribute('data-sort') || th.textContent.trim();
-        widths[key] = th.offsetWidth;
-    });
-    localStorage.setItem('leadsColWidths', JSON.stringify(widths));
-}
-
-function saveLead(e) {
-    e.preventDefault();
-    clearFieldErrors();
-
-    var form = e.target;
-    var formData = new FormData(form);
-    var data = {};
-    formData.forEach(function(value, key) { data[key] = value; });
-
-    // Client-side validation: only contact_person is required
-    var contactVal = (data.contact_person || '').trim();
-    if (!contactVal) {
-        showFieldError('contact_person', 'Cannot be empty');
-        return;
-    }
-
-    var isEdit = !!data.lead_id;
-    var url = '/api/leads.php?action=' + (isEdit ? 'update' : 'create') + '&_cb=' + Date.now();
-    var method = isEdit ? 'PUT' : 'POST';
-    
-    fetch(url, {
-        credentials: 'same-origin',
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(resp) {
-        if (resp.success) {
-            closeModal();
-            loadLeads(currentPage);
-            showNotification('Lead saved successfully', 'success');
-        } else if (resp.field_errors) {
-            // Show server-side field-level errors under the related inputs
-            var keys = Object.keys(resp.field_errors);
-            for (var i = 0; i < keys.length; i++) {
-                showFieldError(keys[i], resp.field_errors[keys[i]]);
-            }
-        } else {
-            showNotification(resp.message || 'Failed to save lead', 'error');
-        }
-    })
-    .catch(function() { showNotification('An error occurred', 'error'); });
-}
 // ── Move Lead to Contact ──
 function moveLeadToContact(leadId, e) {
     if (e) e.stopPropagation();
-    if (!confirm('Convert this lead to a Contact? The lead status will be set to "Won".')) return;
-
-    fetch('/api/move-lead-to-contact.php', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: leadId, csrf_token: CSRF_TOKEN })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(resp) {
-        if (resp.success) {
-            showNotification('Lead converted to contact successfully!', 'success');
-            loadLeads();
-        } else {
-            showNotification(resp.message || 'Conversion failed', 'error');
-        }
-    })
-    .catch(function() { showNotification('Network error', 'error'); });
+    showConfirm('Convert this lead to a Contact? The lead status will be set to "Won".', function() {
+        fetch('/api/move-lead-to-contact.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_id: leadId, csrf_token: CSRF_TOKEN })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (resp.success) {
+                showNotification('Lead converted to contact successfully!', 'success');
+                loadLeads();
+            } else {
+                showNotification(resp.message || 'Error converting lead', 'error');
+            }
+        })
+        .catch(function() { showNotification('Network error', 'error'); });
+    });
 }
 
 function formatDate(dateStr) {

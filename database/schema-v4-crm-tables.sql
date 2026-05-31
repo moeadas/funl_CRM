@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `contacts` (
   `email` VARCHAR(100) DEFAULT NULL,
   `phone` VARCHAR(30) DEFAULT NULL,
   `mobile` VARCHAR(30) DEFAULT NULL,
-  `job_title` VARCHAR(100) DEFAULT NULL,
+  `title` VARCHAR(100) DEFAULT NULL,
   `department` VARCHAR(100) DEFAULT NULL,
   `status` VARCHAR(20) DEFAULT 'Active',
   `address` TEXT DEFAULT NULL,
@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS `deals` (
   `account_id` INT(11) DEFAULT NULL,
   `contact_id` INT(11) DEFAULT NULL,
   `lead_id` INT(11) DEFAULT NULL,
+  `source` VARCHAR(50) DEFAULT NULL,
   `assigned_to` INT(11) DEFAULT NULL,
   `created_by` INT(11) DEFAULT NULL,
   `expected_close` DATE DEFAULT NULL,
@@ -173,8 +174,10 @@ CREATE TABLE IF NOT EXISTS `products` (
   `product_name` VARCHAR(200) NOT NULL,
   `sku` VARCHAR(100) DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
-  `unit_price` DECIMAL(15,2) DEFAULT 0,
+  `price` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+  `cost` DECIMAL(15,2) DEFAULT NULL,
   `currency` VARCHAR(5) DEFAULT 'USD',
+  `quantity_in_stock` INT(11) DEFAULT NULL,
   `category` VARCHAR(100) DEFAULT NULL,
   `is_active` TINYINT(1) DEFAULT 1,
   `created_by` INT(11) DEFAULT NULL,
@@ -313,9 +316,10 @@ CREATE TABLE IF NOT EXISTS `automation_rules` (
   `company_id` INT(11) DEFAULT NULL,
   `rule_name` VARCHAR(200) NOT NULL,
   `description` TEXT DEFAULT NULL,
-  `trigger_event` VARCHAR(100) NOT NULL,
+  `trigger_type` VARCHAR(50) NOT NULL,
   `trigger_conditions` TEXT DEFAULT NULL,
-  `actions` TEXT DEFAULT NULL,
+  `action_type` VARCHAR(50) NOT NULL,
+  `action_config` TEXT DEFAULT NULL,
   `is_active` TINYINT(1) DEFAULT 1,
   `run_count` INT(11) DEFAULT 0,
   `last_run_at` DATETIME DEFAULT NULL,
@@ -324,7 +328,7 @@ CREATE TABLE IF NOT EXISTS `automation_rules` (
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`rule_id`),
   KEY `idx_automation_company` (`company_id`),
-  KEY `idx_automation_trigger` (`trigger_event`)
+  KEY `idx_automation_trigger` (`trigger_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- AUTOMATION LOGS

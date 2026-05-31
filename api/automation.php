@@ -113,9 +113,9 @@ if ($action === 'logs' && $method === 'GET') {
     $ruleId = $_GET['rule_id'] ?? '';
     $limit = min((int)($_GET['limit'] ?? 50), 100);
     
-    $where = ["company_id = ?"];
+    $where = ["r.company_id = ?"];
     $params = [$companyId];
-    if ($ruleId) { $where[] = "rule_id = ?"; $params[] = (int)$ruleId; }
+    if ($ruleId) { $where[] = "r.rule_id = ?"; $params[] = (int)$ruleId; }
     
     $logs = $db->query("
         SELECT l.*, r.rule_name

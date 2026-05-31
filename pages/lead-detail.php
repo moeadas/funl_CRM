@@ -151,6 +151,12 @@ $statusColors = [
         </div>
     </div>
     <div class="lead-header-actions">
+        <?php if ($lead['lead_status'] !== 'Won'): ?>
+            <button onclick="moveLeadToContact(<?php echo $leadId; ?>)" class="btn btn-outline" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                Convert to Contact
+            </button>
+        <?php endif; ?>
         <a href="lead-form.php?id=<?php echo $leadId; ?>" class="btn btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit Lead
@@ -943,7 +949,7 @@ function sendEmail(e) {
 
     // Use FormData to support file attachments
     var formData = new FormData();
-    formData.append('csrf_token', '<?php echo $csrf_token; ?>');
+    formData.append('csrf_token', '<?php echo $_SESSION['csrf_token'] ?? ""; ?>');
     formData.append('lead_id', <?php echo $leadId; ?>);
     formData.append('to', document.getElementById('emailTo').value);
     formData.append('cc', document.getElementById('emailCc').value);
@@ -988,6 +994,28 @@ function sendEmail(e) {
         errDiv.style.display = 'block';
         btn.disabled = false;
         btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Email';
+    });
+}
+
+// ── Convert Lead to Contact ──
+function moveLeadToContact(leadId) {
+    showConfirm('Convert this lead to a Contact? The lead status will be set to "Won".', function() {
+        fetch('/api/move-lead-to-contact.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_id: leadId, csrf_token: '<?php echo $_SESSION['csrf_token'] ?? ""; ?>' })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (resp.success) {
+                showNotification('Lead converted to contact successfully!', 'success');
+                setTimeout(function() { window.location.href = '/pages/contacts.php'; }, 1500);
+            } else {
+                showNotification(resp.message || 'Conversion failed', 'error');
+            }
+        })
+        .catch(function() { showNotification('Network error', 'error'); });
     });
 }
 
