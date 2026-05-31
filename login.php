@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+<?php require_once __DIR__ . '/includes/preloader.php'; ?>
     <div class="main-container">
         <div class="login-card">
             <div class="login-header">

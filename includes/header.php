@@ -31,6 +31,7 @@ if ($_isAdminOrImpersonating) {
     <script src="/assets/js/main.js" defer></script>
 </head>
 <body>
+<?php require_once __DIR__ . '/preloader.php'; ?>
     <!-- Mobile Menu Toggle -->
     <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle menu">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
