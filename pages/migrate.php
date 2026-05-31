@@ -153,6 +153,19 @@ try {
     $results[] = ['leads.country nullable', 'Error: ' . $e->getMessage(), 'error'];
 }
 
+// ─── 5.5. Add language column to users table ───
+try {
+    $db->query("SELECT language FROM users LIMIT 1");
+    $results[] = ['users.language', 'Column already exists', 'info'];
+} catch (Exception $e) {
+    try {
+        $db->query("ALTER TABLE users ADD COLUMN language VARCHAR(10) DEFAULT 'en'");
+        $results[] = ['users.language', 'Column added successfully', 'success'];
+    } catch (Exception $ex) {
+        $results[] = ['users.language', 'Failed: ' . $ex->getMessage(), 'error'];
+    }
+}
+
 // ─── 6. Verify/Fix Twilio settings ───
 try {
     $settings = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('twilio_phone_number', 'whatsapp_from_number')")->fetchAll(PDO::FETCH_KEY_PAIR);

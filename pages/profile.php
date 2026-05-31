@@ -36,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fullName = sanitizeInput($_POST['full_name'] ?? '');
         $phone = sanitizeInput($_POST['phone'] ?? '');
         $email = sanitizeInput($_POST['email'] ?? '');
+        $language = sanitizeInput($_POST['language'] ?? 'en');
         
         if (empty($fullName) || empty($email)) {
             $error = 'Name and Email are required.';
@@ -54,12 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'phone' => $phone,
                         'email' => $email,
                         'username' => $email, // Keep username matching email in SaaS context
+                        'language' => $language,
                     ], ['user_id' => $userId]);
                     
                     // Update session
                     $_SESSION['full_name'] = $fullName;
                     $_SESSION['username'] = $email;
                     $_SESSION['email'] = $email;
+                    $_SESSION['language'] = $language;
                     
                     // Reload user data
                     $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
@@ -181,7 +184,7 @@ include __DIR__ . '/../includes/header.php';
         <div style="display:flex;flex-direction:column;gap:24px;">
             <!-- Profile Card -->
             <div class="card">
-                <div class="card-header"><h3 class="card-title">Profile Information</h3></div>
+                <div class="card-header"><h3 class="card-title"><?php echo __('profile_information'); ?></h3></div>
                 <div class="card-body">
                     <form method="POST">
                         <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
@@ -189,25 +192,32 @@ include __DIR__ . '/../includes/header.php';
                         
                         <div class="form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">Full Name *</label>
+                                <label class="form-label"><?php echo __('full_name'); ?> *</label>
                                 <input type="text" name="full_name" class="form-control" value="<?php echo htmlspecialchars($user['full_name'] ?? ''); ?>" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Email Address *</label>
+                                <label class="form-label"><?php echo __('email_address'); ?> *</label>
                                 <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Phone Number</label>
+                                <label class="form-label"><?php echo __('phone_number'); ?></label>
                                 <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Username (Read-Only)</label>
+                                <label class="form-label"><?php echo __('username_readonly'); ?></label>
                                 <input type="text" class="form-control" value="<?php echo htmlspecialchars($user['username'] ?? ''); ?>" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><?php echo __('preferred_language'); ?></label>
+                                <select name="language" class="form-control">
+                                    <option value="en" <?php echo ($user['language'] ?? 'en') === 'en' ? 'selected' : ''; ?>><?php echo __('english'); ?></option>
+                                    <option value="ar" <?php echo ($user['language'] ?? 'en') === 'ar' ? 'selected' : ''; ?>><?php echo __('arabic'); ?></option>
+                                </select>
                             </div>
                         </div>
 
                         <div style="margin-top:20px;display:flex;justify-content:flex-end;">
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="submit" class="btn btn-primary"><?php echo __('save_changes'); ?></button>
                         </div>
                     </form>
                 </div>
@@ -215,29 +225,29 @@ include __DIR__ . '/../includes/header.php';
 
             <!-- Password Card -->
             <div class="card">
-                <div class="card-header"><h3 class="card-title">Security &amp; Password</h3></div>
+                <div class="card-header"><h3 class="card-title"><?php echo __('security_password'); ?></h3></div>
                 <div class="card-body">
                     <form method="POST">
                         <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                         <input type="hidden" name="action" value="change_password">
                         
                         <div class="form-group">
-                            <label class="form-label">Current Password *</label>
+                            <label class="form-label"><?php echo __('current_password'); ?> *</label>
                             <input type="password" name="current_password" class="form-control" placeholder="••••••••" required>
                         </div>
                         <div class="form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">New Password *</label>
+                                <label class="form-label"><?php echo __('new_password'); ?> *</label>
                                 <input type="password" name="new_password" class="form-control" placeholder="Min 8 characters" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Confirm New Password *</label>
+                                <label class="form-label"><?php echo __('confirm_new_password'); ?> *</label>
                                 <input type="password" name="confirm_password" class="form-control" placeholder="Repeat new password" required>
                             </div>
                         </div>
 
                         <div style="margin-top:20px;display:flex;justify-content:flex-end;">
-                            <button type="submit" class="btn btn-primary">Change Password</button>
+                            <button type="submit" class="btn btn-primary"><?php echo __('change_password'); ?></button>
                         </div>
                     </form>
                 </div>
@@ -274,7 +284,7 @@ include __DIR__ . '/../includes/header.php';
 
             <!-- Microsoft Integration Card -->
             <div class="card">
-                <div class="card-header"><h3 class="card-title">Email Integration</h3></div>
+                <div class="card-header"><h3 class="card-title"><?php echo __('email_integration'); ?></h3></div>
                 <div class="card-body">
                     <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">Connect your Microsoft Office 365 account to send email campaigns and client updates from your personal work email.</p>
                     
@@ -283,7 +293,7 @@ include __DIR__ . '/../includes/header.php';
                             <div style="display:flex;align-items:center;">
                                 <span class="microsoft-icon">🌐</span>
                                 <div class="microsoft-status">
-                                    <h4>Office 365 Connected</h4>
+                                    <h4><?php echo __('office_365_connected'); ?></h4>
                                     <p><?php echo htmlspecialchars($user['ms_connected_email']); ?></p>
                                 </div>
                             </div>
@@ -291,22 +301,22 @@ include __DIR__ . '/../includes/header.php';
                         <form method="POST">
                             <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                             <input type="hidden" name="action" value="disconnect_microsoft">
-                            <button type="submit" class="btn btn-outline btn-error btn-block">Disconnect Account</button>
+                            <button type="submit" class="btn btn-outline btn-error btn-block"><?php echo __('disconnect_account'); ?></button>
                         </form>
                     <?php else: ?>
                         <div class="microsoft-box">
                             <div style="display:flex;align-items:center;">
                                 <span class="microsoft-icon" style="opacity:0.5;">🌐</span>
                                 <div class="microsoft-status">
-                                    <h4>Not Connected</h4>
+                                    <h4><?php echo __('not_connected'); ?></h4>
                                     <p>Connect to get started</p>
                                 </div>
                             </div>
                         </div>
                         <?php if ($msAuthUrl): ?>
-                            <a href="<?php echo $msAuthUrl; ?>" class="btn btn-primary btn-block">Connect Office 365</a>
+                            <a href="<?php echo $msAuthUrl; ?>" class="btn btn-primary btn-block"><?php echo __('connect_office_365'); ?></a>
                         <?php else: ?>
-                            <button class="btn btn-primary btn-block" disabled style="opacity:0.6;cursor:not-allowed;">Connect Office 365</button>
+                            <button class="btn btn-primary btn-block" disabled style="opacity:0.6;cursor:not-allowed;"><?php echo __('connect_office_365'); ?></button>
                             <div style="font-size:11px;color:#ef4444;margin-top:8px;text-align:center;">Client ID is not configured in settings.</div>
                         <?php endif; ?>
                     <?php endif; ?>

@@ -466,3 +466,45 @@ function decryptToken(string $encrypted, ?string $key = null) {
         return $decrypted !== false ? $decrypted : '';
     }
 }
+
+/**
+ * Translate helper function
+ */
+function __($key, $default = null) {
+    static $translations = [];
+    
+    // Get current language from session
+    $lang = $_SESSION['language'] ?? 'en';
+    if (!in_array($lang, ['en', 'ar'])) {
+        $lang = 'en';
+    }
+    
+    // Load language translation array if not already loaded
+    if (!isset($translations[$lang])) {
+        $langFile = __DIR__ . "/languages/{$lang}.php";
+        if (file_exists($langFile)) {
+            $translations[$lang] = include $langFile;
+        } else {
+            $translations[$lang] = [];
+        }
+    }
+    
+    // Return translated string, default text, or uppercase key fallback
+    if (isset($translations[$lang][$key])) {
+        return $translations[$lang][$key];
+    }
+    
+    // Fallback to English dictionary if translation is missing in the chosen language
+    if ($lang !== 'en') {
+        if (!isset($translations['en'])) {
+            $enFile = __DIR__ . "/languages/en.php";
+            $translations['en'] = file_exists($enFile) ? include $enFile : [];
+        }
+        if (isset($translations['en'][$key])) {
+            return $translations['en'][$key];
+        }
+    }
+    
+    // If not found in English either, format key as fallback string
+    return $default ?? str_replace('_', ' ', ucfirst($key));
+}

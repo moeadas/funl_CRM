@@ -129,7 +129,7 @@ function authenticateUser($username, $password) {
     $db = Database::getInstance()->getConnection();
 
     $stmt = $db->prepare("
-        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified
+        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified, language
         FROM users 
         WHERE (username = :username OR email = :email) AND status = 'Active'
     ");
@@ -152,6 +152,7 @@ function authenticateUser($username, $password) {
         $_SESSION['role']           = $user['role'];
         $_SESSION['is_super_admin']  = !empty($user['is_super_admin']);
         $_SESSION['email_verified'] = !empty($user['email_verified']);
+        $_SESSION['language']       = $user['language'] ?? 'en';
         
         // Set company_id for multi-tenant support
         if (!empty($user['company_id'])) {
@@ -371,7 +372,7 @@ function switchToUser($targetUserId) {
     }
 
     $db = Database::getInstance()->getConnection();
-    $stmt = $db->prepare("SELECT user_id, username, email, full_name, role, company_id, is_super_admin FROM users WHERE user_id = ? AND status = 'Active'");
+    $stmt = $db->prepare("SELECT user_id, username, email, full_name, role, company_id, is_super_admin, language FROM users WHERE user_id = ? AND status = 'Active'");
     $stmt->execute([$targetUserId]);
     $target = $stmt->fetch();
 
@@ -388,6 +389,7 @@ function switchToUser($targetUserId) {
         $_SESSION['impersonate_original_role']       = $_SESSION['role'];
         $_SESSION['impersonate_original_company_id'] = $_SESSION['company_id'] ?? null;
         $_SESSION['impersonate_original_is_super_admin'] = $_SESSION['is_super_admin'] ?? false;
+        $_SESSION['impersonate_original_language']   = $_SESSION['language'] ?? 'en';
     }
 
     // Switch session to target user
@@ -397,6 +399,7 @@ function switchToUser($targetUserId) {
     $_SESSION['full_name'] = $target['full_name'];
     $_SESSION['role']      = $target['role'];
     $_SESSION['company_id'] = $target['company_id'] ?? null;
+    $_SESSION['language']   = $target['language'] ?? 'en';
     // Preserve super_admin status only for actual super admins
     if (empty($target['is_super_admin'])) {
         $_SESSION['is_super_admin'] = false;
@@ -426,6 +429,7 @@ function switchBack() {
     $_SESSION['role']      = $_SESSION['impersonate_original_role'];
     $_SESSION['company_id'] = $_SESSION['impersonate_original_company_id'] ?? null;
     $_SESSION['is_super_admin'] = $_SESSION['impersonate_original_is_super_admin'] ?? false;
+    $_SESSION['language']   = $_SESSION['impersonate_original_language'] ?? 'en';
 
     // Clear impersonation data
     unset(
@@ -435,7 +439,8 @@ function switchBack() {
         $_SESSION['impersonate_original_full_name'],
         $_SESSION['impersonate_original_role'],
         $_SESSION['impersonate_original_company_id'],
-        $_SESSION['impersonate_original_is_super_admin']
+        $_SESSION['impersonate_original_is_super_admin'],
+        $_SESSION['impersonate_original_language']
     );
 
     logActivity($_SESSION['user_id'], 'Switch Back', 'User', null,
