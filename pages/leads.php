@@ -48,15 +48,15 @@ $countries = $countryStmt->fetchAll(PDO::FETCH_COLUMN);
 // Get users for assignment dropdown (only for managers)
 $users = hasRole('Sales Manager') ? getAllUsers() : [];
 
-$pageTitle = 'Leads';
+$pageTitle = __('Leads');
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="page-header">
-    <h1 class="page-title">Leads Management</h1>
+    <h1 class="page-title"><?php echo htmlspecialchars(__('Leads Management')); ?></h1>
     <a href="/pages/lead-form.php" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add New Lead
+        <?php echo htmlspecialchars(__('Add New Lead')); ?>
     </a>
 </div>
 
@@ -64,9 +64,9 @@ include __DIR__ . '/../includes/header.php';
 <div class="alert alert-warning" style="display:flex;align-items:center;justify-content:space-between;">
     <div style="display:flex;align-items:center;gap:8px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-        <strong>Follow Up Leads</strong> &mdash; Showing leads that have a "Follow-up" interaction logged.
+        <strong><?php echo htmlspecialchars(__('Follow Up Leads')); ?></strong> &mdash; <?php echo htmlspecialchars(__('Showing leads that have a "Follow-up" interaction logged.')); ?>
     </div>
-    <a href="/pages/leads.php" class="btn btn-sm btn-outline">Show All Leads</a>
+    <a href="/pages/leads.php" class="btn btn-sm btn-outline"><?php echo htmlspecialchars(__('Show All Leads')); ?></a>
 </div>
 <?php endif; ?>
 
@@ -75,32 +75,32 @@ include __DIR__ . '/../includes/header.php';
     <div class="card-body">
         <form id="filterForm" class="filter-form">
             <div class="form-group filter-group">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Company, contact, email..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+                <label class="form-label"><?php echo htmlspecialchars(__('Search')); ?></label>
+                <input type="text" name="search" class="form-control" placeholder="<?php echo htmlspecialchars(__('Company, contact, email...')); ?>" value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
             </div>
             <div class="form-group filter-group">
-                <label class="form-label">Status</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Status')); ?></label>
                 <select name="status" class="form-control">
-                    <option value="">All Statuses</option>
+                    <option value=""><?php echo htmlspecialchars(__('All Statuses')); ?></option>
                     <?php foreach ($statuses as $status): ?>
-                        <option value="<?php echo $status; ?>" <?php echo ($_GET['status'] ?? '') === $status ? 'selected' : ''; ?>><?php echo $status; ?></option>
+                        <option value="<?php echo $status; ?>" <?php echo ($_GET['status'] ?? '') === $status ? 'selected' : ''; ?>><?php echo htmlspecialchars(__($status)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group filter-group">
-                <label class="form-label">Country</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Country')); ?></label>
                 <select name="country" class="form-control">
-                    <option value="">All Countries</option>
+                    <option value=""><?php echo htmlspecialchars(__('All Countries')); ?></option>
                     <?php foreach ($countries as $c): ?>
-                        <option value="<?php echo htmlspecialchars($c); ?>" <?php echo ($_GET['country'] ?? '') === $c ? 'selected' : ''; ?>><?php echo htmlspecialchars($c); ?></option>
+                        <option value="<?php echo htmlspecialchars($c); ?>" <?php echo ($_GET['country'] ?? '') === $c ? 'selected' : ''; ?>><?php echo htmlspecialchars(__($c)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <?php if (!$isSalesRep): ?>
             <div class="form-group filter-group">
-                <label class="form-label">Assigned To</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Assigned To')); ?></label>
                 <select name="assigned_to" class="form-control">
-                    <option value="">All Users</option>
+                    <option value=""><?php echo htmlspecialchars(__('All Users')); ?></option>
                     <?php foreach ($users as $user): ?>
                         <option value="<?php echo $user['user_id']; ?>" <?php echo ($_GET['assigned_to'] ?? '') == $user['user_id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($user['full_name']); ?>
@@ -111,9 +111,9 @@ include __DIR__ . '/../includes/header.php';
             <?php endif; ?>
             <button type="submit" class="btn btn-primary">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                Filter
+                <?php echo htmlspecialchars(__('Filter')); ?>
             </button>
-            <a href="/pages/leads.php" class="btn btn-outline">Clear</a>
+            <a href="/pages/leads.php" class="btn btn-outline"><?php echo htmlspecialchars(__('Clear')); ?></a>
         </form>
     </div>
 </div>
@@ -121,20 +121,20 @@ include __DIR__ . '/../includes/header.php';
 <!-- Leads Table -->
 <div class="card">
     <div class="card-header">
-        <h2 class="card-title">All Leads</h2>
+        <h2 class="card-title"><?php echo htmlspecialchars(__('All Leads')); ?></h2>
         <div class="card-header-actions">
             <div class="view-toggle">
-                <button class="view-btn active" onclick="toggleView('list')" id="btn-list" title="List View">
+                <button class="view-btn active" onclick="toggleView('list')" id="btn-list" title="<?php echo htmlspecialchars(__('List View')); ?>">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                 </button>
-                <button class="view-btn" onclick="toggleView('grid')" id="btn-grid" title="Grid View">
+                <button class="view-btn" onclick="toggleView('grid')" id="btn-grid" title="<?php echo htmlspecialchars(__('Grid View')); ?>">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 </button>
             </div>
             <?php if (hasRole('Sales Manager')): ?>
                 <a href="/pages/export-leads.php" class="btn btn-sm btn-outline">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Export CSV
+                    <?php echo htmlspecialchars(__('Export CSV')); ?>
                 </a>
             <?php endif; ?>
         </div>
@@ -145,21 +145,21 @@ include __DIR__ . '/../includes/header.php';
         <!-- Bulk Actions Toolbar — managers only -->
         <div id="bulkActions" class="bulk-toolbar" style="display: none;">
             <div class="bulk-toolbar-left">
-                <span class="bulk-count"><span id="selectedCount">0</span> selected</span>
+                <span class="bulk-count"><span id="selectedCount">0</span> <?php echo htmlspecialchars(__('selected')); ?></span>
                 <div class="bulk-divider"></div>
                 <select id="bulkAssignUser" class="form-control bulk-select">
-                    <option value="">Assign to...</option>
+                    <option value=""><?php echo htmlspecialchars(__('Assign to...')); ?></option>
                     <?php foreach ($users as $user): ?>
                         <option value="<?php echo $user['user_id']; ?>"><?php echo htmlspecialchars($user['full_name']); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <button class="btn btn-primary btn-sm" onclick="bulkAssign()">Apply</button>
+                <button class="btn btn-primary btn-sm" onclick="bulkAssign()"><?php echo htmlspecialchars(__('Apply')); ?></button>
             </div>
             <div class="bulk-toolbar-right">
                 <?php if (hasRole('Sales Manager')): ?>
                 <button class="btn btn-danger btn-sm" onclick="bulkDelete()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Delete
+                    <?php echo htmlspecialchars(__('Delete')); ?>
                 </button>
                 <?php endif; ?>
             </div>
@@ -172,20 +172,20 @@ include __DIR__ . '/../includes/header.php';
                     <tr>
                         <?php if (!$isSalesRep): ?><th class="th-checkbox" style="width:40px;min-width:40px;"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th><?php endif; ?>
                         <th style="width:44px;min-width:44px;text-align:center;">#</th>
-                        <th class="th-sortable th-resizable" data-sort="company_name">Company <span class="sort-icon"></span></th>
-                        <th class="th-sortable th-resizable" data-sort="contact_person">Contact <span class="sort-icon"></span></th>
-                        <th class="th-sortable th-resizable" data-sort="country">Country <span class="sort-icon"></span></th>
-                        <th class="th-sortable th-resizable" data-sort="lead_status">Status <span class="sort-icon"></span></th>
-                        <th class="th-sortable th-resizable" data-sort="priority">Priority <span class="sort-icon"></span></th>
-                        <?php if (!$isSalesRep): ?><th class="th-sortable th-resizable" data-sort="assigned_name">Assigned To <span class="sort-icon"></span></th><?php endif; ?>
-                        <th class="th-sortable th-resizable" data-sort="created_at">Date Created <span class="sort-icon"></span></th>
-                        <th class="th-sortable th-resizable" data-sort="updated_at">Updated <span class="sort-icon"></span></th>
-                        <th style="width:60px;min-width:60px;">Actions</th>
+                        <th class="th-sortable th-resizable" data-sort="company_name"><?php echo htmlspecialchars(__('Company')); ?> <span class="sort-icon"></span></th>
+                        <th class="th-sortable th-resizable" data-sort="contact_person"><?php echo htmlspecialchars(__('Contact')); ?> <span class="sort-icon"></span></th>
+                        <th class="th-sortable th-resizable" data-sort="country"><?php echo htmlspecialchars(__('Country')); ?> <span class="sort-icon"></span></th>
+                        <th class="th-sortable th-resizable" data-sort="lead_status"><?php echo htmlspecialchars(__('Status')); ?> <span class="sort-icon"></span></th>
+                        <th class="th-sortable th-resizable" data-sort="priority"><?php echo htmlspecialchars(__('Priority')); ?> <span class="sort-icon"></span></th>
+                        <?php if (!$isSalesRep): ?><th class="th-sortable th-resizable" data-sort="assigned_name"><?php echo htmlspecialchars(__('Assigned To')); ?> <span class="sort-icon"></span></th><?php endif; ?>
+                        <th class="th-sortable th-resizable" data-sort="created_at"><?php echo htmlspecialchars(__('Date Created')); ?> <span class="sort-icon"></span></th>
+                        <th class="th-sortable th-resizable" data-sort="updated_at"><?php echo htmlspecialchars(__('Updated')); ?> <span class="sort-icon"></span></th>
+                        <th style="width:60px;min-width:60px;"><?php echo htmlspecialchars(__('Actions')); ?></th>
                     </tr>
                 </thead>
                 <tbody id="leadsTableBody">
                     <tr>
-                        <td colspan="<?php echo $isSalesRep ? '9' : '11'; ?>" class="text-center text-muted">Loading...</td>
+                        <td colspan="<?php echo $isSalesRep ? '9' : '11'; ?>" class="text-center text-muted"><?php echo htmlspecialchars(__('Loading...')); ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -194,7 +194,7 @@ include __DIR__ . '/../includes/header.php';
         <?php if (!$isSalesRep): ?>
         <div id="gridSelectAllContainer" class="grid-select-all" style="display: none;">
             <input type="checkbox" id="gridSelectAll" onclick="toggleAll(this)">
-            <label for="gridSelectAll">Select All Leads on Page</label>
+            <label for="gridSelectAll"><?php echo htmlspecialchars(__('Select All Leads on Page')); ?></label>
         </div>
         <?php endif; ?>
         
@@ -308,9 +308,9 @@ function loadLeads(page) {
     
     var colSpan = isSalesRep ? 9 : 11;
     if (currentView === 'list') {
-        document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">Loading...</td></tr>';
+        document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + escapeHtml(__('Loading...')) + '</td></tr>';
     } else {
-        document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;" class="text-muted">Loading...</div>';
+        document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;" class="text-muted">' + escapeHtml(__('Loading...')) + '</div>';
     }
     
     fetch('/api/leads.php?action=list&_cb=' + Date.now() + '&' + params.toString(), { credentials: 'same-origin' })
@@ -332,9 +332,9 @@ function loadLeads(page) {
                 var errorMsg = data.message || 'Failed to load leads';
                 var colSpan = isSalesRep ? 9 : 11;
                 if (currentView === 'list') {
-                    document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + errorMsg + '</td></tr>';
+                    document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + escapeHtml(__(errorMsg)) + '</td></tr>';
                 } else {
-                    document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;">' + errorMsg + '</div>';
+                    document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;">' + escapeHtml(__(errorMsg)) + '</div>';
                 }
             }
         })
@@ -343,9 +343,9 @@ function loadLeads(page) {
             var errorMsg = 'Failed to load leads';
             var colSpan = isSalesRep ? 9 : 11;
             if (currentView === 'list') {
-                document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + errorMsg + '</td></tr>';
+                document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + escapeHtml(__(errorMsg)) + '</td></tr>';
             } else {
-                document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;">' + errorMsg + '</div>';
+                document.getElementById('leadsGridContainer').innerHTML = '<div style="grid-column:1/-1;text-align:center;">' + escapeHtml(__(errorMsg)) + '</div>';
             }
         });
 }
@@ -355,7 +355,7 @@ function renderLeadsList(leads) {
     var colSpan = isSalesRep ? 9 : 11;
     
     if (!leads.length) {
-        tbody.innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">No leads found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted">' + escapeHtml(__('No leads found')) + '</td></tr>';
         return;
     }
     
@@ -365,17 +365,17 @@ function renderLeadsList(leads) {
         var row = '<tr class="clickable-row" onclick="if(!event.target.type||event.target.type!==\'checkbox\')window.location=\'/pages/lead-detail.php?id=' + lead.lead_id + '\'">';
         if (!isSalesRep) row += '<td onclick="event.stopPropagation()"><input type="checkbox" class="lead-checkbox" value="' + lead.lead_id + '" onchange="updateBulkState()"></td>';
         row += '<td style="text-align:center;color:var(--color-text-tertiary);font-size:13px;font-weight:500;">' + rowNum + '</td>' +
-            '<td><strong>' + escapeHtml(lead.company_name || lead.contact_person || 'Unnamed') + '</strong><br><small class="text-muted">' + escapeHtml(lead.lead_type) + '</small></td>' +
+            '<td><strong>' + escapeHtml(lead.company_name || lead.contact_person || __('Unnamed')) + '</strong><br><small class="text-muted">' + escapeHtml(__(lead.lead_type)) + '</small></td>' +
             '<td>' + escapeHtml(lead.contact_person || '-') + '<br><small class="text-muted">' + escapeHtml(lead.email || '-') + '</small></td>' +
-            '<td>' + escapeHtml(lead.country || '-') + '</td>' +
-            '<td><span class="badge ' + getStatusClass(lead.lead_status) + '">' + escapeHtml(lead.lead_status) + '</span></td>' +
-            '<td><span class="badge ' + getPriorityClass(lead.priority) + '">' + escapeHtml(lead.priority) + '</span></td>';
-        if (!isSalesRep) row += '<td>' + escapeHtml(lead.assigned_name || 'Unassigned') + '</td>';
+            '<td>' + escapeHtml(__(lead.country) || '-') + '</td>' +
+            '<td><span class="badge ' + getStatusClass(lead.lead_status) + '">' + escapeHtml(__(lead.lead_status)) + '</span></td>' +
+            '<td><span class="badge ' + getPriorityClass(lead.priority) + '">' + escapeHtml(__(lead.priority)) + '</span></td>';
+        if (!isSalesRep) row += '<td>' + escapeHtml(lead.assigned_name || __('Unassigned')) + '</td>';
         row += '<td><small class="text-muted">' + formatDate(lead.created_at) + '</small></td>' +
             '<td><small class="text-muted">' + formatDate(lead.updated_at) + '</small></td>' +
             '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;justify-content:center">' +
-            '<a href="/pages/lead-form.php?id=' + lead.lead_id + '" class="btn btn-sm btn-outline" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>' +
-            '<button onclick="moveLeadToContact(' + lead.lead_id + ', event)" title="Convert to Contact" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;color:#15803d;white-space:nowrap">→ Contact</button>' +
+            '<a href="/pages/lead-form.php?id=' + lead.lead_id + '" class="btn btn-sm btn-outline" title="' + escapeHtml(__('Edit')) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>' +
+            '<button onclick="moveLeadToContact(' + lead.lead_id + ', event)" title="' + escapeHtml(__('Convert to Contact')) + '" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;color:#15803d;white-space:nowrap">→ ' + escapeHtml(__('Contact')) + '</button>' +
             '</div></td>' +
         '</tr>';
         return row;
@@ -390,7 +390,7 @@ function renderLeadsGrid(leads) {
     var container = document.getElementById('leadsGridContainer');
     
     if (!leads.length) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;" class="text-muted">No leads found</div>';
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;" class="text-muted">' + escapeHtml(__('No leads found')) + '</div>';
         return;
     }
     
@@ -399,17 +399,17 @@ function renderLeadsGrid(leads) {
             (!isSalesRep ? '<input type="checkbox" class="lead-checkbox card-checkbox" value="' + lead.lead_id + '" onchange="updateBulkState()">' : '') +
             '<div onclick="window.location=\'/pages/lead-detail.php?id=' + lead.lead_id + '\'" style="cursor:pointer;">' +
                 '<div class="lead-card-header"><div>' +
-                    '<h3 class="lead-card-title">' + escapeHtml(lead.company_name || lead.contact_person || 'Unnamed') + '</h3>' +
-                    '<div class="lead-card-subtitle">' + escapeHtml(lead.country || '-') + '</div>' +
-                '</div><span class="lead-tag purple">' + escapeHtml(lead.lead_type) + '</span></div>' +
-                '<div class="lead-desc">' + escapeHtml(lead.notes ? (lead.notes.length > 100 ? lead.notes.substring(0, 100) + '...' : lead.notes) : 'No description available') + '</div>' +
+                    '<h3 class="lead-card-title">' + escapeHtml(lead.company_name || lead.contact_person || __('Unnamed')) + '</h3>' +
+                    '<div class="lead-card-subtitle">' + escapeHtml(__(lead.country) || '-') + '</div>' +
+                '</div><span class="lead-tag purple">' + escapeHtml(__(lead.lead_type)) + '</span></div>' +
+                '<div class="lead-desc">' + escapeHtml(lead.notes ? (lead.notes.length > 100 ? lead.notes.substring(0, 100) + '...' : lead.notes) : __('No description available')) + '</div>' +
                 '<div class="lead-info-grid">' +
                     '<div class="lead-info-item"><span>' + escapeHtml(lead.phone || '-') + '</span></div>' +
                     '<div class="lead-info-item"><span>' + escapeHtml(lead.email || '-') + '</span></div>' +
                 '</div>' +
                 '<div class="lead-card-footer">' +
                     '<strong>' + escapeHtml(lead.contact_person || '-') + '</strong> ' +
-                    '<span class="text-muted">(' + escapeHtml(lead.title_position || 'Contact') + ')</span>' +
+                    '<span class="text-muted">(' + escapeHtml(lead.title_position || __('Contact')) + ')</span>' +
                 '</div>' +
             '</div></div>';
     }).join('');

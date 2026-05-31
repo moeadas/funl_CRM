@@ -196,11 +196,11 @@ function timeAgo($datetime) {
     $timestamp = strtotime($datetime);
     $diff = time() - $timestamp;
     
-    if ($diff < 60) return 'Just now';
-    if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
-    if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
-    if ($diff < 604800) return floor($diff / 86400) . ' days ago';
-    if ($diff < 2592000) return floor($diff / 604800) . ' weeks ago';
+    if ($diff < 60) return __('Just now');
+    if ($diff < 3600) return sprintf(__('%d minutes ago'), floor($diff / 60));
+    if ($diff < 86400) return sprintf(__('%d hours ago'), floor($diff / 3600));
+    if ($diff < 604800) return sprintf(__('%d days ago'), floor($diff / 86400));
+    if ($diff < 2592000) return sprintf(__('%d weeks ago'), floor($diff / 604800));
     
     return formatDate($datetime);
 }
@@ -467,10 +467,9 @@ function decryptToken(string $encrypted, ?string $key = null) {
     }
 }
 
-/**
- * Translate helper function
- */
 function __($key, $default = null) {
+    if (empty($key)) return '';
+    
     static $translations = [];
     
     // Get current language from session
@@ -489,7 +488,17 @@ function __($key, $default = null) {
         }
     }
     
-    // Return translated string, default text, or uppercase key fallback
+    // Normalize key: e.g. "Save Changes *" -> "save_changes"
+    $cleanKey = trim(strtolower($key));
+    $cleanKey = rtrim($cleanKey, '*:-?! ');
+    $cleanKey = preg_replace('/[^a-z0-9]+/', '_', $cleanKey);
+    $cleanKey = trim($cleanKey, '_');
+    
+    // 1. Try clean key in current language
+    if (isset($translations[$lang][$cleanKey])) {
+        return $translations[$lang][$cleanKey];
+    }
+    // 2. Try original key in current language (fallback)
     if (isset($translations[$lang][$key])) {
         return $translations[$lang][$key];
     }
@@ -500,11 +509,24 @@ function __($key, $default = null) {
             $enFile = __DIR__ . "/languages/en.php";
             $translations['en'] = file_exists($enFile) ? include $enFile : [];
         }
+        // 3. Try clean key in English
+        if (isset($translations['en'][$cleanKey])) {
+            return $translations['en'][$cleanKey];
+        }
+        // 4. Try original key in English
         if (isset($translations['en'][$key])) {
             return $translations['en'][$key];
         }
     }
     
-    // If not found in English either, format key as fallback string
-    return $default ?? str_replace('_', ' ', ucfirst($key));
+    // If not found, return default, or formatted key (if it was a snake_case key to start with), or the original key
+    if ($default !== null) {
+        return $default;
+    }
+    
+    if (strpos($key, ' ') === false && strpos($key, '_') !== false) {
+        return str_replace('_', ' ', ucfirst($key));
+    }
+    
+    return $key;
 }

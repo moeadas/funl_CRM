@@ -279,15 +279,15 @@ if (hasRole('Sales Manager')) {
     }
 }
 
-$pageTitle = 'Dashboard';
+$pageTitle = __('Dashboard');
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="page-header">
-    <h1 class="page-title">Dashboard</h1>
+    <h1 class="page-title"><?php echo htmlspecialchars(__('Dashboard')); ?></h1>
     <a href="/pages/leads.php?action=add" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add New Lead
+        <?php echo htmlspecialchars(__('Add New Lead')); ?>
     </a>
 </div>
 
@@ -298,7 +298,7 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label"><?php echo $isSalesRep ? 'My Leads' : 'Total Leads'; ?></div>
+            <div class="stat-label"><?php echo htmlspecialchars($isSalesRep ? __('My Leads') : __('Total Leads')); ?></div>
             <div class="stat-value"><?php echo number_format($stats['total_leads']); ?></div>
         </div>
     </div>
@@ -308,9 +308,9 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Won</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Won')); ?></div>
             <div class="stat-value"><?php echo number_format($stats['won']); ?></div>
-            <div class="stat-sub"><?php echo $stats['conversion_rate']; ?>% conversion</div>
+            <div class="stat-sub"><?php echo $stats['conversion_rate']; ?>% <?php echo htmlspecialchars(__('conversion')); ?></div>
         </div>
     </div>
 
@@ -319,7 +319,7 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Contacted Today</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Contacted Today')); ?></div>
             <div class="stat-value"><?php echo number_format($stats['contacted_today']); ?></div>
         </div>
     </div>
@@ -329,7 +329,7 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Follow Up</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Follow Up')); ?></div>
             <div class="stat-value"><?php echo number_format($stats['follow_ups']); ?></div>
         </div>
     </div>
@@ -341,7 +341,7 @@ include __DIR__ . '/../includes/header.php';
     <!-- Monthly Trend Chart -->
     <div class="card dashboard-main">
         <div class="card-header">
-            <h2 class="card-title">Lead Trend (Last 6 Months)</h2>
+            <h2 class="card-title"><?php echo htmlspecialchars(__('Lead Trend (Last 6 Months)')); ?></h2>
         </div>
         <div class="card-body">
             <canvas id="trendChart" height="120"></canvas>
@@ -351,16 +351,16 @@ include __DIR__ . '/../includes/header.php';
     <!-- Top Sources -->
     <div class="card dashboard-aside">
         <div class="card-header">
-            <h2 class="card-title">Top Sources</h2>
+            <h2 class="card-title"><?php echo htmlspecialchars(__('Top Sources')); ?></h2>
         </div>
         <div class="card-body">
             <?php if (empty($top_sources)): ?>
-                <p class="text-center text-muted">No data yet</p>
+                <p class="text-center text-muted"><?php echo htmlspecialchars(__('No data yet')); ?></p>
             <?php else: ?>
                 <?php foreach ($top_sources as $src): ?>
                     <div class="progress-row">
                         <div class="progress-label">
-                            <span><?php echo htmlspecialchars($src['lead_source']); ?></span>
+                            <span><?php echo htmlspecialchars(__($src['lead_source'])); ?></span>
                             <span class="text-muted"><?php echo $src['count']; ?></span>
                         </div>
                         <div class="progress-bar-bg">
@@ -380,7 +380,7 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Campaigns</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Campaigns')); ?></div>
             <div class="stat-value"><?php echo number_format($emailStats['campaigns']); ?></div>
         </div>
     </div>
@@ -389,7 +389,7 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Emails Sent</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Emails Sent')); ?></div>
             <div class="stat-value"><?php echo number_format($emailStats['sent']); ?></div>
         </div>
     </div>
@@ -398,7 +398,7 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Opened</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Opened')); ?></div>
             <div class="stat-value"><?php echo number_format($emailStats['opened']); ?></div>
         </div>
     </div>
@@ -407,7 +407,7 @@ include __DIR__ . '/../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Clicked</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Clicked')); ?></div>
             <div class="stat-value"><?php echo number_format($emailStats['clicked']); ?></div>
         </div>
     </div>
@@ -419,30 +419,30 @@ include __DIR__ . '/../includes/header.php';
     <!-- Recent Leads -->
     <div class="card dashboard-main">
         <div class="card-header">
-            <h2 class="card-title">Recent Leads</h2>
-            <a href="/pages/leads.php" class="btn btn-sm btn-outline">View All</a>
+            <h2 class="card-title"><?php echo htmlspecialchars(__('Recent Leads')); ?></h2>
+            <a href="/pages/leads.php" class="btn btn-sm btn-outline"><?php echo htmlspecialchars(__('View All')); ?></a>
         </div>
         <div class="card-body">
             <div class="table-container">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Company</th>
-                            <th>Contact</th>
-                            <th>Status</th>
-                            <th>Assigned</th>
-                            <th>Last Activity</th>
+                            <th><?php echo htmlspecialchars(__('Company')); ?></th>
+                            <th><?php echo htmlspecialchars(__('Contact')); ?></th>
+                            <th><?php echo htmlspecialchars(__('Status')); ?></th>
+                            <th><?php echo htmlspecialchars(__('Assigned')); ?></th>
+                            <th><?php echo htmlspecialchars(__('Last Activity')); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($recent_leads)): ?>
-                            <tr><td colspan="5" class="text-center text-muted">No leads found</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted"><?php echo htmlspecialchars(__('No leads found')); ?></td></tr>
                         <?php else: ?>
                             <?php foreach ($recent_leads as $lead): ?>
                                 <tr class="clickable-row" onclick="window.location='/pages/lead-detail.php?id=<?php echo $lead['lead_id']; ?>'">
                                     <td>
-                                        <strong><?php echo htmlspecialchars($lead['company_name'] ?: ($lead['contact_person'] ?: 'Unnamed')); ?></strong>
-                                        <br><small class="text-muted"><?php echo htmlspecialchars($lead['lead_type']); ?></small>
+                                        <strong><?php echo htmlspecialchars($lead['company_name'] ?: ($lead['contact_person'] ?: __('Unnamed'))); ?></strong>
+                                        <br><small class="text-muted"><?php echo htmlspecialchars(__($lead['lead_type'])); ?></small>
                                     </td>
                                     <td>
                                         <?php echo htmlspecialchars($lead['contact_person'] ?: '-'); ?>
@@ -450,12 +450,12 @@ include __DIR__ . '/../includes/header.php';
                                     </td>
                                     <td>
                                         <span class="badge <?php echo getStatusBadgeClass($lead['lead_status']); ?>">
-                                            <?php echo htmlspecialchars($lead['lead_status']); ?>
+                                            <?php echo htmlspecialchars(__($lead['lead_status'])); ?>
                                         </span>
                                     </td>
-                                    <td><?php echo htmlspecialchars($lead['assigned_name'] ?: 'Unassigned'); ?></td>
+                                    <td><?php echo htmlspecialchars($lead['assigned_name'] ? $lead['assigned_name'] : __('Unassigned')); ?></td>
                                     <td>
-                                        <small class="text-muted"><?php echo $lead['last_activity'] ? timeAgo($lead['last_activity']) : 'No activity'; ?></small>
+                                        <small class="text-muted"><?php echo $lead['last_activity'] ? timeAgo($lead['last_activity']) : __('No activity'); ?></small>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -469,12 +469,12 @@ include __DIR__ . '/../includes/header.php';
     <!-- Activity Feed -->
     <div class="card dashboard-aside">
         <div class="card-header">
-            <h2 class="card-title">Recent Activity</h2>
+            <h2 class="card-title"><?php echo htmlspecialchars(__('Recent Activity')); ?></h2>
         </div>
         <div class="card-body">
             <div class="activity-feed">
                 <?php if (empty($recent_activities)): ?>
-                    <p class="text-center text-muted">No recent activity</p>
+                    <p class="text-center text-muted"><?php echo htmlspecialchars(__('No recent activity')); ?></p>
                 <?php else: ?>
                     <?php foreach ($recent_activities as $activity): ?>
                         <div class="activity-feed-item">
@@ -483,8 +483,8 @@ include __DIR__ . '/../includes/header.php';
                             </div>
                             <div class="activity-feed-content">
                                 <p class="activity-feed-text">
-                                    <strong><?php echo htmlspecialchars($activity['user_name'] ?? 'System'); ?></strong>
-                                    <span class="text-muted"><?php echo htmlspecialchars($activity['action']); ?></span>
+                                    <strong><?php echo htmlspecialchars($activity['user_name'] ?? __('System')); ?></strong>
+                                    <span class="text-muted"><?php echo htmlspecialchars(__($activity['action'])); ?></span>
                                 </p>
                                 <?php if ($activity['details']): ?>
                                     <p class="activity-feed-detail"><?php echo htmlspecialchars($activity['details']); ?></p>
@@ -508,7 +508,7 @@ new Chart(trendCtx, {
     data: {
         labels: <?php echo json_encode(array_column($monthly_trend, 'month')); ?>,
         datasets: [{
-            label: 'New Leads',
+            label: <?php echo json_encode(__('New Leads')); ?>,
             data: <?php echo json_encode(array_column($monthly_trend, 'count')); ?>,
             borderColor: '#dd2d4a',
             backgroundColor: 'rgba(221, 45, 74, 0.1)',

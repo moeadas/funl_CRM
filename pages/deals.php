@@ -10,7 +10,7 @@ $userId = getCurrentUserId();
 $companyId = $_SESSION["company_id"] ?? null;
 $userRole = $_SESSION["role"] ?? "";
 
-$pageTitle = 'Pipeline';
+$pageTitle = __('Pipeline');
 $js = ['deals'];
 
 require_once __DIR__ . '/../includes/header.php';
@@ -255,37 +255,37 @@ select.filter-select {
 
 <div class="deals-page">
     <div class="page-header">
-        <h1>Pipeline</h1>
+        <h1><?php echo htmlspecialchars(__('Pipeline')); ?></h1>
         <div class="header-actions">
-            <a href="/pages/deal-form.php" class="btn btn-primary" style="text-decoration:none;">+ New Deal</a>
+            <a href="/pages/deal-form.php" class="btn btn-primary" style="text-decoration:none;">+ <?php echo htmlspecialchars(__('New Deal')); ?></a>
         </div>
     </div>
 
     <!-- Stats -->
     <div class="pipeline-stats" id="pipeline-stats">
         <div class="stat-card">
-            <div class="stat-label">Open Deals</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Open Deals')); ?></div>
             <div class="stat-value" id="stat-open-count">-</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Pipeline Value</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Pipeline Value')); ?></div>
             <div class="stat-value blue" id="stat-pipeline-value">-</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Won (All Time)</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Won (All Time)')); ?></div>
             <div class="stat-value green" id="stat-won-value">-</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Lost (All Time)</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Lost (All Time)')); ?></div>
             <div class="stat-value red" id="stat-lost-value">-</div>
         </div>
     </div>
 
     <!-- Filters -->
     <div class="filters-bar">
-        <input type="text" id="deal-search" class="search-input" placeholder="Search deals..." oninput="loadDeals()">
+        <input type="text" id="deal-search" class="search-input" placeholder="<?php echo htmlspecialchars(__('Search deals...')); ?>" oninput="loadDeals()">
         <select id="deal-assigned-filter" class="filter-select" onchange="loadDeals()">
-            <option value="">All Owners</option>
+            <option value=""><?php echo htmlspecialchars(__('All Owners')); ?></option>
             <?php foreach ($users as $u): ?>
                 <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
             <?php endforeach; ?>
@@ -306,7 +306,7 @@ const API = '/api/deals.php';
 
 const STAGES = [
     <?php foreach ($stages as $s): ?>
-        { name: '<?= $s['stage_name'] ?>', label: '<?= htmlspecialchars($s['stage_label']) ?>', probability: <?= $s['probability'] ?>, color: '<?= $s['color'] ?>' },
+        { name: '<?= $s['stage_name'] ?>', label: '<?= htmlspecialchars(__($s['stage_label'])) ?>', probability: <?= $s['probability'] ?>, color: '<?= $s['color'] ?>' },
     <?php endforeach; ?>
 ];
 
@@ -374,7 +374,7 @@ function renderBoard() {
             <div class="pipeline-col-body" 
                  ondragover="onDragOver(event)" 
                  ondrop="onDrop(event, '${stage.name}')">
-                ${stageDeals.length ? stageDeals.map(d => renderDealCard(d, stage, cardClass)).join('') : '<div class="pipeline-empty">Drop deals here</div>'}
+                ${stageDeals.length ? stageDeals.map(d => renderDealCard(d, stage, cardClass)).join('') : '<div class="pipeline-empty">' + escapeHtml(__('Drop deals here')) + '</div>'}
             </div>
         </div>`;
     }).join('');
@@ -390,11 +390,11 @@ function renderDealCard(deal, stage, cardClass) {
         const today = new Date().toISOString().split('T')[0];
         const closeDate = deal.expected_close;
         if (closeDate < today) {
-            closeDateHtml = `<span class="deal-close-date overdue">Overdue: ${formatDate(closeDate)}</span>`;
+            closeDateHtml = `<span class="deal-close-date overdue">${escapeHtml(__('Overdue'))}: ${formatDate(closeDate)}</span>`;
         } else if (closeDate <= new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]) {
-            closeDateHtml = `<span class="deal-close-date soon">Close: ${formatDate(closeDate)}</span>`;
+            closeDateHtml = `<span class="deal-close-date soon">${escapeHtml(__('Close'))}: ${formatDate(closeDate)}</span>`;
         } else {
-            closeDateHtml = `<span class="deal-close-date">Close: ${formatDate(closeDate)}</span>`;
+            closeDateHtml = `<span class="deal-close-date">${escapeHtml(__('Close'))}: ${formatDate(closeDate)}</span>`;
         }
     }
     
@@ -464,9 +464,9 @@ function moveDeal(dealId, newStage) {
             }
             renderBoard();
             loadSummary();
-            showNotification('Deal moved', 'success');
+            showNotification(__('Deal moved'), 'success');
         } else {
-            showNotification(resp.message || 'Failed to move', 'error');
+            showNotification(resp.message || __('Failed to move'), 'error');
         }
     });
 }

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
-$pageTitle = 'Contact';
+$pageTitle = __('Contact');
 $currentPage = 'contacts';
 $contactId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
@@ -44,91 +44,91 @@ textarea.form-control { min-height:80px; resize:vertical; }
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/contacts.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Contacts</a>
-        <h1><?= $contactId ? 'Edit Contact' : 'New Contact' ?></h1>
+        <a href="/pages/contacts.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo htmlspecialchars(__('Back to Contacts')); ?></a>
+        <h1><?= $contactId ? htmlspecialchars(__('Edit Contact')) : htmlspecialchars(__('New Contact')) ?></h1>
     </div>
     <div>
-        <button type="button" class="btn btn-primary" onclick="saveContact()">Save Contact</button>
+        <button type="button" class="btn btn-primary" onclick="saveContact()"><?php echo htmlspecialchars(__('Save Contact')); ?></button>
     </div>
 </div>
 
 <div style="max-width:1000px;">
     <div class="card">
-        <h3 class="card-title">Personal Information</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Personal Information')); ?></h3>
         <div class="row-2">
             <div class="form-group">
-                <label class="form-label">First Name *</label>
-                <input type="text" id="firstName" class="form-control" placeholder="John" required>
+                <label class="form-label"><?php echo htmlspecialchars(__('First Name *')); ?></label>
+                <input type="text" id="firstName" class="form-control" placeholder="<?php echo htmlspecialchars(__('John')); ?>" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Last Name *</label>
-                <input type="text" id="lastName" class="form-control" placeholder="Doe" required>
-            </div>
-        </div>
-        <div class="row-2" style="margin-top:16px;">
-            <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="email" id="email" class="form-control" placeholder="john@example.com">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Phone</label>
-                <input type="tel" id="phone" class="form-control" placeholder="+1 555-0100">
+                <label class="form-label"><?php echo htmlspecialchars(__('Last Name *')); ?></label>
+                <input type="text" id="lastName" class="form-control" placeholder="<?php echo htmlspecialchars(__('Doe')); ?>" required>
             </div>
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label">Mobile</label>
-                <input type="tel" id="mobile" class="form-control" placeholder="+1 555-0100">
+                <label class="form-label"><?php echo htmlspecialchars(__('Email')); ?></label>
+                <input type="email" id="email" class="form-control" placeholder="<?php echo htmlspecialchars(__('john@example.com')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Job Title / Position</label>
-                <input type="text" id="title" class="form-control" placeholder="CEO">
+                <label class="form-label"><?php echo htmlspecialchars(__('Phone')); ?></label>
+                <input type="tel" id="phone" class="form-control" placeholder="<?php echo htmlspecialchars(__('Phone Number')); ?>">
+            </div>
+        </div>
+        <div class="row-2" style="margin-top:16px;">
+            <div class="form-group">
+                <label class="form-label"><?php echo htmlspecialchars(__('Mobile')); ?></label>
+                <input type="tel" id="mobile" class="form-control" placeholder="<?php echo htmlspecialchars(__('Phone Number')); ?>">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><?php echo htmlspecialchars(__('Job Title / Position')); ?></label>
+                <input type="text" id="title" class="form-control" placeholder="<?php echo htmlspecialchars(__('CEO')); ?>">
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Address & Location</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Address & Location')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Country</label>
-                <input type="text" id="country" class="form-control" placeholder="e.g., United States">
+                <label class="form-label"><?php echo htmlspecialchars(__('Country')); ?></label>
+                <input type="text" id="country" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., United States')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">City</label>
-                <input type="text" id="city" class="form-control" placeholder="e.g., San Francisco">
+                <label class="form-label"><?php echo htmlspecialchars(__('City')); ?></label>
+                <input type="text" id="city" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., San Francisco')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Address</label>
-                <input type="text" id="address" class="form-control" placeholder="123 Main St">
+                <label class="form-label"><?php echo htmlspecialchars(__('Address')); ?></label>
+                <input type="text" id="address" class="form-control" placeholder="<?php echo htmlspecialchars(__('123 Main St')); ?>">
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Classification & Relationship</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Classification & Relationship')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Account</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Account')); ?></label>
                 <select id="accountId" class="form-control">
-                    <option value="">No Account</option>
+                    <option value=""><?php echo htmlspecialchars(__('No Account')); ?></option>
                     <?php foreach ($accounts as $a): ?>
                         <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Status</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Status')); ?></label>
                 <select id="contactStatus" class="form-control">
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="Do Not Contact">Do Not Contact</option>
+                    <option value="Active"><?php echo htmlspecialchars(__('Active')); ?></option>
+                    <option value="Inactive"><?php echo htmlspecialchars(__('Inactive')); ?></option>
+                    <option value="Do Not Contact"><?php echo htmlspecialchars(__('Do Not Contact')); ?></option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Assigned To</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Assigned To')); ?></label>
                 <select id="assignedTo" class="form-control">
-                    <option value="">Unassigned</option>
+                    <option value=""><?php echo htmlspecialchars(__('Unassigned')); ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                     <?php endforeach; ?>
@@ -138,9 +138,9 @@ textarea.form-control { min-height:80px; resize:vertical; }
     </div>
 
     <div class="card">
-        <h3 class="card-title">Tags & Additional Details</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Tags & Additional Details')); ?></h3>
         <div class="form-group">
-            <label class="form-label">Tags</label>
+            <label class="form-label"><?php echo htmlspecialchars(__('Tags')); ?></label>
             <div class="tag-selector" id="tagSelector">
                 <?php foreach ($tags as $t): ?>
                     <label class="tag-option" style="background:<?= htmlspecialchars($t['tag_color']) ?>15; color:<?= htmlspecialchars($t['tag_color']) ?>; border: 1px solid <?= htmlspecialchars($t['tag_color']) ?>40;" onclick="toggleTagOption(this)">
@@ -151,8 +151,8 @@ textarea.form-control { min-height:80px; resize:vertical; }
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Notes</label>
-            <textarea id="notes" class="form-control" placeholder="Additional notes about this contact..."></textarea>
+            <label class="form-label"><?php echo htmlspecialchars(__('Notes')); ?></label>
+            <textarea id="notes" class="form-control" placeholder="<?php echo htmlspecialchars(__('Additional notes about this contact...')); ?>"></textarea>
         </div>
     </div>
 </div>
@@ -208,7 +208,7 @@ function loadContact() {
                 });
             }
         } else {
-            showNotification(resp.message || 'Failed to load contact', 'error');
+            showNotification(resp.message || __('Failed to load contact'), 'error');
         }
     });
 }
@@ -216,7 +216,7 @@ function loadContact() {
 function saveContact() {
     var firstName = document.getElementById('firstName').value.trim();
     var lastName = document.getElementById('lastName').value.trim();
-    if (!firstName || !lastName) { showNotification('First and last name are required', 'error'); return; }
+    if (!firstName || !lastName) { showNotification(__('First and last name are required'), 'error'); return; }
     
     var tagIds = [...document.querySelectorAll('#tagSelector input:checked')].map(i => parseInt(i.value));
     
@@ -251,14 +251,14 @@ function saveContact() {
     })
     .then(r => r.json())
     .then(function(data) {
-        showNotification(data.message || (data.success ? 'Contact saved!' : 'Save failed'), data.success ? 'success' : 'error');
+        showNotification(data.message || (data.success ? __('Contact saved!') : __('Save failed')), data.success ? 'success' : 'error');
         if (data.success) {
             setTimeout(() => {
                 window.location.href = '/pages/contacts.php';
             }, 500);
         }
     })
-    .catch(function() { showNotification('Network error', 'error'); });
+    .catch(function() { showNotification(__('Network error'), 'error'); });
 }
 </script>
 

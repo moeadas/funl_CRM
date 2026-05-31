@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-$pageTitle = htmlspecialchars($lead['contact_person'] ?: $lead['company_name'] ?: 'Lead #' . $leadId);
+$pageTitle = htmlspecialchars($lead['contact_person'] ?: $lead['company_name'] ?: __('Lead #') . $leadId);
 include '../includes/header.php';
 
 $statusColors = [
@@ -140,13 +140,13 @@ $statusColors = [
             <?php echo strtoupper(substr($lead['contact_person'] ?: $lead['company_name'] ?: '??', 0, 2)); ?>
         </div>
         <div>
-            <h1 class="lead-title"><?php echo htmlspecialchars($lead['contact_person'] ?: $lead['company_name'] ?: 'Lead #' . $leadId); ?></h1>
+            <h1 class="lead-title"><?php echo htmlspecialchars($lead['contact_person'] ?: $lead['company_name'] ?: __('Lead #') . $leadId); ?></h1>
             <div class="lead-meta">
                 <span class="badge badge-<?php echo $statusColors[$lead['lead_status']] ?? 'secondary'; ?>">
-                    <?php echo htmlspecialchars($lead['lead_status']); ?>
+                    <?php echo htmlspecialchars(__($lead['lead_status'])); ?>
                 </span>
-                <span class="badge badge-outline"><?php echo htmlspecialchars($lead['lead_type']); ?></span>
-                <span class="text-muted"><?php echo htmlspecialchars(($lead['city'] ? $lead['city'] . ', ' : '') . ($lead['country'] ?? '')); ?></span>
+                <span class="badge badge-outline"><?php echo htmlspecialchars(__($lead['lead_type'])); ?></span>
+                <span class="text-muted"><?php echo htmlspecialchars(($lead['city'] ? $lead['city'] . ', ' : '') . ($lead['country'] ? __($lead['country']) : '')); ?></span>
             </div>
         </div>
     </div>
@@ -154,16 +154,16 @@ $statusColors = [
         <?php if ($lead['lead_status'] !== 'Won'): ?>
             <button onclick="moveLeadToContact(<?php echo $leadId; ?>)" class="btn btn-outline" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d;display:inline-flex;align-items:center;gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                Convert to Contact
+                <?php echo htmlspecialchars(__('Convert to Contact')); ?>
             </button>
         <?php endif; ?>
         <a href="lead-form.php?id=<?php echo $leadId; ?>" class="btn btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit Lead
+            <?php echo htmlspecialchars(__('Edit Lead')); ?>
         </a>
         <a href="leads.php" class="btn btn-outline">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            Back
+            <?php echo htmlspecialchars(__('Back')); ?>
         </a>
     </div>
 </div>
@@ -176,7 +176,7 @@ $statusColors = [
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $lead['total_interactions']; ?></div>
-            <div class="stat-label">Interactions</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Interactions')); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -185,7 +185,7 @@ $statusColors = [
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo count($waMessages); ?></div>
-            <div class="stat-label">WhatsApp Msgs</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('WhatsApp Msgs')); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -194,7 +194,7 @@ $statusColors = [
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo count($voipCalls); ?></div>
-            <div class="stat-label">VoIP Calls</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('VoIP Calls')); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -203,7 +203,7 @@ $statusColors = [
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo date('M d, Y', strtotime($lead['created_at'])); ?></div>
-            <div class="stat-label">Created</div>
+            <div class="stat-label"><?php echo htmlspecialchars(__('Created')); ?></div>
         </div>
     </div>
 </div>
@@ -213,87 +213,87 @@ $statusColors = [
     <div class="detail-main">
         <!-- Contact Information -->
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Contact Information</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Contact Information')); ?></h3></div>
             <div class="card-body">
                 <div class="grid grid-2">
                     <div class="detail-item">
-                        <div class="detail-label">Contact Person</div>
-                        <div class="detail-value"><?php echo htmlspecialchars($lead['contact_person'] ?? 'N/A'); ?></div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('Contact Person')); ?></div>
+                        <div class="detail-value"><?php echo htmlspecialchars($lead['contact_person'] ?? __('N/A')); ?></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Title/Position</div>
-                        <div class="detail-value"><?php echo htmlspecialchars($lead['title_position'] ?? 'N/A'); ?></div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('Title / Position')); ?></div>
+                        <div class="detail-value"><?php echo htmlspecialchars($lead['title_position'] ?? __('N/A')); ?></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Country</div>
-                        <div class="detail-value"><?php echo htmlspecialchars($lead['country'] ?? 'N/A'); ?></div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('Country')); ?></div>
+                        <div class="detail-value"><?php echo htmlspecialchars($lead['country'] ? __($lead['country']) : __('N/A')); ?></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">City</div>
-                        <div class="detail-value"><?php echo htmlspecialchars($lead['city'] ?? 'N/A'); ?></div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('City')); ?></div>
+                        <div class="detail-value"><?php echo htmlspecialchars($lead['city'] ?? __('N/A')); ?></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Email</div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('Email')); ?></div>
                         <div class="detail-value">
                             <?php if ($lead['email']): ?>
                                 <a href="mailto:<?php echo htmlspecialchars($lead['email']); ?>"><?php echo htmlspecialchars($lead['email']); ?></a>
-                            <?php else: ?>N/A<?php endif; ?>
+                            <?php else: ?><?php echo htmlspecialchars(__('N/A')); ?><?php endif; ?>
                         </div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Phone</div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('Phone')); ?></div>
                         <div class="detail-value">
                             <?php if ($lead['phone']): ?>
                                 <a href="tel:<?php echo htmlspecialchars($lead['phone']); ?>"><?php echo htmlspecialchars($lead['phone']); ?></a>
                                 <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
                                     <button class="comm-btn comm-btn-call" onclick="VoIPPhone.call('<?php echo htmlspecialchars($lead['phone']); ?>', <?php echo $leadId; ?>)">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                        VoIP Call
+                                        <?php echo htmlspecialchars(__('VoIP Call')); ?>
                                     </button>
                                     <button class="comm-btn comm-btn-wa" onclick="WhatsAppChat.open(<?php echo $leadId; ?>, '<?php echo htmlspecialchars($lead['phone']); ?>', '<?php echo htmlspecialchars($lead['contact_person'] ?: $lead['company_name']); ?>')">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                                        WhatsApp
+                                        <?php echo htmlspecialchars(__('WhatsApp')); ?>
                                     </button>
                                     <?php if ($lead['email']): ?>
                                     <button class="comm-btn" style="background:linear-gradient(135deg,#e63946,#c62828);color:#fff;" onclick="openComposeEmail()">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                                        Send Email
+                                        <?php echo htmlspecialchars(__('Send Email')); ?>
                                     </button>
                                     <?php endif; ?>
                                 </div>
-                            <?php else: ?>N/A<?php endif; ?>
+                            <?php else: ?><?php echo htmlspecialchars(__('N/A')); ?><?php endif; ?>
                         </div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Mobile</div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('Mobile')); ?></div>
                         <div class="detail-value">
                             <?php if ($lead['mobile']): ?>
                                 <?php echo htmlspecialchars($lead['mobile']); ?>
                                 <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
                                     <button class="comm-btn comm-btn-call" onclick="VoIPPhone.call('<?php echo htmlspecialchars($lead['mobile']); ?>', <?php echo $leadId; ?>)">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                        VoIP Call
+                                        <?php echo htmlspecialchars(__('VoIP Call')); ?>
                                     </button>
                                     <button class="comm-btn comm-btn-wa" onclick="WhatsAppChat.open(<?php echo $leadId; ?>, '<?php echo htmlspecialchars($lead['mobile']); ?>', '<?php echo htmlspecialchars($lead['contact_person'] ?: $lead['company_name']); ?>')">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                                        WhatsApp
+                                        <?php echo htmlspecialchars(__('WhatsApp')); ?>
                                     </button>
                                     <?php if ($lead['email']): ?>
                                     <button class="comm-btn" style="background:linear-gradient(135deg,#e63946,#c62828);color:#fff;" onclick="openComposeEmail()">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                                        Send Email
+                                        <?php echo htmlspecialchars(__('Send Email')); ?>
                                     </button>
                                     <?php endif; ?>
                                 </div>
-                            <?php else: ?>N/A<?php endif; ?>
+                            <?php else: ?><?php echo htmlspecialchars(__('N/A')); ?><?php endif; ?>
                         </div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Website</div>
+                        <div class="detail-label"><?php echo htmlspecialchars(__('Website')); ?></div>
                         <div class="detail-value">
                             <?php if ($lead['website']): ?>
                                 <a href="<?php echo htmlspecialchars($lead['website']); ?>" target="_blank"><?php echo htmlspecialchars($lead['website']); ?></a>
-                            <?php else: ?>N/A<?php endif; ?>
+                            <?php else: ?><?php echo htmlspecialchars(__('N/A')); ?><?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -302,12 +302,12 @@ $statusColors = [
         
         <!-- Location & Address -->
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Location &amp; Address</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Location & Address')); ?></h3></div>
             <div class="card-body">
                 <div class="grid grid-2">
-                    <div class="detail-item"><div class="detail-label">City</div><div class="detail-value"><?php echo htmlspecialchars($lead['city'] ?? 'N/A'); ?></div></div>
-                    <div class="detail-item"><div class="detail-label">Address</div><div class="detail-value"><?php echo htmlspecialchars($lead['address'] ?? 'N/A'); ?></div></div>
-                    <div class="detail-item detail-span-2"><div class="detail-label">Specialization</div><div class="detail-value"><?php echo htmlspecialchars($lead['specialization'] ?? 'N/A'); ?></div></div>
+                    <div class="detail-item"><div class="detail-label"><?php echo htmlspecialchars(__('City')); ?></div><div class="detail-value"><?php echo htmlspecialchars($lead['city'] ?? __('N/A')); ?></div></div>
+                    <div class="detail-item"><div class="detail-label"><?php echo htmlspecialchars(__('Address')); ?></div><div class="detail-value"><?php echo htmlspecialchars($lead['address'] ?? __('N/A')); ?></div></div>
+                    <div class="detail-item detail-span-2"><div class="detail-label"><?php echo htmlspecialchars(__('Specialization')); ?></div><div class="detail-value"><?php echo htmlspecialchars($lead['specialization'] ?? __('N/A')); ?></div></div>
                 </div>
             </div>
         </div>
@@ -318,7 +318,7 @@ $statusColors = [
         if (!empty($customFieldValues)):
         ?>
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Custom Fields</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Custom Fields')); ?></h3></div>
             <div class="card-body">
                 <div class="grid grid-2">
                     <?php foreach ($customFieldValues as $cf): ?>
@@ -334,7 +334,7 @@ $statusColors = [
                                 elseif ($cf['field_type'] === 'tel' && $cf['field_value']):
                                     echo '<a href="tel:' . htmlspecialchars($cf['field_value']) . '">' . htmlspecialchars($cf['field_value']) . '</a>';
                                 elseif ($cf['field_type'] === 'checkbox'):
-                                    echo $cf['field_value'] ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-info">No</span>';
+                                    echo $cf['field_value'] ? '<span class="badge badge-success">' . htmlspecialchars(__('Yes')) . '</span>' : '<span class="badge badge-info">' . htmlspecialchars(__('No')) . '</span>';
                                 else:
                                     echo nl2br(htmlspecialchars($cf['field_value']));
                                 endif;
@@ -351,23 +351,23 @@ $statusColors = [
         <!-- Social Media -->
         <?php if ($lead['facebook_url'] || $lead['instagram_url'] || $lead['linkedin_url'] || $lead['twitter_url'] || $lead['youtube_url']): ?>
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Social Media</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Social Media')); ?></h3></div>
             <div class="card-body">
                 <div class="social-links-detail">
                     <?php if ($lead['facebook_url']): ?>
-                        <a href="<?php echo htmlspecialchars($lead['facebook_url']); ?>" target="_blank" class="social-link-btn facebook">Facebook</a>
+                        <a href="<?php echo htmlspecialchars($lead['facebook_url']); ?>" target="_blank" class="social-link-btn facebook"><?php echo htmlspecialchars(__('Facebook')); ?></a>
                     <?php endif; ?>
                     <?php if ($lead['instagram_url']): ?>
-                        <a href="<?php echo htmlspecialchars($lead['instagram_url']); ?>" target="_blank" class="social-link-btn instagram">Instagram</a>
+                        <a href="<?php echo htmlspecialchars($lead['instagram_url']); ?>" target="_blank" class="social-link-btn instagram"><?php echo htmlspecialchars(__('Instagram')); ?></a>
                     <?php endif; ?>
                     <?php if ($lead['linkedin_url']): ?>
-                        <a href="<?php echo htmlspecialchars($lead['linkedin_url']); ?>" target="_blank" class="social-link-btn linkedin">LinkedIn</a>
+                        <a href="<?php echo htmlspecialchars($lead['linkedin_url']); ?>" target="_blank" class="social-link-btn linkedin"><?php echo htmlspecialchars(__('LinkedIn')); ?></a>
                     <?php endif; ?>
                     <?php if ($lead['twitter_url']): ?>
-                        <a href="<?php echo htmlspecialchars($lead['twitter_url']); ?>" target="_blank" class="social-link-btn twitter">Twitter</a>
+                        <a href="<?php echo htmlspecialchars($lead['twitter_url']); ?>" target="_blank" class="social-link-btn twitter"><?php echo htmlspecialchars(__('Twitter')); ?></a>
                     <?php endif; ?>
                     <?php if ($lead['youtube_url']): ?>
-                        <a href="<?php echo htmlspecialchars($lead['youtube_url']); ?>" target="_blank" class="social-link-btn youtube">YouTube</a>
+                        <a href="<?php echo htmlspecialchars($lead['youtube_url']); ?>" target="_blank" class="social-link-btn youtube"><?php echo htmlspecialchars(__('YouTube')); ?></a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -377,7 +377,7 @@ $statusColors = [
         <!-- Notes -->
         <?php if ($lead['notes']): ?>
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Notes</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Notes')); ?></h3></div>
             <div class="card-body"><p><?php echo nl2br(htmlspecialchars($lead['notes'])); ?></p></div>
         </div>
         <?php endif; ?>
@@ -389,14 +389,14 @@ $statusColors = [
             <div class="card-header section-toggle-header" onclick="toggleSection('email-history-body', 'email-history-chevron')">
                 <h3 class="card-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    Email History
+                    <?php echo htmlspecialchars(__('Email History')); ?>
                     <span class="badge badge-danger"><?php echo count($emailInteractions); ?></span>
                 </h3>
                 <div class="card-actions" style="display:flex;align-items:center;gap:8px;">
                     <?php if ($lead['email']): ?>
                         <button class="btn btn-sm" style="background:linear-gradient(135deg,#e63946,#c62828);color:#fff;border:none;" onclick="event.stopPropagation();openComposeEmail()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                            New Email
+                            <?php echo htmlspecialchars(__('New Email')); ?>
                         </button>
                     <?php endif; ?>
                     <svg id="email-history-chevron" class="section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -406,8 +406,8 @@ $statusColors = [
                 <?php if (empty($emailInteractions)): ?>
                     <div class="comm-empty">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        <p>No emails sent yet</p>
-                        <p class="comm-empty-sub">Click "New Email" to compose and send an email</p>
+                        <p><?php echo htmlspecialchars(__('No emails sent yet')); ?></p>
+                        <p class="comm-empty-sub"><?php echo htmlspecialchars(__('Click "New Email" to compose and send an email')); ?></p>
                     </div>
                 <?php else: ?>
                     <div class="email-history-list">
@@ -438,10 +438,10 @@ $statusColors = [
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                         </div>
                                         <div>
-                                            <div class="email-history-subject"><?php echo htmlspecialchars($email['subject'] ?: '(No subject)'); ?></div>
+                                            <div class="email-history-subject"><?php echo htmlspecialchars($email['subject'] ?: __('(No subject)')); ?></div>
                                             <div class="email-history-meta">
-                                                To: <?php echo htmlspecialchars($emailTo); ?>
-                                                <?php if ($emailCc): ?> &middot; Cc: <?php echo htmlspecialchars($emailCc); ?><?php endif; ?>
+                                                <?php echo htmlspecialchars(__('To:')); ?> <?php echo htmlspecialchars($emailTo); ?>
+                                                <?php if ($emailCc): ?> &middot; <?php echo htmlspecialchars(__('Cc:')); ?> <?php echo htmlspecialchars($emailCc); ?><?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
@@ -455,7 +455,7 @@ $statusColors = [
                                     <div class="email-detail-body"><?php echo nl2br(htmlspecialchars($emailBodyText)); ?></div>
                                     <div class="email-detail-footer">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                        Sent by <?php echo htmlspecialchars($email['user_name'] ?? 'Unknown'); ?>
+                                        <?php echo htmlspecialchars(__('Sent by')); ?> <?php echo htmlspecialchars($email['user_name'] ?? __('Unknown')); ?>
                                     </div>
                                 </div>
                             </div>
@@ -472,7 +472,7 @@ $statusColors = [
             <div class="card-header section-toggle-header" onclick="toggleSection('wa-history-body', 'wa-history-chevron')">
                 <h3 class="card-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                    WhatsApp Conversation
+                    <?php echo htmlspecialchars(__('WhatsApp Conversation')); ?>
                     <span class="badge badge-success"><?php echo count($waMessages); ?></span>
                 </h3>
                 <div class="card-actions" style="display:flex;align-items:center;gap:8px;">
@@ -480,7 +480,7 @@ $statusColors = [
                         <?php $waNumber = $lead['phone'] ?: $lead['mobile']; ?>
                         <button class="btn btn-sm" style="background:#25D366;color:#fff;border:none;" onclick="event.stopPropagation();WhatsAppChat.open(<?php echo $leadId; ?>, '<?php echo htmlspecialchars($waNumber); ?>', '<?php echo htmlspecialchars($lead['contact_person'] ?: $lead['company_name']); ?>')">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                            New Message
+                            <?php echo htmlspecialchars(__('New Message')); ?>
                         </button>
                     <?php endif; ?>
                     <svg id="wa-history-chevron" class="section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -490,8 +490,8 @@ $statusColors = [
                 <?php if (empty($waMessages)): ?>
                     <div class="comm-empty">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                        <p>No WhatsApp messages yet</p>
-                        <p class="comm-empty-sub">Click "New Message" to start a conversation</p>
+                        <p><?php echo htmlspecialchars(__('No WhatsApp messages yet')); ?></p>
+                        <p class="comm-empty-sub"><?php echo htmlspecialchars(__('Click "New Message" to start a conversation')); ?></p>
                     </div>
                 <?php else: ?>
                     <div class="lead-wa-chat" id="wa-chat-scroll">
@@ -502,7 +502,7 @@ $statusColors = [
                                     <?php if (!$isOut): ?>
                                         <div class="wa-msg-sender"><?php echo htmlspecialchars($msg['from_number']); ?></div>
                                     <?php else: ?>
-                                        <div class="wa-msg-sender" style="color: #0071e3;">CRM Agent</div>
+                                        <div class="wa-msg-sender" style="color: #0071e3;"><?php echo htmlspecialchars(__('CRM Agent')); ?></div>
                                     <?php endif; ?>
                                     <div class="wa-text"><?php echo nl2br(htmlspecialchars($msg['message_body'] ?? '')); ?></div>
                                     <div class="wa-msg-footer">
@@ -517,7 +517,7 @@ $statusColors = [
                                                     default => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
                                                 };
                                             ?>
-                                            <span class="wa-msg-status <?php echo $statusClass; ?>" title="<?php echo htmlspecialchars($msg['status']); ?>">
+                                            <span class="wa-msg-status <?php echo $statusClass; ?>" title="<?php echo htmlspecialchars(__($msg['status'])); ?>">
                                                 <?php echo $statusIcon; ?>
                                             </span>
                                         <?php else: ?>
@@ -541,7 +541,7 @@ $statusColors = [
             <div class="card-header section-toggle-header" onclick="toggleSection('voip-history-body', 'voip-history-chevron')">
                 <h3 class="card-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    VoIP Call History
+                    <?php echo htmlspecialchars(__('VoIP Call History')); ?>
                     <span class="badge badge-info"><?php echo count($voipCalls); ?></span>
                 </h3>
                 <div class="card-actions" style="display:flex;align-items:center;gap:8px;">
@@ -549,7 +549,7 @@ $statusColors = [
                         <?php $callNumber = $lead['phone'] ?: $lead['mobile']; ?>
                         <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();VoIPPhone.call('<?php echo htmlspecialchars($callNumber); ?>', <?php echo $leadId; ?>)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                            New Call
+                            <?php echo htmlspecialchars(__('New Call')); ?>
                         </button>
                     <?php endif; ?>
                     <svg id="voip-history-chevron" class="section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -559,8 +559,8 @@ $statusColors = [
                 <?php if (empty($voipCalls)): ?>
                     <div class="comm-empty">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        <p>No VoIP calls recorded</p>
-                        <p class="comm-empty-sub">Click "New Call" to initiate a call</p>
+                        <p><?php echo htmlspecialchars(__('No VoIP calls recorded')); ?></p>
+                        <p class="comm-empty-sub"><?php echo htmlspecialchars(__('Click "New Call" to initiate a call')); ?></p>
                     </div>
                 <?php else: ?>
                     <div class="voip-call-list">
@@ -583,8 +583,8 @@ $statusColors = [
                                 <div class="voip-call-info">
                                     <div class="voip-call-top">
                                         <span class="voip-call-number"><?php echo htmlspecialchars($call['to_number'] ?? $call['from_number'] ?? 'Unknown'); ?></span>
-                                        <span class="voip-call-direction <?php echo $dirClass; ?>"><?php echo htmlspecialchars($call['direction'] ?? 'Outbound'); ?></span>
-                                        <span class="voip-call-status <?php echo $statusLower; ?>"><?php echo htmlspecialchars($call['status']); ?></span>
+                                        <span class="voip-call-direction <?php echo $dirClass; ?>"><?php echo htmlspecialchars(__($call['direction'] ?? 'Outbound')); ?></span>
+                                        <span class="voip-call-status <?php echo $statusLower; ?>"><?php echo htmlspecialchars(__($call['status'])); ?></span>
                                     </div>
                                     <div class="voip-call-details">
                                         <span class="voip-call-detail-item">
@@ -594,7 +594,7 @@ $statusColors = [
                                         <?php if (!empty($call['outcome'])): ?>
                                         <span class="voip-call-detail-item">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                            <?php echo htmlspecialchars($call['outcome']); ?>
+                                            <?php echo htmlspecialchars(__($call['outcome'])); ?>
                                         </span>
                                         <?php endif; ?>
                                         <span class="voip-call-detail-item">
@@ -604,7 +604,7 @@ $statusColors = [
                                     </div>
                                     <div class="voip-call-meta">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                        <?php echo htmlspecialchars($call['user_name'] ?? 'System'); ?>
+                                        <?php echo htmlspecialchars($call['user_name'] ?? __('System')); ?>
                                     </div>
                                     <?php if (!empty($call['notes'])): ?>
                                         <div class="voip-call-notes">
@@ -626,17 +626,17 @@ $statusColors = [
             <div class="card-header section-toggle-header" onclick="toggleSection('interactions-body', 'interactions-chevron')">
                 <h3 class="card-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Recent Interactions
+                    <?php echo htmlspecialchars(__('Recent Interactions')); ?>
                     <span class="badge badge-secondary"><?php echo count($interactions); ?></span>
                 </h3>
                 <div class="card-actions" style="display:flex;align-items:center;gap:8px;">
-                    <a href="interactions.php?lead_id=<?php echo $leadId; ?>" class="btn btn-sm btn-primary" onclick="event.stopPropagation()">Log Interaction</a>
+                    <a href="interactions.php?lead_id=<?php echo $leadId; ?>" class="btn btn-sm btn-primary" onclick="event.stopPropagation()"><?php echo htmlspecialchars(__('Log Interaction')); ?></a>
                     <svg id="interactions-chevron" class="section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
             </div>
             <div class="card-body" id="interactions-body">
                 <?php if (empty($interactions)): ?>
-                    <p class="text-muted text-center">No interactions recorded yet</p>
+                    <p class="text-muted text-center"><?php echo htmlspecialchars(__('No interactions recorded yet')); ?></p>
                 <?php else: ?>
                     <div class="timeline">
                         <?php foreach ($interactions as $idx => $interaction): ?>
@@ -645,7 +645,7 @@ $statusColors = [
                                 <div class="timeline-content">
                                     <div class="timeline-header interaction-expand-btn" onclick="toggleInteractionDetail(<?php echo $idx; ?>)">
                                         <span class="badge badge-<?php echo strtolower($interaction['interaction_type'] ?? 'note'); ?>">
-                                            <?php echo htmlspecialchars($interaction['interaction_type']); ?>
+                                            <?php echo htmlspecialchars(__($interaction['interaction_type'])); ?>
                                         </span>
                                         <span class="timeline-date"><?php echo date('M d, Y H:i', strtotime($interaction['interaction_date'])); ?></span>
                                         <svg class="section-chevron" id="interaction-toggle-<?php echo $idx; ?>" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:8px;"><polyline points="6 9 12 15 18 9"/></svg>
@@ -654,14 +654,14 @@ $statusColors = [
                                     <div class="interaction-detail-panel" id="interaction-detail-<?php echo $idx; ?>" style="display:none;">
                                         <?php if ($interaction['notes']): ?>
                                             <div style="margin-bottom:8px;">
-                                                <div class="interaction-detail-label">Notes</div>
+                                                <div class="interaction-detail-label"><?php echo htmlspecialchars(__('Notes')); ?></div>
                                                 <div><?php echo nl2br(htmlspecialchars($interaction['notes'])); ?></div>
                                             </div>
                                         <?php endif; ?>
                                         <?php if ($interaction['outcome'] ?? null): ?>
                                             <div style="margin-bottom:8px;">
-                                                <div class="interaction-detail-label">Outcome</div>
-                                                <div><?php echo htmlspecialchars($interaction['outcome']); ?></div>
+                                                <div class="interaction-detail-label"><?php echo htmlspecialchars(__('Outcome')); ?></div>
+                                                <div><?php echo htmlspecialchars(__($interaction['outcome'])); ?></div>
                                             </div>
                                         <?php endif; ?>
                                         <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:6px;">
@@ -672,11 +672,11 @@ $statusColors = [
                                     <div class="timeline-footer">
                                         <?php echo htmlspecialchars($interaction['user_name']); ?>
                                         <?php if ($isManager): ?>
-                                        <form method="POST" style="display:inline;margin:0;margin-left:8px;" onsubmit="return confirm('Delete this interaction?');">
+                                        <form method="POST" style="display:inline;margin:0;margin-left:8px;" onsubmit="return confirm('<?php echo htmlspecialchars(__('Delete this interaction?'), ENT_QUOTES); ?>');">
                                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                                             <input type="hidden" name="action" value="delete_interaction">
                                             <input type="hidden" name="interaction_id" value="<?php echo $interaction['interaction_id']; ?>">
-                                            <button type="submit" class="btn-icon-delete" title="Delete interaction">
+                                            <button type="submit" class="btn-icon-delete" title="<?php echo htmlspecialchars(__('Delete interaction'), ENT_QUOTES); ?>">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                             </button>
                                         </form>
@@ -695,49 +695,49 @@ $statusColors = [
     <div>
         <!-- Lead Management -->
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Lead Management</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Lead Management')); ?></h3></div>
             <div class="card-body">
-                <div class="sidebar-item"><div class="sidebar-label">Assigned To</div><div class="sidebar-value"><?php echo htmlspecialchars($lead['assigned_to_name'] ?? 'Unassigned'); ?></div></div>
-                <div class="sidebar-item"><div class="sidebar-label">Created By</div><div class="sidebar-value"><?php echo htmlspecialchars($lead['created_by_name'] ?? 'Unknown'); ?></div></div>
-                <div class="sidebar-item"><div class="sidebar-label">Lead Source</div><div class="sidebar-value"><?php echo htmlspecialchars($lead['lead_source'] ?? 'N/A'); ?></div></div>
-                <div class="sidebar-item"><div class="sidebar-label">Created</div><div class="sidebar-value"><?php echo date('M d, Y', strtotime($lead['created_at'])); ?></div></div>
-                <div class="sidebar-item"><div class="sidebar-label">Updated</div><div class="sidebar-value"><?php echo date('M d, Y', strtotime($lead['updated_at'])); ?></div></div>
+                <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Assigned To')); ?></div><div class="sidebar-value"><?php echo htmlspecialchars($lead['assigned_to_name'] ? $lead['assigned_to_name'] : __('Unassigned')); ?></div></div>
+                <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Created By')); ?></div><div class="sidebar-value"><?php echo htmlspecialchars($lead['created_by_name'] ? $lead['created_by_name'] : __('Unknown')); ?></div></div>
+                <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Lead Source')); ?></div><div class="sidebar-value"><?php echo htmlspecialchars($lead['lead_source'] ? __($lead['lead_source']) : __('N/A')); ?></div></div>
+                <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Created')); ?></div><div class="sidebar-value"><?php echo date('M d, Y', strtotime($lead['created_at'])); ?></div></div>
+                <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Updated')); ?></div><div class="sidebar-value"><?php echo date('M d, Y', strtotime($lead['updated_at'])); ?></div></div>
             </div>
         </div>
         
         <!-- Quick Actions -->
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Quick Actions</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Quick Actions')); ?></h3></div>
             <div class="card-body quick-actions">
                 <?php if ($lead['phone'] || $lead['mobile']): ?>
                     <?php $callNumber = $lead['phone'] ?: $lead['mobile']; ?>
                     <button class="btn btn-block" style="background:linear-gradient(135deg,#0071e3,#5856d6);color:#fff;border:none;box-shadow:0 2px 8px rgba(0,113,227,0.2);" onclick="VoIPPhone.call('<?php echo htmlspecialchars($callNumber); ?>', <?php echo $leadId; ?>)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        VoIP Call
+                        <?php echo htmlspecialchars(__('VoIP Call')); ?>
                     </button>
                     <button class="btn btn-block" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;box-shadow:0 2px 8px rgba(37,211,102,0.2);" onclick="WhatsAppChat.open(<?php echo $leadId; ?>, '<?php echo htmlspecialchars($callNumber); ?>', '<?php echo htmlspecialchars($lead['contact_person'] ?: $lead['company_name']); ?>')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                        WhatsApp Message
+                        <?php echo htmlspecialchars(__('WhatsApp Message')); ?>
                     </button>
                 <?php endif; ?>
                 <?php if ($lead['email']): ?>
                 <button type="button" onclick="openComposeEmail()" class="btn btn-block" style="background:linear-gradient(135deg,#e63946,#c62828) !important;color:#fff !important;border:none;box-shadow:0 2px 8px rgba(230,57,70,0.25);">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    Send Email
+                    <?php echo htmlspecialchars(__('Send Email')); ?>
                 </button>
                 <?php endif; ?>
-                <a href="interactions.php?lead_id=<?php echo $leadId; ?>" class="btn btn-block btn-info">Log Interaction</a>
-                <a href="interactions.php?lead_id=<?php echo $leadId; ?>&type=meeting" class="btn btn-block btn-success">Schedule Meeting</a>
-                <a href="lead-form.php?id=<?php echo $leadId; ?>" class="btn btn-block btn-warning">Edit Lead</a>
+                <a href="interactions.php?lead_id=<?php echo $leadId; ?>" class="btn btn-block btn-info"><?php echo htmlspecialchars(__('Log Interaction')); ?></a>
+                <a href="interactions.php?lead_id=<?php echo $leadId; ?>&type=meeting" class="btn btn-block btn-success"><?php echo htmlspecialchars(__('Schedule Meeting')); ?></a>
+                <a href="lead-form.php?id=<?php echo $leadId; ?>" class="btn btn-block btn-warning"><?php echo htmlspecialchars(__('Edit Lead')); ?></a>
             </div>
         </div>
         
         <!-- Documents -->
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Documents</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Documents')); ?></h3></div>
             <div class="card-body">
                 <?php if (empty($documents)): ?>
-                    <p class="text-muted text-center">No documents uploaded</p>
+                    <p class="text-muted text-center"><?php echo htmlspecialchars(__('No documents uploaded')); ?></p>
                 <?php else: ?>
                     <div class="document-list">
                         <?php foreach ($documents as $doc): ?>
@@ -756,10 +756,10 @@ $statusColors = [
         
         <!-- Activity Log -->
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Activity Log</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Activity Log')); ?></h3></div>
             <div class="card-body activity-log-scroll">
                 <?php if (empty($activities)): ?>
-                    <p class="text-muted text-center">No activities recorded</p>
+                    <p class="text-muted text-center"><?php echo htmlspecialchars(__('No activities recorded')); ?></p>
                 <?php else: ?>
                     <?php foreach ($activities as $activity): ?>
                         <div class="activity-item">
@@ -767,7 +767,7 @@ $statusColors = [
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             </div>
                             <div class="activity-content">
-                                <div class="activity-action"><?php echo htmlspecialchars($activity['action']); ?></div>
+                                <div class="activity-action"><?php echo htmlspecialchars(__($activity['action'])); ?></div>
                                 <div class="activity-meta"><?php echo htmlspecialchars($activity['user_name']); ?> &middot; <?php echo date('M d, H:i', strtotime($activity['created_at'])); ?></div>
                             </div>
                         </div>
@@ -785,32 +785,27 @@ $statusColors = [
         <div class="modal-header" style="background:linear-gradient(135deg,#e63946,#c62828);color:#fff;">
             <h3 style="display:flex;align-items:center;gap:8px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                Compose Email
+                <?php echo htmlspecialchars(__('Compose Email')); ?>
             </h3>
             <button type="button" class="btn-close" onclick="closeComposeEmail()" style="color:#fff;filter:brightness(2);">&times;</button>
         </div>
         <form id="composeEmailForm" onsubmit="sendEmail(event)">
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">To</label>
+                    <label class="form-label"><?php echo htmlspecialchars(__('To')); ?></label>
                     <input type="email" id="emailTo" class="form-control" value="<?php echo htmlspecialchars($lead['email'] ?? ''); ?>" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Cc <small class="text-muted">(optional, comma-separated)</small></label>
+                    <label class="form-label"><?php echo htmlspecialchars(__('Cc')); ?> <small class="text-muted"><?php echo htmlspecialchars(__('(optional, comma-separated)')); ?></small></label>
                     <input type="text" id="emailCc" class="form-control" placeholder="cc1@example.com, cc2@example.com">
-                </div>
                 <div class="form-group">
-                    <label class="form-label">Subject <span class="required">*</span></label>
-                    <input type="text" id="emailSubject" class="form-control" required placeholder="Enter subject...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Message <span class="required">*</span></label>
-                    <textarea id="emailBody" class="form-control" rows="10" required placeholder="Write your email message here..." style="min-height:180px;"></textarea>
+                    <label class="form-label"><?php echo htmlspecialchars(__('Message')); ?> <span class="required">*</span></label>
+                    <textarea id="emailBody" class="form-control" rows="10" required placeholder="<?php echo htmlspecialchars(__('Write your email message here...')); ?>" style="min-height:180px;"></textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                        Attachments <small class="text-muted">(optional, max 10MB each)</small>
+                        <?php echo htmlspecialchars(__('Attachments')); ?> <small class="text-muted"><?php echo htmlspecialchars(__('(optional, max 10MB each)')); ?></small>
                     </label>
                     <input type="file" id="emailAttachments" class="form-control" multiple style="padding:8px;">
                     <div id="attachmentList" style="margin-top:6px;font-size:12px;color:var(--color-text-secondary);"></div>
@@ -819,10 +814,10 @@ $statusColors = [
                 <div id="emailSuccess" class="alert alert-success" style="display:none;"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeComposeEmail()">Cancel</button>
+                <button type="button" class="btn btn-outline" onclick="closeComposeEmail()"><?php echo htmlspecialchars(__('Cancel')); ?></button>
                 <button type="submit" id="emailSendBtn" class="btn" style="background:linear-gradient(135deg,#e63946,#c62828);color:#fff;border:none;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    Send Email
+                    <?php echo htmlspecialchars(__('Send Email')); ?>
                 </button>
             </div>
         </form>

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
-$pageTitle = 'Support Ticket';
+$pageTitle = __('Support Ticket');
 $currentPage = 'tickets';
 $ticketId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
@@ -40,76 +40,76 @@ textarea.form-control { min-height:120px; resize:vertical; }
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/tickets.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Tickets</a>
-        <h1><?= $ticketId ? 'Edit Ticket' : 'New Ticket' ?></h1>
+        <a href="/pages/tickets.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo htmlspecialchars(__('Back to Tickets')); ?></a>
+        <h1><?= $ticketId ? htmlspecialchars(__('Edit Ticket')) : htmlspecialchars(__('New Ticket')) ?></h1>
     </div>
     <div class="header-actions">
         <?php if ($ticketId): ?>
-            <button type="button" class="btn btn-danger" onclick="deleteTicket()">Delete Ticket</button>
+            <button type="button" class="btn btn-danger" onclick="deleteTicket()"><?php echo htmlspecialchars(__('Delete Ticket')); ?></button>
         <?php endif; ?>
-        <button type="button" class="btn btn-primary" onclick="saveTicket()">Save Ticket</button>
+        <button type="button" class="btn btn-primary" onclick="saveTicket()"><?php echo htmlspecialchars(__('Save Ticket')); ?></button>
     </div>
 </div>
 
 <div style="max-width:900px;">
     <div class="card">
-        <h3 class="card-title">Ticket Information</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Ticket Information')); ?></h3>
         <div class="form-group">
-            <label class="form-label">Subject *</label>
-            <input type="text" id="ticketSubject" class="form-control" placeholder="Brief summary of the issue" required>
+            <label class="form-label"><?php echo htmlspecialchars(__('Subject *')); ?></label>
+            <input type="text" id="ticketSubject" class="form-control" placeholder="<?php echo htmlspecialchars(__('Brief summary of the issue')); ?>" required>
         </div>
         <div class="row-2" style="margin-top: 16px;">
             <div class="form-group">
-                <label class="form-label">Category</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Category')); ?></label>
                 <select id="ticketCategory" class="form-control">
-                    <option value="Technical Support">Technical Support</option>
-                    <option value="Billing">Billing</option>
-                    <option value="Feature Request">Feature Request</option>
-                    <option value="Bug Report">Bug Report</option>
-                    <option value="Other">Other</option>
+                    <option value="Technical Support"><?php echo htmlspecialchars(__('Technical Support')); ?></option>
+                    <option value="Billing"><?php echo htmlspecialchars(__('Billing')); ?></option>
+                    <option value="Feature Request"><?php echo htmlspecialchars(__('Feature Request')); ?></option>
+                    <option value="Bug Report"><?php echo htmlspecialchars(__('Bug Report')); ?></option>
+                    <option value="Other"><?php echo htmlspecialchars(__('Other')); ?></option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Status</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Status')); ?></label>
                 <select id="ticketStatus" class="form-control">
-                    <option value="open">Open</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
+                    <option value="open"><?php echo htmlspecialchars(__('Open')); ?></option>
+                    <option value="in_progress"><?php echo htmlspecialchars(__('In Progress')); ?></option>
+                    <option value="resolved"><?php echo htmlspecialchars(__('Resolved')); ?></option>
+                    <option value="closed"><?php echo htmlspecialchars(__('Closed')); ?></option>
                 </select>
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Description *</label>
-            <textarea id="ticketDescription" class="form-control" placeholder="Detailed description of the issue or inquiry..." required></textarea>
+            <label class="form-label"><?php echo htmlspecialchars(__('Description *')); ?></label>
+            <textarea id="ticketDescription" class="form-control" placeholder="<?php echo htmlspecialchars(__('Detailed description of the issue or inquiry...')); ?>" required></textarea>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Associations & Assignment</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Associations & Assignment')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Contact</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Contact')); ?></label>
                 <select id="ticketContactId" class="form-control">
-                    <option value="">Select contact...</option>
+                    <option value=""><?php echo htmlspecialchars(__('Select contact...')); ?></option>
                     <?php foreach ($contacts as $c): ?>
                         <option value="<?= $c['contact_id'] ?>"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Account</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Account')); ?></label>
                 <select id="ticketAccountId" class="form-control">
-                    <option value="">Select account...</option>
+                    <option value=""><?php echo htmlspecialchars(__('Select account...')); ?></option>
                     <?php foreach ($accounts as $a): ?>
                         <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Assigned To</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Assigned To')); ?></label>
                 <select id="ticketAssignedTo" class="form-control">
-                    <option value="">Unassigned</option>
+                    <option value=""><?php echo htmlspecialchars(__('Unassigned')); ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                     <?php endforeach; ?>
@@ -118,12 +118,12 @@ textarea.form-control { min-height:120px; resize:vertical; }
         </div>
         <div class="row-2" style="margin-top: 16px;">
             <div class="form-group">
-                <label class="form-label">Priority</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Priority')); ?></label>
                 <select id="ticketPriority" class="form-control">
-                    <option value="low">Low</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="low"><?php echo htmlspecialchars(__('Low')); ?></option>
+                    <option value="medium" selected><?php echo htmlspecialchars(__('Medium')); ?></option>
+                    <option value="high"><?php echo htmlspecialchars(__('High')); ?></option>
+                    <option value="urgent"><?php echo htmlspecialchars(__('Urgent')); ?></option>
                 </select>
             </div>
         </div>
@@ -155,7 +155,7 @@ function loadTicket() {
             document.getElementById('ticketAssignedTo').value = t.assigned_to || '';
             document.getElementById('ticketPriority').value = t.priority || 'medium';
         } else {
-            showNotification(resp.message || 'Failed to load ticket', 'error');
+            showNotification(resp.message || __('Failed to load ticket'), 'error');
         }
     });
 }
@@ -164,11 +164,11 @@ function saveTicket() {
     var subject = document.getElementById('ticketSubject').value.trim();
     var description = document.getElementById('ticketDescription').value.trim();
     if (!subject) {
-        showNotification('Subject is required', 'error');
+        showNotification(__('subject_is_required'), 'error');
         return;
     }
     if (!description) {
-        showNotification('Description is required', 'error');
+        showNotification(__('description_is_required'), 'error');
         return;
     }
     
@@ -197,18 +197,18 @@ function saveTicket() {
     })
     .then(r => r.json())
     .then(data => {
-        showNotification(data.message || (data.success ? 'Ticket saved!' : 'Save failed'), data.success ? 'success' : 'error');
+        showNotification(data.message || (data.success ? __('ticket_saved') : __('Save failed')), data.success ? 'success' : 'error');
         if (data.success) {
             setTimeout(() => {
                 window.location.href = '/pages/tickets.php';
             }, 500);
         }
     })
-    .catch(() => showNotification('Network error', 'error'));
+    .catch(() => showNotification(__('Network error'), 'error'));
 }
 
 function deleteTicket() {
-    showConfirm('Are you sure you want to delete this ticket? This action cannot be undone.', () => {
+    showConfirm(__('are_you_sure_you_want_to_delete_this_ticket_this_action_cannot_be_undone'), () => {
         fetch('/api/tickets.php?action=delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -217,7 +217,7 @@ function deleteTicket() {
         })
         .then(r => r.json())
         .then(resp => {
-            showNotification(resp.message || (resp.success ? 'Ticket deleted' : 'Failed to delete'), resp.success ? 'success' : 'error');
+            showNotification(resp.message || (resp.success ? __('Ticket deleted') : __('Failed to delete')), resp.success ? 'success' : 'error');
             if (resp.success) {
                 setTimeout(() => {
                     window.location.href = '/pages/tickets.php';

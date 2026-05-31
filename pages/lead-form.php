@@ -29,142 +29,142 @@ textarea.form-control { min-height:80px; resize:vertical; }
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/leads.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Leads</a>
-        <h1><?= $leadId ? 'Edit Lead' : 'New Lead' ?></h1>
+        <a href="/pages/leads.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo htmlspecialchars(__('Back to Leads')); ?></a>
+        <h1><?= $leadId ? htmlspecialchars(__('Edit Lead')) : htmlspecialchars(__('New Lead')) ?></h1>
     </div>
     <div>
-        <button type="button" class="btn btn-primary" onclick="saveLead()">Save Lead</button>
+        <button type="button" class="btn btn-primary" onclick="saveLead()"><?php echo htmlspecialchars(__('Save Lead')); ?></button>
     </div>
 </div>
 
 <div style="max-width:1000px;">
     <div class="card">
-        <h3 class="card-title">Company Information</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Company Information')); ?></h3>
         <div class="row-2">
             <div class="form-group">
-                <label class="form-label">Company Name *</label>
-                <input type="text" id="companyName" class="form-control" placeholder="e.g., Acme Corp">
+                <label class="form-label"><?php echo htmlspecialchars(__('Company Name *')); ?></label>
+                <input type="text" id="companyName" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., Acme Corp')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Lead Type</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Lead Type')); ?></label>
                 <select id="leadType" class="form-control">
-                    <option value="Business">Business</option>
-                    <option value="Individual">Individual</option>
-                    <option value="Partner">Partner</option>
-                    <option value="Reseller">Reseller</option>
-                    <option value="Other">Other</option>
+                    <option value="Business"><?php echo htmlspecialchars(__('Business')); ?></option>
+                    <option value="Individual"><?php echo htmlspecialchars(__('Individual')); ?></option>
+                    <option value="Partner"><?php echo htmlspecialchars(__('Partner')); ?></option>
+                    <option value="Reseller"><?php echo htmlspecialchars(__('Reseller')); ?></option>
+                    <option value="Other"><?php echo htmlspecialchars(__('Other')); ?></option>
                 </select>
             </div>
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label">Industry</label>
-                <input type="text" id="industry" class="form-control" placeholder="e.g., Technology">
+                <label class="form-label"><?php echo htmlspecialchars(__('Industry')); ?></label>
+                <input type="text" id="industry" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., Technology')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Company Size</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Company Size')); ?></label>
                 <select id="companySize" class="form-control">
-                    <option value="">Select...</option>
-                    <option value="1-10">1-10 employees</option>
-                    <option value="11-50">11-50 employees</option>
-                    <option value="51-200">51-200 employees</option>
-                    <option value="201-500">201-500 employees</option>
-                    <option value="501+">501+ employees</option>
+                    <option value=""><?php echo htmlspecialchars(__('Select...')); ?></option>
+                    <option value="1-10"><?php echo htmlspecialchars(__('1-10 employees')); ?></option>
+                    <option value="11-50"><?php echo htmlspecialchars(__('11-50 employees')); ?></option>
+                    <option value="51-200"><?php echo htmlspecialchars(__('51-200 employees')); ?></option>
+                    <option value="201-500"><?php echo htmlspecialchars(__('201-500 employees')); ?></option>
+                    <option value="501+"><?php echo htmlspecialchars(__('501+ employees')); ?></option>
                 </select>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Contact Details</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Contact Details')); ?></h3>
         <div class="row-2">
             <div class="form-group">
-                <label class="form-label">Contact Person *</label>
-                <input type="text" id="contactPerson" class="form-control" placeholder="e.g., John Doe">
+                <label class="form-label"><?php echo htmlspecialchars(__('Contact Person *')); ?></label>
+                <input type="text" id="contactPerson" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., John Doe')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Title / Position</label>
-                <input type="text" id="titlePosition" class="form-control" placeholder="e.g., CEO">
+                <label class="form-label"><?php echo htmlspecialchars(__('Title / Position')); ?></label>
+                <input type="text" id="titlePosition" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., CEO')); ?>">
             </div>
         </div>
         <div class="row-3" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label">Email</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Email')); ?></label>
                 <input type="email" id="email" class="form-control" placeholder="john@example.com">
             </div>
             <div class="form-group">
-                <label class="form-label">Phone</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Phone')); ?></label>
                 <input type="tel" id="phone" class="form-control" placeholder="+1 555-0100">
             </div>
             <div class="form-group">
-                <label class="form-label">Mobile</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Mobile')); ?></label>
                 <input type="tel" id="mobile" class="form-control" placeholder="+1 555-0100">
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Location & Source</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Location & Source')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Country</label>
-                <input type="text" id="countryInput" class="form-control" placeholder="e.g., United States" autocomplete="off">
+                <label class="form-label"><?php echo htmlspecialchars(__('Country')); ?></label>
+                <input type="text" id="countryInput" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., United States')); ?>" autocomplete="off">
             </div>
             <div class="form-group">
-                <label class="form-label">City</label>
-                <input type="text" id="city" class="form-control" placeholder="City name">
+                <label class="form-label"><?php echo htmlspecialchars(__('City')); ?></label>
+                <input type="text" id="city" class="form-control" placeholder="<?php echo htmlspecialchars(__('City name')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Lead Source</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Lead Source')); ?></label>
                 <select id="leadSource" class="form-control">
-                    <option value="Website">Website</option>
-                    <option value="Referral">Referral</option>
-                    <option value="Social Media">Social Media</option>
-                    <option value="Email Campaign">Email Campaign</option>
-                    <option value="Cold Call">Cold Call</option>
-                    <option value="Trade Show">Trade Show</option>
-                    <option value="Other">Other</option>
+                    <option value="Website"><?php echo htmlspecialchars(__('Website')); ?></option>
+                    <option value="Referral"><?php echo htmlspecialchars(__('Referral')); ?></option>
+                    <option value="Social Media"><?php echo htmlspecialchars(__('Social Media')); ?></option>
+                    <option value="Email Campaign"><?php echo htmlspecialchars(__('Email Campaign')); ?></option>
+                    <option value="Cold Call"><?php echo htmlspecialchars(__('Cold Call')); ?></option>
+                    <option value="Trade Show"><?php echo htmlspecialchars(__('Trade Show')); ?></option>
+                    <option value="Other"><?php echo htmlspecialchars(__('Other')); ?></option>
                 </select>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Status & Priority</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Status & Priority')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Status</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Status')); ?></label>
                 <select id="leadStatus" class="form-control">
-                    <option value="New Lead">New Lead</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Interested">Interested</option>
-                    <option value="Not Interested">Not Interested</option>
-                    <option value="Call Scheduled">Call Scheduled</option>
-                    <option value="Proposal Sent">Proposal Sent</option>
-                    <option value="Negotiation">Negotiation</option>
-                    <option value="Won">Won</option>
-                    <option value="Lost">Lost</option>
+                    <option value="New Lead"><?php echo htmlspecialchars(__('New Lead')); ?></option>
+                    <option value="Contacted"><?php echo htmlspecialchars(__('Contacted')); ?></option>
+                    <option value="Interested"><?php echo htmlspecialchars(__('Interested')); ?></option>
+                    <option value="Not Interested"><?php echo htmlspecialchars(__('Not Interested')); ?></option>
+                    <option value="Call Scheduled"><?php echo htmlspecialchars(__('Call Scheduled')); ?></option>
+                    <option value="Proposal Sent"><?php echo htmlspecialchars(__('Proposal Sent')); ?></option>
+                    <option value="Negotiation"><?php echo htmlspecialchars(__('Negotiation')); ?></option>
+                    <option value="Won"><?php echo htmlspecialchars(__('Won')); ?></option>
+                    <option value="Lost"><?php echo htmlspecialchars(__('Lost')); ?></option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Priority</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Priority')); ?></label>
                 <select id="priority" class="form-control">
-                    <option value="Low">Low</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
+                    <option value="Low"><?php echo htmlspecialchars(__('Low')); ?></option>
+                    <option value="Medium" selected><?php echo htmlspecialchars(__('Medium')); ?></option>
+                    <option value="High"><?php echo htmlspecialchars(__('High')); ?></option>
+                    <option value="Urgent"><?php echo htmlspecialchars(__('Urgent')); ?></option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Assigned To</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Assigned To')); ?></label>
                 <select id="assignedTo" class="form-control">
-                    <option value="">Unassigned</option>
+                    <option value=""><?php echo htmlspecialchars(__('Unassigned')); ?></option>
                 </select>
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Notes</label>
-            <textarea id="notes" class="form-control" placeholder="Additional notes about this lead..."></textarea>
+            <label class="form-label"><?php echo htmlspecialchars(__('Notes')); ?></label>
+            <textarea id="notes" class="form-control" placeholder="<?php echo htmlspecialchars(__('Additional notes about this lead...')); ?>"></textarea>
         </div>
     </div>
 </div>
@@ -212,7 +212,7 @@ function loadLead() {
 
 function saveLead() {
     var companyName = document.getElementById('companyName').value.trim();
-    if (!companyName) { showNotification('Company name is required', 'error'); return; }
+    if (!companyName) { showNotification(__('Company name is required'), 'error'); return; }
     
     var payload = {
         csrf_token: CSRF_TOKEN,
@@ -243,7 +243,7 @@ function saveLead() {
         })
         .then(r => r.json())
         .then(data => {
-            showNotification(data.message || (data.success ? 'Lead updated!' : 'Update failed'), data.success ? 'success' : 'error');
+            showNotification(data.message || (data.success ? __('Lead updated!') : __('Update failed')), data.success ? 'success' : 'error');
             if (data.success) window.location.href = '/pages/leads.php';
         });
     } else {
@@ -255,7 +255,7 @@ function saveLead() {
         })
         .then(r => r.json())
         .then(data => {
-            showNotification(data.message || (data.success ? 'Lead created!' : 'Create failed'), data.success ? 'success' : 'error');
+            showNotification(data.message || (data.success ? __('Lead created!') : __('Create failed')), data.success ? 'success' : 'error');
             if (data.success) window.location.href = '/pages/leads.php?saved=1';
         });
     }

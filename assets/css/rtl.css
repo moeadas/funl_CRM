@@ -1,6 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap');
+
 /* ─── CRM Multilingual RTL Overrides (Arabic Support) ─── */
 
 html[dir="rtl"] {
+    --font-family: 'Noto Sans Arabic', 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif !important;
     text-align: right;
 }
 

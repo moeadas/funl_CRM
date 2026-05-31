@@ -33,9 +33,80 @@ $_userDir = ($_userLocale === 'ar') ? 'rtl' : 'ltr';
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/modal-system.css">
     <?php if ($_userLocale === 'ar'): ?>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/assets/css/rtl.css">
     <?php endif; ?>
     <script src="/assets/js/main.js" defer></script>
+    <script>
+    window.CRM_TRANSLATIONS = <?php 
+        $lang = $_SESSION['language'] ?? 'en';
+        if (!in_array($lang, ['en', 'ar'])) { $lang = 'en'; }
+        
+        $translations = [];
+        $langFile = __DIR__ . "/languages/{$lang}.php";
+        if (file_exists($langFile)) {
+            $translations = include $langFile;
+        }
+        
+        $enTranslations = [];
+        $enFile = __DIR__ . "/languages/en.php";
+        if (file_exists($enFile)) {
+            $enTranslations = include $enFile;
+        }
+        
+        echo json_encode([
+            'lang' => $lang,
+            'dictionary' => $translations,
+            'fallback' => $enTranslations
+        ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+    ?>;
+
+    function __(key, defaultVal) {
+        if (!key) return '';
+        var translations = window.CRM_TRANSLATIONS || { lang: 'en', dictionary: {}, fallback: {} };
+        
+        // Normalize key: e.g. "Save Changes *" -> "save_changes"
+        var cleanKey = key.trim().toLowerCase();
+        // strip trailing asterisks, colons, question marks, exclamation marks, spaces
+        cleanKey = cleanKey.replace(/[*:\-?! ]+$/, '');
+        cleanKey = cleanKey.replace(/[^a-z0-9]+/g, '_');
+        cleanKey = cleanKey.replace(/^_+|_+$/g, '');
+        
+        // 1. Try clean key in current language
+        if (translations.dictionary[cleanKey] !== undefined) {
+            return translations.dictionary[cleanKey];
+        }
+        // 2. Try original key in current language
+        if (translations.dictionary[key] !== undefined) {
+            return translations.dictionary[key];
+        }
+        
+        // Fallback to English dictionary
+        if (translations.lang !== 'en') {
+            if (translations.fallback[cleanKey] !== undefined) {
+                return translations.fallback[cleanKey];
+            }
+            if (translations.fallback[key] !== undefined) {
+                return translations.fallback[key];
+            }
+        }
+        
+        if (defaultVal !== undefined) {
+            return defaultVal;
+        }
+        
+        // If it looks like a snake_case key, format it nicely
+        if (key.indexOf(' ') === -1 && key.indexOf('_') !== -1) {
+            var parts = key.split('_');
+            for (var i = 0; i < parts.length; i++) {
+                parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
+            }
+            return parts.join(' ');
+        }
+        
+        return key;
+    }
+    </script>
     <?php echo getSetting('tracking_head_code'); ?>
 </head>
 <body>

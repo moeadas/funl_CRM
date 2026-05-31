@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
-$pageTitle = 'Task';
+$pageTitle = __('Task');
 $currentPage = 'tasks';
 $taskId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
@@ -39,80 +39,80 @@ textarea.form-control { min-height:80px; resize:vertical; }
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/tasks.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Board</a>
-        <h1><?= $taskId ? 'Edit Task' : 'New Task' ?></h1>
+        <a href="/pages/tasks.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo htmlspecialchars(__('Back to Board')); ?></a>
+        <h1><?= $taskId ? htmlspecialchars(__('Edit Task')) : htmlspecialchars(__('New Task')) ?></h1>
     </div>
     <div class="header-actions">
         <?php if ($taskId): ?>
-            <button type="button" class="btn btn-danger" onclick="deleteTask()">Delete Task</button>
+            <button type="button" class="btn btn-danger" onclick="deleteTask()"><?php echo htmlspecialchars(__('Delete Task')); ?></button>
         <?php endif; ?>
-        <button type="button" class="btn btn-primary" onclick="saveTask()">Save Task</button>
+        <button type="button" class="btn btn-primary" onclick="saveTask()"><?php echo htmlspecialchars(__('Save Task')); ?></button>
     </div>
 </div>
 
 <div style="max-width:900px;">
     <div class="card">
-        <h3 class="card-title">Task Details</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Task Details')); ?></h3>
         <div class="row-2">
             <div class="form-group">
-                <label class="form-label">Task Title *</label>
-                <input type="text" id="taskTitle" class="form-control" placeholder="What needs to be done?" required>
+                <label class="form-label"><?php echo htmlspecialchars(__('Task Title *')); ?></label>
+                <input type="text" id="taskTitle" class="form-control" placeholder="<?php echo htmlspecialchars(__('What needs to be done?')); ?>" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Status</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Status')); ?></label>
                 <select id="taskStatus" class="form-control">
-                    <option value="todo">To Do</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="review">Review</option>
-                    <option value="done">Done</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="todo"><?php echo htmlspecialchars(__('To Do')); ?></option>
+                    <option value="in_progress"><?php echo htmlspecialchars(__('In Progress')); ?></option>
+                    <option value="review"><?php echo htmlspecialchars(__('Review')); ?></option>
+                    <option value="done"><?php echo htmlspecialchars(__('Done')); ?></option>
+                    <option value="cancelled"><?php echo htmlspecialchars(__('Cancelled')); ?></option>
                 </select>
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Description</label>
-            <textarea id="taskDescription" class="form-control" placeholder="Add details about this task..."></textarea>
+            <label class="form-label"><?php echo htmlspecialchars(__('Description')); ?></label>
+            <textarea id="taskDescription" class="form-control" placeholder="<?php echo htmlspecialchars(__('Add details about this task...')); ?>"></textarea>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Assignment & Due Date</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Assignment & Due Date')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Priority</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Priority')); ?></label>
                 <select id="taskPriority" class="form-control">
-                    <option value="low">Low</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="low"><?php echo htmlspecialchars(__('Low')); ?></option>
+                    <option value="medium" selected><?php echo htmlspecialchars(__('Medium')); ?></option>
+                    <option value="high"><?php echo htmlspecialchars(__('High')); ?></option>
+                    <option value="urgent"><?php echo htmlspecialchars(__('Urgent')); ?></option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Assigned To</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Assigned To')); ?></label>
                 <select id="taskAssignedTo" class="form-control">
-                    <option value="">Unassigned</option>
+                    <option value=""><?php echo htmlspecialchars(__('Unassigned')); ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Due Date</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Due Date')); ?></label>
                 <input type="date" id="taskDueDate" class="form-control">
             </div>
         </div>
         <div class="row-2" style="margin-top: 16px;">
             <div class="form-group">
-                <label class="form-label">Linked Lead</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Linked Lead')); ?></label>
                 <select id="taskLeadId" class="form-control">
-                    <option value="">None</option>
+                    <option value=""><?php echo htmlspecialchars(__('None')); ?></option>
                     <?php foreach ($leads as $l): ?>
                         <option value="<?= $l['lead_id'] ?>"><?= htmlspecialchars($l['company_name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Follow-up Date</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Follow-up Date')); ?></label>
                 <input type="date" id="taskFollowUp" class="form-control">
             </div>
         </div>
@@ -147,7 +147,7 @@ function loadTask() {
             document.getElementById('taskAssignedTo').value = t.assigned_to || '';
             document.getElementById('taskLeadId').value = t.lead_id || '';
         } else {
-            showNotification(resp.message || 'Failed to load task', 'error');
+            showNotification(resp.message || __('Failed to load task'), 'error');
         }
     });
 }
@@ -155,7 +155,7 @@ function loadTask() {
 function saveTask() {
     var title = document.getElementById('taskTitle').value.trim();
     if (!title) {
-        showNotification('Title is required', 'error');
+        showNotification(__('title_is_required'), 'error');
         return;
     }
     
@@ -184,18 +184,18 @@ function saveTask() {
     })
     .then(r => r.json())
     .then(data => {
-        showNotification(data.message || (data.success ? 'Task saved!' : 'Save failed'), data.success ? 'success' : 'error');
+        showNotification(data.message || (data.success ? __('Task saved!') : __('Save failed')), data.success ? 'success' : 'error');
         if (data.success) {
             setTimeout(() => {
                 window.location.href = '/pages/tasks.php';
             }, 500);
         }
     })
-    .catch(() => showNotification('Network error', 'error'));
+    .catch(() => showNotification(__('Network error'), 'error'));
 }
 
 function deleteTask() {
-    showConfirm('Are you sure you want to delete this task?', function() {
+    showConfirm(__('are_you_sure_you_want_to_delete_this_task'), function() {
         fetch('/api/tasks.php?action=delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -204,7 +204,7 @@ function deleteTask() {
         })
         .then(r => r.json())
         .then(resp => {
-            showNotification(resp.message || (resp.success ? 'Task deleted' : 'Failed to delete'), resp.success ? 'success' : 'error');
+            showNotification(resp.message || (resp.success ? __('Task deleted') : __('Failed to delete')), resp.success ? 'success' : 'error');
             if (resp.success) {
                 setTimeout(() => {
                     window.location.href = '/pages/tasks.php';

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
-$pageTitle = 'Support Tickets';
+$pageTitle = __('Support Tickets');
 $js = ['tickets'];
 require_once __DIR__ . '/../includes/header.php';
 
@@ -49,14 +49,22 @@ table.data-table tr:hover { background: #f9fafb; }
 
 <div class="tickets-page">
     <div class="page-header">
-        <h1>Support Tickets</h1>
-        <a href="/pages/ticket-form.php" class="btn btn-primary" style="text-decoration:none;">+ New Ticket</a>
+        <h1><?php echo htmlspecialchars(__('Support Tickets')); ?></h1>
+        <a href="/pages/ticket-form.php" class="btn btn-primary" style="text-decoration:none;">+ <?php echo htmlspecialchars(__('New Ticket')); ?></a>
     </div>
     
     <div class="data-table-wrap">
         <table class="data-table">
-            <thead><tr><th>Ticket #</th><th>Subject</th><th>Contact</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead>
-            <tbody id="tickets-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">Loading...</td></tr></tbody>
+            <thead><tr>
+                <th><?php echo htmlspecialchars(__('Ticket #')); ?></th>
+                <th><?php echo htmlspecialchars(__('Subject')); ?></th>
+                <th><?php echo htmlspecialchars(__('Contact')); ?></th>
+                <th><?php echo htmlspecialchars(__('Priority')); ?></th>
+                <th><?php echo htmlspecialchars(__('Status')); ?></th>
+                <th><?php echo htmlspecialchars(__('Assigned')); ?></th>
+                <th><?php echo htmlspecialchars(__('Actions')); ?></th>
+            </tr></thead>
+            <tbody id="tickets-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af"><?php echo htmlspecialchars(__('Loading')); ?>...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -82,7 +90,7 @@ function loadTickets() {
 function renderTickets() {
     const tbody = document.getElementById('tickets-tbody');
     if (!tickets.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">No tickets yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">' + escapeHtml(__('No tickets yet')) + '</td></tr>';
         return;
     }
     tbody.innerHTML = tickets.map(t => {
@@ -92,19 +100,19 @@ function renderTickets() {
             <td><strong>${escapeHtml(t.ticket_number)}</strong></td>
             <td>${escapeHtml(t.subject)}</td>
             <td>${escapeHtml(contact)}</td>
-            <td><span class="priority-badge priority-${t.priority}">${t.priority}</span></td>
-            <td><span class="status-badge status-${t.status}">${t.status.replace('_', ' ')}</span></td>
-            <td>${escapeHtml(t.assigned_name || 'Unassigned')}</td>
+            <td><span class="priority-badge priority-${t.priority}">${escapeHtml(__(t.priority))}</span></td>
+            <td><span class="status-badge status-${t.status}">${escapeHtml(__(t.status))}</span></td>
+            <td>${escapeHtml(t.assigned_name || __('Unassigned'))}</td>
             <td>
-                <a href="/pages/ticket-form.php?id=${t.ticket_id}" class="btn btn-xs btn-outline" style="text-decoration:none;margin-right:5px;padding:4px 8px;">Edit</a>
-                <button onclick="deleteTicket(${t.ticket_id})" class="btn btn-xs btn-outline" style="color:#dc2626;padding:4px 8px;">Delete</button>
+                <a href="/pages/ticket-form.php?id=${t.ticket_id}" class="btn btn-xs btn-outline" style="text-decoration:none;margin-right:5px;padding:4px 8px;">${escapeHtml(__('Edit'))}</a>
+                <button onclick="deleteTicket(${t.ticket_id})" class="btn btn-xs btn-outline" style="color:#dc2626;padding:4px 8px;">${escapeHtml(__('Delete'))}</button>
             </td>
         </tr>`;
     }).join('');
 }
 
 function deleteTicket(id) {
-    showConfirm('Delete this ticket? This action cannot be undone.', () => {
+    showConfirm(__('are_you_sure_you_want_to_delete_this_ticket_this_action_cannot_be_undone'), () => {
         fetch(`${API}?action=delete`, {
             method: 'POST',
             credentials: 'same-origin',
@@ -113,9 +121,9 @@ function deleteTicket(id) {
         }).then(r => r.json()).then(resp => {
             if (resp.success) {
                 loadTickets();
-                showNotification('Ticket deleted successfully', 'success');
+                showNotification(__('ticket_deleted_successfully'), 'success');
             } else {
-                showNotification(resp.message || 'Failed to delete ticket', 'error');
+                showNotification(resp.message || __('failed_to_delete_ticket'), 'error');
             }
         });
     });

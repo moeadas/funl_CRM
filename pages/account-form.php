@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
-$pageTitle = 'Account';
+$pageTitle = __('Account');
 $currentPage = 'contacts';
 $accountId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
@@ -35,82 +35,82 @@ textarea.form-control { min-height:80px; resize:vertical; }
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/contacts.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Contacts</a>
-        <h1><?= $accountId ? 'Edit Account' : 'New Account' ?></h1>
+        <a href="/pages/contacts.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo htmlspecialchars(__('Back to Contacts')); ?></a>
+        <h1><?= $accountId ? htmlspecialchars(__('Edit Account')) : htmlspecialchars(__('New Account')) ?></h1>
     </div>
     <div>
-        <button type="button" class="btn btn-primary" onclick="saveAccount()">Save Account</button>
+        <button type="button" class="btn btn-primary" onclick="saveAccount()"><?php echo htmlspecialchars(__('Save Account')); ?></button>
     </div>
 </div>
 
 <div style="max-width:1000px;">
     <div class="card">
-        <h3 class="card-title">Company Profile</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Company Profile')); ?></h3>
         <div class="row-2">
             <div class="form-group">
-                <label class="form-label">Account Name *</label>
-                <input type="text" id="accountName" class="form-control" placeholder="e.g., Acme Corp" required>
+                <label class="form-label"><?php echo htmlspecialchars(__('Account Name *')); ?></label>
+                <input type="text" id="accountName" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., Acme Corp')); ?>" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Type</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Type')); ?></label>
                 <select id="accountType" class="form-control">
-                    <option value="Customer">Customer</option>
-                    <option value="Prospect">Prospect</option>
-                    <option value="Partner">Partner</option>
-                    <option value="Vendor">Vendor</option>
-                    <option value="Other">Other</option>
+                    <option value="Customer"><?php echo htmlspecialchars(__('Customer')); ?></option>
+                    <option value="Prospect"><?php echo htmlspecialchars(__('Prospect')); ?></option>
+                    <option value="Partner"><?php echo htmlspecialchars(__('Partner')); ?></option>
+                    <option value="Vendor"><?php echo htmlspecialchars(__('Vendor')); ?></option>
+                    <option value="Other"><?php echo htmlspecialchars(__('Other')); ?></option>
                 </select>
             </div>
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label">Industry</label>
-                <input type="text" id="industry" class="form-control" placeholder="e.g., Technology">
+                <label class="form-label"><?php echo htmlspecialchars(__('Industry')); ?></label>
+                <input type="text" id="industry" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., Technology')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Website</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Website')); ?></label>
                 <input type="text" id="website" class="form-control" placeholder="https://...">
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Contact & Location</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Contact & Location')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Phone</label>
-                <input type="tel" id="phone" class="form-control" placeholder="+1 555-0100">
+                <label class="form-label"><?php echo htmlspecialchars(__('Phone')); ?></label>
+                <input type="tel" id="phone" class="form-control" placeholder="<?php echo htmlspecialchars(__('Phone Number')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Country</label>
-                <input type="text" id="country" class="form-control" placeholder="e.g., United States">
+                <label class="form-label"><?php echo htmlspecialchars(__('Country')); ?></label>
+                <input type="text" id="country" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., United States')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">City</label>
-                <input type="text" id="city" class="form-control" placeholder="e.g., Chicago">
+                <label class="form-label"><?php echo htmlspecialchars(__('City')); ?></label>
+                <input type="text" id="city" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., Chicago')); ?>">
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Address</label>
-            <textarea id="address" class="form-control" placeholder="123 Corporate Blvd..."></textarea>
+            <label class="form-label"><?php echo htmlspecialchars(__('Address')); ?></label>
+            <textarea id="address" class="form-control" placeholder="<?php echo htmlspecialchars(__('Address')); ?>"></textarea>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Metadata & Ownership</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Metadata & Ownership')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Annual Revenue</label>
-                <input type="number" step="0.01" id="annualRevenue" class="form-control" placeholder="e.g., 5000000">
+                <label class="form-label"><?php echo htmlspecialchars(__('Annual Revenue')); ?></label>
+                <input type="number" step="0.01" id="annualRevenue" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., 5000000')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Employees Count</label>
-                <input type="number" id="employeeCount" class="form-control" placeholder="e.g., 150">
+                <label class="form-label"><?php echo htmlspecialchars(__('Employees Count')); ?></label>
+                <input type="number" id="employeeCount" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., 150')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Assigned Owner</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Assigned Owner')); ?></label>
                 <select id="assignedTo" class="form-control">
-                    <option value="">Unassigned</option>
+                    <option value=""><?php echo htmlspecialchars(__('Unassigned')); ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                     <?php endforeach; ?>
@@ -118,8 +118,8 @@ textarea.form-control { min-height:80px; resize:vertical; }
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Description / Summary</label>
-            <textarea id="description" class="form-control" placeholder="Notes or summary about the account..."></textarea>
+            <label class="form-label"><?php echo htmlspecialchars(__('Description / Summary')); ?></label>
+            <textarea id="description" class="form-control" placeholder="<?php echo htmlspecialchars(__('Description / Summary')); ?>"></textarea>
         </div>
     </div>
 </div>
@@ -151,14 +151,14 @@ function loadAccount() {
             document.getElementById('assignedTo').value = a.assigned_to || '';
             document.getElementById('description').value = a.description || '';
         } else {
-            showNotification(resp.message || 'Failed to load account', 'error');
+            showNotification(resp.message || __('Failed to load account'), 'error');
         }
     });
 }
 
 function saveAccount() {
     var accountName = document.getElementById('accountName').value.trim();
-    if (!accountName) { showNotification('Account name is required', 'error'); return; }
+    if (!accountName) { showNotification(__('account_name_is_required'), 'error'); return; }
     
     var payload = {
         csrf_token: CSRF_TOKEN,
@@ -189,14 +189,14 @@ function saveAccount() {
     })
     .then(r => r.json())
     .then(function(data) {
-        showNotification(data.message || (data.success ? 'Account saved!' : 'Save failed'), data.success ? 'success' : 'error');
+        showNotification(data.message || (data.success ? __('Account saved!') : __('Save failed')), data.success ? 'success' : 'error');
         if (data.success) {
             setTimeout(() => {
                 window.location.href = '/pages/contacts.php';
             }, 500);
         }
     })
-    .catch(function() { showNotification('Network error', 'error'); });
+    .catch(function() { showNotification(__('Network error'), 'error'); });
 }
 </script>
 

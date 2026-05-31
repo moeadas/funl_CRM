@@ -125,8 +125,8 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
             </div>
             <div class="contact-actions">
-                <a href="/pages/contacts.php" class="btn btn-outline">Back to Contacts</a>
-                <button class="btn btn-primary" onclick="editContact(<?php echo $contactId; ?>)">Edit Contact</button>
+                <a href="/pages/contacts.php" class="btn btn-outline"><?php echo htmlspecialchars(__('Back to Contacts')); ?></a>
+                <button class="btn btn-primary" onclick="editContact(<?php echo $contactId; ?>)"><?php echo htmlspecialchars(__('Edit Contact')); ?></button>
             </div>
         </div>
         <div class="contact-meta">
@@ -151,7 +151,7 @@ require_once __DIR__ . '/../includes/header.php';
             <?php if ($contact['assigned_to_name']): ?>
                 <div class="contact-meta-item">
                     <span>👤</span>
-                    Assigned to: <?php echo htmlspecialchars($contact['assigned_to_name']); ?>
+                    <?php echo htmlspecialchars(__('Assigned to')); ?>: <?php echo htmlspecialchars($contact['assigned_to_name']); ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -161,44 +161,44 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="contact-main">
             <!-- Contact Info -->
             <div class="card">
-                <h3 class="card-title">Contact Information</h3>
+                <h3 class="card-title"><?php echo htmlspecialchars(__('Contact Information')); ?></h3>
                 <div class="info-row">
-                    <div class="info-label">Full Name</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Full Name')); ?></div>
                     <div class="info-value"><?php echo htmlspecialchars(($contact['first_name'] ?? '') . ' ' . ($contact['last_name'] ?? '')); ?></div>
                 </div>
                 <?php if ($contact['title']): ?>
                 <div class="info-row">
-                    <div class="info-label">Title</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Title')); ?></div>
                     <div class="info-value"><?php echo htmlspecialchars($contact['title']); ?></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['account_name']): ?>
                 <div class="info-row">
-                    <div class="info-label">Account</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Account')); ?></div>
                     <div class="info-value"><?php echo htmlspecialchars($contact['account_name']); ?></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['email']): ?>
                 <div class="info-row">
-                    <div class="info-label">Email</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Email')); ?></div>
                     <div class="info-value"><a href="mailto:<?php echo htmlspecialchars($contact['email']); ?>"><?php echo htmlspecialchars($contact['email']); ?></a></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['phone']): ?>
                 <div class="info-row">
-                    <div class="info-label">Phone</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Phone')); ?></div>
                     <div class="info-value"><?php echo htmlspecialchars($contact['phone']); ?></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['mobile']): ?>
                 <div class="info-row">
-                    <div class="info-label">Mobile</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Mobile')); ?></div>
                     <div class="info-value"><?php echo htmlspecialchars($contact['mobile']); ?></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['address'] || $contact['city'] || $contact['country']): ?>
                 <div class="info-row">
-                    <div class="info-label">Address</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Address')); ?></div>
                     <div class="info-value">
                         <?php 
                             $addr = [];
@@ -214,25 +214,25 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
                 <?php if ($contact['website']): ?>
                 <div class="info-row">
-                    <div class="info-label">Website</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Website')); ?></div>
                     <div class="info-value"><a href="<?php echo htmlspecialchars($contact['website']); ?>" target="_blank"><?php echo htmlspecialchars($contact['website']); ?></a></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['birthday']): ?>
                 <div class="info-row">
-                    <div class="info-label">Birthday</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Birthday')); ?></div>
                     <div class="info-value"><?php echo htmlspecialchars($contact['birthday']); ?></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['lead_source']): ?>
                 <div class="info-row">
-                    <div class="info-label">Lead Source</div>
-                    <div class="info-value"><?php echo htmlspecialchars($contact['lead_source']); ?></div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Lead Source')); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars(__($contact['lead_source'])); ?></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($contact['notes']): ?>
                 <div class="info-row">
-                    <div class="info-label">Notes</div>
+                    <div class="info-label"><?php echo htmlspecialchars(__('Notes')); ?></div>
                     <div class="info-value"><?php echo nl2br(htmlspecialchars($contact['notes'])); ?></div>
                 </div>
                 <?php endif; ?>
@@ -241,7 +241,7 @@ require_once __DIR__ . '/../includes/header.php';
             <!-- Social Links -->
             <?php if ($contact['facebook_url'] || $contact['linkedin_url'] || $contact['twitter_url'] || $contact['instagram_url']): ?>
             <div class="card">
-                <h3 class="card-title">Social Media</h3>
+                <h3 class="card-title"><?php echo htmlspecialchars(__('Social Media')); ?></h3>
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <?php if ($contact['facebook_url']): ?>
                         <a href="<?php echo htmlspecialchars($contact['facebook_url']); ?>" target="_blank" class="btn btn-outline">Facebook</a>
@@ -263,16 +263,16 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="contact-sidebar">
             <!-- Tasks -->
             <div class="card">
-                <h3 class="card-title">Tasks (<?php echo count($tasks); ?>)</h3>
+                <h3 class="card-title"><?php echo htmlspecialchars(__('Tasks')); ?> (<?php echo count($tasks); ?>)</h3>
                 <?php if (empty($tasks)): ?>
-                    <div class="empty-state">No tasks for this contact</div>
+                    <div class="empty-state"><?php echo htmlspecialchars(__('No tasks for this contact')); ?></div>
                 <?php else: ?>
                     <?php foreach ($tasks as $task): ?>
                         <div class="task-item">
                             <div class="item-title"><?php echo htmlspecialchars($task['title']); ?></div>
                             <div class="item-meta">
-                                <span class="status-badge status-<?php echo $task['status']; ?>"><?php echo ucfirst(str_replace('_', ' ', $task['status'])); ?></span>
-                                <?php if ($task['due_date']): ?> • Due <?php echo htmlspecialchars($task['due_date']); ?><?php endif; ?>
+                                <span class="status-badge status-<?php echo $task['status']; ?>"><?php echo htmlspecialchars(__(strtolower($task['status']))); ?></span>
+                                <?php if ($task['due_date']): ?> • <?php echo htmlspecialchars(__('Due')); ?> <?php echo htmlspecialchars($task['due_date']); ?><?php endif; ?>
                                 <?php if ($task['assigned_name']): ?> • <?php echo htmlspecialchars($task['assigned_name']); ?><?php endif; ?>
                             </div>
                         </div>
@@ -282,15 +282,15 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Deals -->
             <div class="card">
-                <h3 class="card-title">Deals (<?php echo count($deals); ?>)</h3>
+                <h3 class="card-title"><?php echo htmlspecialchars(__('Deals')); ?> (<?php echo count($deals); ?>)</h3>
                 <?php if (empty($deals)): ?>
-                    <div class="empty-state">No deals for this contact</div>
+                    <div class="empty-state"><?php echo htmlspecialchars(__('No deals for this contact')); ?></div>
                 <?php else: ?>
                     <?php foreach ($deals as $deal): ?>
                         <div class="deal-item">
                             <div class="item-title"><?php echo htmlspecialchars($deal['deal_name']); ?></div>
                             <div class="item-meta">
-                                <span class="status-badge" style="background: <?php echo $deal['stage_color'] ?? '#e5e7eb'; ?>20; color: <?php echo $deal['stage_color'] ?? '#6b7280'; ?>"><?php echo htmlspecialchars($deal['stage_label'] ?? $deal['stage']); ?></span>
+                                <span class="status-badge" style="background: <?php echo $deal['stage_color'] ?? '#e5e7eb'; ?>20; color: <?php echo $deal['stage_color'] ?? '#6b7280'; ?>"><?php echo htmlspecialchars(__($deal['stage_label'] ?? $deal['stage'])); ?></span>
                                 <?php if ($deal['deal_value']): ?> • $<?php echo number_format($deal['deal_value'], 2); ?><?php endif; ?>
                             </div>
                         </div>
@@ -300,15 +300,15 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Quotes -->
             <div class="card">
-                <h3 class="card-title">Quotes (<?php echo count($quotes); ?>)</h3>
+                <h3 class="card-title"><?php echo htmlspecialchars(__('Quotes')); ?> (<?php echo count($quotes); ?>)</h3>
                 <?php if (empty($quotes)): ?>
-                    <div class="empty-state">No quotes for this contact</div>
+                    <div class="empty-state"><?php echo htmlspecialchars(__('No quotes for this contact')); ?></div>
                 <?php else: ?>
                     <?php foreach ($quotes as $quote): ?>
                         <div class="quote-item">
                             <div class="item-title"><?php echo htmlspecialchars($quote['quote_title'] ?? $quote['quote_number']); ?></div>
                             <div class="item-meta">
-                                <span class="status-badge status-<?php echo $quote['status']; ?>"><?php echo ucfirst($quote['status']); ?></span>
+                                <span class="status-badge status-<?php echo $quote['status']; ?>"><?php echo htmlspecialchars(__(strtolower($quote['status']))); ?></span>
                                 <?php if ($quote['total']): ?> • $<?php echo number_format($quote['total'], 2); ?><?php endif; ?>
                             </div>
                         </div>
@@ -321,8 +321,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
 function editContact(contactId) {
-    // Redirect to contacts page with edit param
-    window.location.href = '/pages/contacts.php?edit=' + contactId;
+    window.location.href = '/pages/contact-form.php?id=' + contactId;
 }
 </script>
 

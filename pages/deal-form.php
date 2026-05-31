@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
 
-$pageTitle = 'Deal';
+$pageTitle = __('Deal');
 $currentPage = 'deals';
 $dealId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
@@ -44,27 +44,27 @@ textarea.form-control { min-height:80px; resize:vertical; }
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/deals.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Pipeline</a>
-        <h1><?= $dealId ? 'Edit Deal' : 'New Deal' ?></h1>
+        <a href="/pages/deals.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo htmlspecialchars(__('Back to Pipeline')); ?></a>
+        <h1><?= $dealId ? htmlspecialchars(__('Edit Deal')) : htmlspecialchars(__('New Deal')) ?></h1>
     </div>
     <div style="display:flex; gap:10px;">
         <?php if ($dealId): ?>
-            <button type="button" class="btn btn-danger" onclick="deleteDeal()">Delete Deal</button>
+            <button type="button" class="btn btn-danger" onclick="deleteDeal()"><?php echo htmlspecialchars(__('Delete Deal')); ?></button>
         <?php endif; ?>
-        <button type="button" class="btn btn-primary" onclick="saveDeal()">Save Deal</button>
+        <button type="button" class="btn btn-primary" onclick="saveDeal()"><?php echo htmlspecialchars(__('Save Deal')); ?></button>
     </div>
 </div>
 
 <div style="max-width:1000px;">
     <div class="card">
-        <h3 class="card-title">Deal Information</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Deal Information')); ?></h3>
         <div class="form-group">
-            <label class="form-label">Deal Name *</label>
-            <input type="text" id="dealName" class="form-control" placeholder="e.g. Acme Corp - Enterprise License" required>
+            <label class="form-label"><?php echo htmlspecialchars(__('Deal Name *')); ?></label>
+            <input type="text" id="dealName" class="form-control" placeholder="<?php echo htmlspecialchars(__('Deal Name')); ?>" required>
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label">Value</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Value')); ?></label>
                 <div class="currency-input">
                     <select id="dealCurrency" class="form-control">
                         <option value="USD">USD</option>
@@ -79,63 +79,63 @@ textarea.form-control { min-height:80px; resize:vertical; }
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Deal Type</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Deal Type')); ?></label>
                 <select id="dealType" class="form-control">
-                    <option value="New Business">New Business</option>
-                    <option value="Renewal">Renewal</option>
-                    <option value="Upsell">Upsell</option>
+                    <option value="New Business"><?php echo htmlspecialchars(__('New Business')); ?></option>
+                    <option value="Renewal"><?php echo htmlspecialchars(__('Renewal')); ?></option>
+                    <option value="Upsell"><?php echo htmlspecialchars(__('Upsell')); ?></option>
                 </select>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Pipeline Stage & Probability</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('Pipeline Stage & Probability')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Stage</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Stage')); ?></label>
                 <select id="dealStage" class="form-control" onchange="updateDefaultProbability()">
                     <?php foreach ($stages as $s): ?>
-                        <option value="<?= $s['stage_name'] ?>" data-prob="<?= $s['probability'] ?>"><?= htmlspecialchars($s['stage_label']) ?></option>
+                        <option value="<?= $s['stage_name'] ?>" data-prob="<?= $s['probability'] ?>"><?= htmlspecialchars(__($s['stage_label'])) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Probability %</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Probability %')); ?></label>
                 <input type="number" id="dealProbability" class="form-control" min="0" max="100" value="10">
             </div>
             <div class="form-group">
-                <label class="form-label">Expected Close Date</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Expected Close Date')); ?></label>
                 <input type="date" id="dealCloseDate" class="form-control">
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">CRM Links & Ownership</h3>
+        <h3 class="card-title"><?php echo htmlspecialchars(__('CRM Links & Ownership')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label">Account Link</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Account Link')); ?></label>
                 <select id="dealAccountId" class="form-control">
-                    <option value="">None</option>
+                    <option value=""><?php echo htmlspecialchars(__('None')); ?></option>
                     <?php foreach ($accounts as $a): ?>
                         <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Primary Contact</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Primary Contact')); ?></label>
                 <select id="dealContactId" class="form-control">
-                    <option value="">None</option>
+                    <option value=""><?php echo htmlspecialchars(__('None')); ?></option>
                     <?php foreach ($contacts as $c): ?>
                         <option value="<?= $c['contact_id'] ?>"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Assigned Owner</label>
+                <label class="form-label"><?php echo htmlspecialchars(__('Assigned Owner')); ?></label>
                 <select id="dealAssignedTo" class="form-control">
-                    <option value="">Unassigned</option>
+                    <option value=""><?php echo htmlspecialchars(__('Unassigned')); ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                     <?php endforeach; ?>
@@ -143,8 +143,8 @@ textarea.form-control { min-height:80px; resize:vertical; }
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Deal Description</label>
-            <textarea id="dealDescription" class="form-control" placeholder="Add descriptions, context or next steps..."></textarea>
+            <label class="form-label"><?php echo htmlspecialchars(__('Deal Description')); ?></label>
+            <textarea id="dealDescription" class="form-control" placeholder="<?php echo htmlspecialchars(__('Deal Description')); ?>"></textarea>
         </div>
     </div>
 </div>
@@ -191,14 +191,14 @@ function loadDeal() {
             document.getElementById('dealAssignedTo').value = d.assigned_to || '';
             document.getElementById('dealDescription').value = d.description || '';
         } else {
-            showNotification(resp.message || 'Failed to load deal', 'error');
+            showNotification(resp.message || __('Failed to load deal'), 'error');
         }
     });
 }
 
 function saveDeal() {
     var dealName = document.getElementById('dealName').value.trim();
-    if (!dealName) { showNotification('Deal name is required', 'error'); return; }
+    if (!dealName) { showNotification(__('deal_name_is_required'), 'error'); return; }
     
     var payload = {
         csrf_token: CSRF_TOKEN,
@@ -228,18 +228,18 @@ function saveDeal() {
     })
     .then(r => r.json())
     .then(function(data) {
-        showNotification(data.message || (data.success ? 'Deal saved!' : 'Save failed'), data.success ? 'success' : 'error');
+        showNotification(data.message || (data.success ? __('Deal saved!') : __('Save failed')), data.success ? 'success' : 'error');
         if (data.success) {
             setTimeout(() => {
                 window.location.href = '/pages/deals.php';
             }, 500);
         }
     })
-    .catch(function() { showNotification('Network error', 'error'); });
+    .catch(function() { showNotification(__('Network error'), 'error'); });
 }
 
 function deleteDeal() {
-    showConfirm('Are you sure you want to delete this deal?', function() {
+    showConfirm(__('are_you_sure_you_want_to_delete_this_deal'), function() {
         fetch('/api/deals.php?action=delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -248,7 +248,7 @@ function deleteDeal() {
         })
         .then(r => r.json())
         .then(resp => {
-            showNotification(resp.message || (resp.success ? 'Deal deleted' : 'Delete failed'), resp.success ? 'success' : 'error');
+            showNotification(resp.message || (resp.success ? __('Deal deleted') : __('Delete failed')), resp.success ? 'success' : 'error');
             if (resp.success) {
                 setTimeout(() => {
                     window.location.href = '/pages/deals.php';

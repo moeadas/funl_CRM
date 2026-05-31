@@ -14,7 +14,7 @@ $userId = getCurrentUserId();
 $companyId = $_SESSION["company_id"] ?? null;
 $userRole = $_SESSION["role"] ?? "";
 
-$pageTitle = 'Tasks';
+$pageTitle = __('Tasks');
 $css = ['tasks'];
 $js = ['tasks'];
 
@@ -354,11 +354,11 @@ textarea.form-control { min-height: 80px; resize: vertical; }
 
 <div class="tasks-page">
     <div class="tasks-header">
-        <h1>Tasks</h1>
+        <h1><?php echo htmlspecialchars(__('Tasks')); ?></h1>
         <div class="tasks-filters">
-            <input type="text" id="task-search" placeholder="Search tasks..." oninput="loadTasks()">
+            <input type="text" id="task-search" placeholder="<?php echo htmlspecialchars(__('Search tasks...')); ?>" oninput="loadTasks()">
             <select id="task-assignee-filter" onchange="loadTasks()">
-                <option value="">All Team Members</option>
+                <option value=""><?php echo htmlspecialchars(__('All Team Members')); ?></option>
                 <?php foreach ($db->query("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId]) as $u): ?>
                     <option value="<?= $u['user_id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
                 <?php endforeach; ?>
@@ -421,11 +421,11 @@ function renderBoard() {
         return `
         <div class="${colClass}" data-status="${col.status}">
             <div class="kanban-col-header">
-                <span class="kanban-col-title">${col.label}</span>
+                <span class="kanban-col-title">${escapeHtml(__(col.label))}</span>
                 <span class="kanban-count" id="count-${col.status}">${colTasks.length}</span>
             </div>
             <div class="kanban-col-body" ondragover="onDragOver(event)" ondrop="onDrop(event, '${col.status}')">
-                ${colTasks.length ? colTasks.map(t => renderCard(t)).join('') : '<div class="kanban-empty">No tasks</div>'}
+                ${colTasks.length ? colTasks.map(t => renderCard(t)).join('') : '<div class="kanban-empty">' + escapeHtml(__('No tasks')) + '</div>'}
             </div>
         </div>`;
     }).join('');
@@ -443,13 +443,13 @@ function renderCard(task) {
         <div class="task-card-header">
             <a href="/pages/task-form.php?id=${task.task_id}" class="task-title" style="text-decoration:none;">${escapeHtml(task.title)}</a>
             <div class="task-actions" onclick="event.stopPropagation()">
-                <button onclick="deleteTask(${task.task_id})" title="Delete">&times;</button>
+                <button onclick="deleteTask(${task.task_id})" title="${escapeHtml(__('Delete'))}">&times;</button>
             </div>
         </div>
         <div class="task-meta">
             <div class="task-meta-row">
-                <span class="task-priority ${pClass}">${task.priority}</span>
-                ${due ? `<span class="task-meta-icon">📅</span><span class="due-label ${due.class}">${due.label}</span>` : ''}
+                <span class="task-priority ${pClass}">${escapeHtml(__(task.priority))}</span>
+                ${due ? `<span class="task-meta-icon">📅</span><span class="due-label ${due.class}">${escapeHtml(due.label)}</span>` : ''}
             </div>
             ${task.assigned_name ? `
             <div class="task-meta-row">
@@ -476,10 +476,10 @@ function dueLabel(dateStr) {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const due = new Date(dateStr + 'T00:00:00');
     if (isNaN(due)) return null;
-    if (due < today) return { label: 'Overdue: ' + formatDate(due), class: 'overdue' };
-    if (+due === +today) return { label: 'Due today', class: 'today' };
-    if (+due === +tomorrow) return { label: 'Due tomorrow', class: 'tomorrow' };
-    return { label: 'Due ' + formatDate(due), class: 'scheduled' };
+    if (due < today) return { label: __('Overdue') + ': ' + formatDate(due), class: 'overdue' };
+    if (+due === +today) return { label: __('Due today'), class: 'today' };
+    if (+due === +tomorrow) return { label: __('Due tomorrow'), class: 'tomorrow' };
+    return { label: __('due') + ' ' + formatDate(due), class: 'scheduled' };
 }
 
 function formatDate(date) {
@@ -526,15 +526,15 @@ function moveTask(taskId, newStatus) {
             const task = tasks.find(t => t.task_id == taskId);
             if (task) task.status = newStatus;
             renderBoard();
-            showNotification('Task moved', 'success');
+            showNotification(__('Task moved'), 'success');
         } else {
-            showNotification(resp.message || 'Failed to move task', 'error');
+            showNotification(resp.message || __('Failed to move task'), 'error');
         }
     });
 }
 
 function deleteTask(taskId) {
-    showConfirm('Delete this task?', function() {
+    showConfirm(__('are_you_sure_you_want_to_delete_this_task'), function() {
         fetch(`${API}?action=delete`, {
             method: 'POST',
             credentials: 'same-origin',
@@ -546,9 +546,9 @@ function deleteTask(taskId) {
             if (resp.success) {
                 tasks = tasks.filter(t => t.task_id != taskId);
                 renderBoard();
-                showNotification('Task deleted', 'success');
+                showNotification(__('Task deleted'), 'success');
             } else {
-                showNotification(resp.message || 'Failed to delete task', 'error');
+                showNotification(resp.message || __('Failed to delete task'), 'error');
             }
         });
     });

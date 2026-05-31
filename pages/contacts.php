@@ -10,7 +10,7 @@ $userId = getCurrentUserId();
 $companyId = $_SESSION["company_id"] ?? null;
 $userRole = $_SESSION["role"] ?? "";
 
-$pageTitle = 'Contacts';
+$pageTitle = __('Contacts');
 $js = ['contacts'];
 
 require_once __DIR__ . '/../includes/header.php';
@@ -275,50 +275,50 @@ table.data-table tr:hover { background: var(--bg-secondary, #f9fafb); }
 
 <div class="contacts-page">
     <div class="page-header">
-        <h1>Contacts & Accounts</h1>
+        <h1><?php echo htmlspecialchars(__('Contacts & Accounts')); ?></h1>
         <div class="header-actions">
-            <a href="/pages/account-form.php" class="btn btn-outline">+ New Account</a>
-            <a href="/pages/contact-form.php" class="btn btn-primary">+ New Contact</a>
+            <a href="/pages/account-form.php" class="btn btn-outline">+ <?php echo htmlspecialchars(__('New Account')); ?></a>
+            <a href="/pages/contact-form.php" class="btn btn-primary">+ <?php echo htmlspecialchars(__('New Contact')); ?></a>
         </div>
     </div>
 
     <div class="tab-nav">
-        <button class="tab-btn active" data-tab="contacts" onclick="switchTab('contacts')">Contacts</button>
-        <button class="tab-btn" data-tab="accounts" onclick="switchTab('accounts')">Accounts</button>
+        <button class="tab-btn active" data-tab="contacts" onclick="switchTab('contacts')"><?php echo htmlspecialchars(__('Contacts')); ?></button>
+        <button class="tab-btn" data-tab="accounts" onclick="switchTab('accounts')"><?php echo htmlspecialchars(__('Accounts')); ?></button>
     </div>
 
     <!-- Contacts Tab -->
     <div id="tab-contacts" class="tab-content">
         <div class="filters-bar">
-            <input type="text" id="contact-search" class="search-input" placeholder="Search contacts..." oninput="loadContacts()">
+            <input type="text" id="contact-search" class="search-input" placeholder="<?php echo htmlspecialchars(__('Search contacts...')); ?>" oninput="loadContacts()">
             <select id="contact-account-filter" class="filter-select" onchange="loadContacts()">
-                <option value="">All Accounts</option>
+                <option value=""><?php echo htmlspecialchars(__('All Accounts')); ?></option>
                 <?php foreach ($accounts as $a): ?>
                     <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
                 <?php endforeach; ?>
             </select>
             <select id="contact-status-filter" class="filter-select" onchange="loadContacts()">
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Do Not Contact">Do Not Contact</option>
+                <option value=""><?php echo htmlspecialchars(__('All Status')); ?></option>
+                <option value="Active"><?php echo htmlspecialchars(__('Active')); ?></option>
+                <option value="Inactive"><?php echo htmlspecialchars(__('Inactive')); ?></option>
+                <option value="Do Not Contact"><?php echo htmlspecialchars(__('Do Not Contact')); ?></option>
             </select>
         </div>
         <div class="data-table-wrap">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Account</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Tags</th>
-                        <th>Status</th>
+                        <th><?php echo htmlspecialchars(__('Name')); ?></th>
+                        <th><?php echo htmlspecialchars(__('Account')); ?></th>
+                        <th><?php echo htmlspecialchars(__('Email')); ?></th>
+                        <th><?php echo htmlspecialchars(__('Phone')); ?></th>
+                        <th><?php echo htmlspecialchars(__('Tags')); ?></th>
+                        <th><?php echo htmlspecialchars(__('Status')); ?></th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody id="contacts-tbody">
-                    <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+                    <tr><td colspan="7" class="empty-state"><?php echo htmlspecialchars(__('Loading...')); ?></td></tr>
                 </tbody>
             </table>
         </div>
@@ -327,18 +327,18 @@ table.data-table tr:hover { background: var(--bg-secondary, #f9fafb); }
     <!-- Accounts Tab -->
     <div id="tab-accounts" class="tab-content" style="display:none;">
         <div class="filters-bar">
-            <input type="text" id="account-search" class="search-input" placeholder="Search accounts..." oninput="loadAccounts()">
+            <input type="text" id="account-search" class="search-input" placeholder="<?php echo htmlspecialchars(__('Search accounts...')); ?>" oninput="loadAccounts()">
             <select id="account-type-filter" class="filter-select" onchange="loadAccounts()">
-                <option value="">All Types</option>
-                <option value="Customer">Customer</option>
-                <option value="Prospect">Prospect</option>
-                <option value="Partner">Partner</option>
-                <option value="Vendor">Vendor</option>
-                <option value="Other">Other</option>
+                <option value=""><?php echo htmlspecialchars(__('All Types')); ?></option>
+                <option value="Customer"><?php echo htmlspecialchars(__('Customer')); ?></option>
+                <option value="Prospect"><?php echo htmlspecialchars(__('Prospect')); ?></option>
+                <option value="Partner"><?php echo htmlspecialchars(__('Partner')); ?></option>
+                <option value="Vendor"><?php echo htmlspecialchars(__('Vendor')); ?></option>
+                <option value="Other"><?php echo htmlspecialchars(__('Other')); ?></option>
             </select>
         </div>
         <div class="accounts-grid" id="accounts-grid">
-            <div class="empty-state">Loading...</div>
+            <div class="empty-state"><?php echo htmlspecialchars(__('Loading...')); ?></div>
         </div>
     </div>
 </div>
@@ -396,7 +396,7 @@ function loadContacts() {
 function renderContacts() {
     const tbody = document.getElementById('contacts-tbody');
     if (!contacts.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><h3>No contacts yet</h3>Click "+ New Contact" to add your first contact.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><h3>' + escapeHtml(__('No contacts yet')) + '</h3>' + escapeHtml(__('Click "+ New Contact" to add your first contact.')) + '</td></tr>';
         return;
     }
     tbody.innerHTML = contacts.map(c => {
@@ -413,17 +413,17 @@ function renderContacts() {
             <td class="contact-email">${c.email ? `<a href="mailto:${escapeHtml(c.email)}" onclick="event.stopPropagation()">${escapeHtml(c.email)}</a>` : '-'}</td>
             <td>${c.phone || '-'}</td>
             <td>${tags || '-'}</td>
-            <td><span class="status-badge ${statusClass}">${c.contact_status || 'Active'}</span></td>
+            <td><span class="status-badge ${statusClass}">${escapeHtml(__(c.contact_status || 'Active'))}</span></td>
             <td><div class="action-btns" onclick="event.stopPropagation()">
-                <button onclick="window.location.href='/pages/contact-form.php?id=${c.contact_id}'" title="Edit">✏️</button>
-                <button onclick="deleteContact(${c.contact_id})" title="Delete">🗑️</button>
+                <button onclick="window.location.href='/pages/contact-form.php?id=${c.contact_id}'" title="${escapeHtml(__('Edit'))}">✏️</button>
+                <button onclick="deleteContact(${c.contact_id})" title="${escapeHtml(__('Delete'))}">🗑️</button>
             </div></td>
         </tr>`;
     }).join('');
 }
 
 function deleteContact(contactId) {
-    showConfirm('Delete this contact?', function() {
+    showConfirm(__('Delete this contact?'), function() {
         fetch(`${API}?action=delete_contact`, {
             method: 'POST',
             credentials: 'same-origin',
@@ -432,9 +432,9 @@ function deleteContact(contactId) {
         }).then(r => r.json()).then(resp => {
             if (resp.success) {
                 loadContacts();
-                showNotification('Contact deleted', 'success');
+                showNotification(__('Contact deleted'), 'success');
             } else {
-                showNotification(resp.message || 'Failed to delete contact', 'error');
+                showNotification(resp.message || __('Failed to delete contact'), 'error');
             }
         });
     });
@@ -463,28 +463,28 @@ function loadAccounts() {
 function renderAccounts() {
     const grid = document.getElementById('accounts-grid');
     if (!accounts.length) {
-        grid.innerHTML = '<div class="empty-state"><h3>No accounts yet</h3>Click "+ New Account" to add your first account.</div>';
+        grid.innerHTML = '<div class="empty-state"><h3>' + escapeHtml(__('No accounts yet')) + '</h3>' + escapeHtml(__('Click "+ New Account" to add your first account.')) + '</div>';
         return;
     }
     grid.innerHTML = accounts.map(a => `
         <div class="account-card" onclick="window.location.href='/pages/account-form.php?id=${a.account_id}'">
-            <button class="card-delete-btn" onclick="event.stopPropagation(); deleteAccount(${a.account_id})" title="Delete Account">🗑️</button>
+            <button class="card-delete-btn" onclick="event.stopPropagation(); deleteAccount(${a.account_id})" title="${escapeHtml(__('Delete Account'))}">🗑️</button>
             <div class="account-card-header">
                 <div class="account-name">${escapeHtml(a.account_name)}</div>
-                <div class="account-type">${a.account_type || 'Customer'}</div>
+                <div class="account-type">${escapeHtml(__(a.account_type || 'Customer'))}</div>
             </div>
             <div class="account-meta">
                 ${a.industry ? `<div class="account-meta-row">🏢 ${escapeHtml(a.industry)}</div>` : ''}
                 ${a.phone ? `<div class="account-meta-row">📞 ${escapeHtml(a.phone)}</div>` : ''}
                 ${a.city || a.country ? `<div class="account-meta-row">📍 ${escapeHtml([a.city, a.country].filter(Boolean).join(', '))}</div>` : ''}
-                <div class="account-meta-row">👥 ${a.contact_count || 0} contact${a.contact_count !== 1 ? 's' : ''}</div>
+                <div class="account-meta-row">👥 ${a.contact_count || 0} ${escapeHtml(a.contact_count === 1 ? __('contact') : __('contacts'))}</div>
             </div>
         </div>
     `).join('');
 }
 
 function deleteAccount(accountId) {
-    showConfirm('Are you sure you want to delete this account? Any associated contacts will be unlinked.', function() {
+    showConfirm(__('delete_account_confirm'), function() {
         fetch(`${API}?action=delete_account`, {
             method: 'POST',
             credentials: 'same-origin',
@@ -493,9 +493,9 @@ function deleteAccount(accountId) {
         }).then(r => r.json()).then(resp => {
             if (resp.success) {
                 loadAccounts();
-                showNotification('Account deleted', 'success');
+                showNotification(__('Account deleted'), 'success');
             } else {
-                showNotification(resp.message || 'Failed to delete account', 'error');
+                showNotification(resp.message || __('Failed to delete account'), 'error');
             }
         });
     });
