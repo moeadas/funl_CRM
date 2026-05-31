@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'whatsapp_enabled', 'whatsapp_from_number', 'whatsapp_sandbox_mode',
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption',
             'email_from_name', 'email_from_address', 'email_reply_to', 'email_batch_size', 'email_batch_delay',
-            'tracking_head_code', 'tracking_body_code'
+            'tracking_head_code', 'tracking_body_code', 'preloader_code'
         ];
 
         $pdo->beginTransaction();
@@ -285,6 +285,11 @@ include __DIR__ . '/../includes/header.php';
                             <span class="text-muted" style="font-size:12px;">Current favicon:</span>
                             <img src="<?php echo getCompanyFavicon(); ?>?v=<?php echo time(); ?>" alt="Favicon" style="max-height:32px;">
                         </div>
+                    </div>
+                    <div class="form-group" style="margin-top:24px;">
+                        <label class="form-label">Preloader Code (HTML/CSS/JS)</label>
+                        <textarea name="preloader_code" class="form-control" rows="12" placeholder="HTML code for preloader..." style="font-family: monospace; font-size: 13px;"><?php echo htmlspecialchars($settings['preloader_code'] ?? ''); ?></textarea>
+                        <p class="text-muted" style="font-size:11px; margin-top:4px;">Customize the HTML, CSS, and JS used for the full-screen preloader. Leave empty to use the default brand preloader.</p>
                     </div>
                 </div>
             </div>
