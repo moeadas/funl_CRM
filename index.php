@@ -8,6 +8,6 @@ startSecureSession();
 if (isLoggedIn()) {
     header('Location: /pages/dashboard.php');
 } else {
-    header('Location: /login.php');
+    header('Location: /register.php');
 }
 exit;
