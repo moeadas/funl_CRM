@@ -16,7 +16,10 @@ $csrf_token = generateCSRFToken();
 
 // Registration handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    requireCSRF();
+    // Bypass CSRF check for public signup form submissions (e.g. WordPress integrations)
+    if ($_POST['action'] !== 'register_company') {
+        requireCSRF();
+    }
 
     if ($_POST['action'] === 'register_company') {
         $companyName = sanitizeInput($_POST['company_name'] ?? '');
