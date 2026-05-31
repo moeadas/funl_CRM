@@ -32,7 +32,7 @@ function getCompanyLogo() {
     if ($logo && file_exists(__DIR__ . '/../uploads/' . $logo)) {
         return '/uploads/' . htmlspecialchars($logo);
     }
-    return '/assets/images/logo-default.svg';
+    return '/assets/images/logo-default.png';
 }
 
 function getCompanyFavicon() {
@@ -40,7 +40,7 @@ function getCompanyFavicon() {
     if ($favicon && file_exists(__DIR__ . '/../uploads/' . $favicon)) {
         return '/uploads/' . htmlspecialchars($favicon);
     }
-    return '/assets/images/favicon.svg';
+    return '/assets/images/favicon.png';
 }
 
 // Custom Fields Helpers

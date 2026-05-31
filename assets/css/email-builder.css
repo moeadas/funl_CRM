@@ -1,5 +1,5 @@
 :root {
-  --eb-brand: #D91C48;
+  --eb-brand: #dd2d4a;
   --eb-bg: #f5f6f8;
   --eb-panel: #ffffff;
   --eb-border: #e3e6ea;
@@ -116,7 +116,7 @@ html[data-eb-dir="rtl"] .eb-section-tools { right: auto; left: 4px; }
 .eb-section-tools button.danger:hover { background: #fde7eb; color: #c0392b; }
 .eb-block { position: relative; transition: outline-color .15s; outline: 2px solid transparent; }
 .eb-block.is-selected { outline-color: var(--eb-brand); }
-.eb-block:hover { outline-color: rgba(217, 28, 72, .35); }
+.eb-block:hover { outline-color: rgba(221, 45, 74, .35); }
 .eb-block[contenteditable="true"]:focus { outline-color: var(--eb-brand); }
 .eb-block-tools {
   position: absolute; top: 2px; right: 2px; display: none;

@@ -25,7 +25,7 @@ if ($_isAdminOrImpersonating) {
     <title><?php echo htmlspecialchars($pageTitle); ?> — <?php echo APP_NAME; ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="icon" type="image/svg+xml" href="<?php echo $_companyFavicon; ?>">
+    <link rel="icon" href="<?php echo $_companyFavicon; ?>">
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/modal-system.css">
     <script src="/assets/js/main.js" defer></script>

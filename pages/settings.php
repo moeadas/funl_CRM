@@ -168,7 +168,7 @@ include __DIR__ . '/../includes/header.php';
 .tabs-nav { display: flex; border-bottom: 1.5px solid #e5e7eb; gap: 24px; margin-bottom: 24px; }
 .tab-link { padding: 12px 4px; font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
 .tab-link:hover { color: #1f2937; }
-.tab-link.active { color: #D91C48; border-bottom-color: #D91C48; font-weight: 600; }
+.tab-link.active { color: #dd2d4a; border-bottom-color: #dd2d4a; font-weight: 600; }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }

@@ -249,7 +249,7 @@ include __DIR__ . '/../includes/header.php';
             <!-- Account Status Card -->
             <div class="card">
                 <div class="card-body" style="text-align:center;padding:32px 24px;">
-                    <div style="width:72px;height:72px;border-radius:50%;background:#D91C48;color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 16px;">
+                    <div style="width:72px;height:72px;border-radius:50%;background:#dd2d4a;color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 16px;">
                         <?php 
                         $parts = explode(' ', $user['full_name']);
                         echo strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : ''));

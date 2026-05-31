@@ -25,3 +25,5 @@ scratch/
 config/.env.production
 *.db
 composer.phar
+FUNL_FAVICON.png
+FUNL_Logo.png

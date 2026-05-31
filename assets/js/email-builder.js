@@ -26,7 +26,7 @@
   /* ============================================================
    * Constants
    * ============================================================ */
-  const BRAND = '#D91C48';
+  const BRAND = '#dd2d4a';
   const STORAGE_PREFIX = 'pp_email_builder_';
   const AUTOSAVE_DEBOUNCE_MS = 4000;
   const HISTORY_LIMIT = 60;
@@ -301,12 +301,12 @@
         blockOf('heading', { content: '<h1 style="margin:0;color:#111;">Welcome to [Company]</h1>', textAlign: 'center', fontSize: 32, color: '#111111' }),
         blockOf('text', { content: '<p style="color:#444;">Hi {{first_name}}, we\'re thrilled to have you on board! Here is everything you need to get started.</p>', textAlign: 'center', color: '#444444' }),
         blockOf('spacer', { height: 8 }),
-        blockOf('button', { text: 'Complete your profile', url: '#', align: 'center', bgColor: '#D91C48', textColor: '#ffffff', fullWidth: true }),
+        blockOf('button', { text: 'Complete your profile', url: '#', align: 'center', bgColor: '#dd2d4a', textColor: '#ffffff', fullWidth: true }),
         blockOf('divider', { color: '#e5e5e5' }),
         blockOf('heading', { content: '<h3 style="margin:0;">Quick tips</h3>', fontSize: 20, textAlign: 'left' }),
         blockOf('text', { content: '<ul><li>Set up your preferences</li><li>Invite your team</li><li>Explore the dashboard</li></ul>', fontSize: 14 }),
         blockOf('spacer', { height: 8 }),
-        blockOf('text', { content: '<p style="font-size:13px;color:#888;text-align:center;">Need help? Reply to this email or <a href="#" style="color:#D91C48;">contact support</a>.</p>', fontSize: 13, color: '#888888' })
+        blockOf('text', { content: '<p style="font-size:13px;color:#888;text-align:center;">Need help? Reply to this email or <a href="#" style="color:#dd2d4a;">contact support</a>.</p>', fontSize: 13, color: '#888888' })
       ];
       return s;
     },
@@ -324,7 +324,7 @@
         blockOf('spacer', { height: 16 }),
         blockOf('divider', { color: '#e5e5e5' }),
         blockOf('heading', { content: '<h3>More reads</h3>', fontSize: 18 }),
-        blockOf('text', { content: '<ul><li><a href="#" style="color:#D91C48;">Article title one</a> — 3 min read</li><li><a href="#" style="color:#D91C48;">Article title two</a> — 5 min read</li><li><a href="#" style="color:#D91C48;">Article title three</a> — 4 min read</li></ul>', fontSize: 14 })
+        blockOf('text', { content: '<ul><li><a href="#" style="color:#dd2d4a;">Article title one</a> — 3 min read</li><li><a href="#" style="color:#dd2d4a;">Article title two</a> — 5 min read</li><li><a href="#" style="color:#dd2d4a;">Article title three</a> — 4 min read</li></ul>', fontSize: 14 })
       ];
       return s;
     },
@@ -340,7 +340,7 @@
         blockOf('heading', { content: '<h2 style="margin:0;">What is new</h2>', fontSize: 22, color: '#111111' }),
         blockOf('text', { content: '<ul><li><strong>Feature One</strong> — Brief description here</li><li><strong>Feature Two</strong> — Brief description here</li><li><strong>Feature Three</strong> — Brief description here</li></ul>', fontSize: 15, color: '#444444' }),
         blockOf('spacer', { height: 16 }),
-        blockOf('button', { text: 'Get early access', url: '#', align: 'center', bgColor: '#D91C48', textColor: '#ffffff', fontSize: 18, paddingV: 18, paddingH: 32, fullWidth: true }),
+        blockOf('button', { text: 'Get early access', url: '#', align: 'center', bgColor: '#dd2d4a', textColor: '#ffffff', fontSize: 18, paddingV: 18, paddingH: 32, fullWidth: true }),
         blockOf('spacer', { height: 8 }),
         blockOf('text', { content: '<p style="font-size:12px;color:#999;text-align:center;">Early-bird pricing ends soon. No credit card required.</p>', fontSize: 12, color: '#999999', textAlign: 'center' })
       ];
@@ -358,23 +358,23 @@
         blockOf('heading', { content: '<h2 style="margin:0;">📅 Date \u0026 Time</h2>', fontSize: 20, color: '#111111' }),
         blockOf('text', { content: '<p><strong>Thursday, June 15, 2026</strong><br>2:00 PM — 3:30 PM EST</p>', fontSize: 15, color: '#444444' }),
         blockOf('heading', { content: '<h2 style="margin:16px 0 0;">📍 Location</h2>', fontSize: 20, color: '#111111' }),
-        blockOf('text', { content: '<p>Online via Zoom<br><a href="#" style="color:#D91C48;">Add to calendar</a></p>', fontSize: 15, color: '#444444' }),
+        blockOf('text', { content: '<p>Online via Zoom<br><a href="#" style="color:#dd2d4a;">Add to calendar</a></p>', fontSize: 15, color: '#444444' }),
         blockOf('spacer', { height: 24 }),
-        blockOf('button', { text: 'RSVP Now', url: '#', align: 'center', bgColor: '#D91C48', textColor: '#ffffff', fontSize: 18, paddingV: 16, paddingH: 48 }),
+        blockOf('button', { text: 'RSVP Now', url: '#', align: 'center', bgColor: '#dd2d4a', textColor: '#ffffff', fontSize: 18, paddingV: 16, paddingH: 48 }),
         blockOf('spacer', { height: 8 }),
-        blockOf('text', { content: '<p style="font-size:13px;color:#888;text-align:center;">Can\'t make it? <a href="#" style="color:#D91C48;">Watch the replay</a> later.</p>', fontSize: 13, color: '#888888', textAlign: 'center' })
+        blockOf('text', { content: '<p style="font-size:13px;color:#888;text-align:center;">Can\'t make it? <a href="#" style="color:#dd2d4a;">Watch the replay</a> later.</p>', fontSize: 13, color: '#888888', textAlign: 'center' })
       ];
       return s;
     },
     promoSale: function () {
       const s = defaultSection();
-      s.bgColor = '#D91C48';
+      s.bgColor = '#dd2d4a';
       s.paddingTop = 48; s.paddingBottom = 48;
       s.content[0] = [
         blockOf('heading', { content: '<h1 style="margin:0;color:#fff;">FLASH SALE ⚡</h1>', textAlign: 'center', fontSize: 42, color: '#ffffff' }),
         blockOf('text', { content: '<p style="color:#fff;text-align:center;font-size:18px;">Up to <strong>50% off</strong> everything. This weekend only.</p>', textAlign: 'center', fontSize: 18, color: '#ffffff' }),
         blockOf('spacer', { height: 24 }),
-        blockOf('button', { text: 'Shop the sale', url: '#', align: 'center', bgColor: '#ffffff', textColor: '#D91C48', fontSize: 18, paddingV: 18, paddingH: 40 }),
+        blockOf('button', { text: 'Shop the sale', url: '#', align: 'center', bgColor: '#ffffff', textColor: '#dd2d4a', fontSize: 18, paddingV: 18, paddingH: 40 }),
         blockOf('spacer', { height: 8 }),
         blockOf('text', { content: '<p style="color:#fff;text-align:center;font-size:13px;opacity:.8;">Use code <strong>FLASH50</strong> at checkout. Expires Sunday midnight.</p>', textAlign: 'center', fontSize: 13, color: '#ffffff' })
       ];

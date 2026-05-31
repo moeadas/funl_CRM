@@ -131,12 +131,12 @@ $plans = getActivePlans();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pinpoint CRM - Start Your Free Trial</title>
+    <title><?php echo htmlspecialchars(getAppName()); ?> - Start Your Free Trial</title>
     <link rel="icon" type="image/svg+xml" href="<?php echo getCompanyFavicon(); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
-        :root { --color-primary: #D91C48; --color-primary-dark: #861B44; --color-primary-light: #FF6B8A; }
+        :root { --color-primary: #dd2d4a; --color-primary-dark: #9d1830; --color-primary-light: #ff627d; --color-grey: #999999; }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #1a1a2e; line-height: 1.6; }
@@ -147,7 +147,7 @@ $plans = getActivePlans();
         .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--color-primary); text-decoration: none; }
         .nav-logo img { height: 32px; }
         .nav-links { display: flex; align-items: center; gap: 32px; }
-        .nav-links a { color: #4a4a5a; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+        .nav-links a { color: var(--color-grey); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
         .nav-links a:hover { color: var(--color-primary); }
         .nav-cta { background: var(--color-primary); color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; transition: all 0.2s; }
         .nav-cta:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
@@ -155,15 +155,15 @@ $plans = getActivePlans();
 
         /* Hero */
         .hero { padding: 140px 24px 80px; text-align: center; max-width: 900px; margin: 0 auto; }
-        .hero-badge { display: inline-block; background: rgba(217,28,72,0.08); color: var(--color-primary); padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
+        .hero-badge { display: inline-block; background: rgba(221, 45, 74,0.08); color: var(--color-primary); padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
         .hero h1 { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; letter-spacing: -0.02em; }
         .hero h1 span { color: var(--color-primary); }
-        .hero p { font-size: 20px; color: #6a6a7a; max-width: 600px; margin: 0 auto 32px; }
+        .hero p { font-size: 20px; color: var(--color-grey); max-width: 600px; margin: 0 auto 32px; }
         .hero-cta { display: inline-flex; align-items: center; gap: 16px; }
-        .btn-hero { background: var(--color-primary); color: #fff; padding: 16px 36px; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(217,28,72,0.3); }
-        .btn-hero:hover { background: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(217,28,72,0.4); }
+        .btn-hero { background: var(--color-primary); color: #fff; padding: 16px 36px; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(221, 45, 74,0.3); }
+        .btn-hero:hover { background: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(221, 45, 74,0.4); }
         .btn-hero-outline { background: transparent; color: var(--color-primary); padding: 16px 36px; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; border: 2px solid var(--color-primary); transition: all 0.2s; }
-        .btn-hero-outline:hover { background: rgba(217,28,72,0.05); }
+        .btn-hero-outline:hover { background: rgba(221, 45, 74,0.05); }
         .hero-trust { margin-top: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #8a8a9a; font-size: 14px; }
         .hero-trust .stars { color: #FFB800; font-size: 16px; }
 
@@ -171,20 +171,20 @@ $plans = getActivePlans();
         .section { padding: 80px 24px; }
         .section-header { text-align: center; max-width: 700px; margin: 0 auto 64px; }
         .section-header h2 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
-        .section-header p { font-size: 18px; color: #6a6a7a; }
+        .section-header p { font-size: 18px; color: var(--color-grey); }
 
         /* Pricing */
         .pricing-section { background: #f8f9fb; }
         .pricing-cards { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
         .pricing-card { background: #fff; border-radius: 16px; padding: 36px 28px; border: 1px solid #e8e8ef; transition: all 0.3s; position: relative; }
         .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
-        .pricing-card.featured { border-color: var(--color-primary); box-shadow: 0 8px 30px rgba(217,28,72,0.12); }
+        .pricing-card.featured { border-color: var(--color-primary); box-shadow: 0 8px 30px rgba(221, 45, 74,0.12); }
         .pricing-card .badge { position: absolute; top: -12px; right: 24px; background: var(--color-primary); color: #fff; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; }
         .pricing-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-        .pricing-card .desc { font-size: 14px; color: #7a7a8a; margin-bottom: 20px; }
+        .pricing-card .desc { font-size: 14px; color: var(--color-grey); margin-bottom: 20px; }
         .pricing-card .price { font-size: 40px; font-weight: 800; color: var(--color-primary); margin-bottom: 4px; }
-        .pricing-card .price span { font-size: 15px; font-weight: 400; color: #7a7a8a; }
-        .pricing-card .price-note { font-size: 13px; color: #9a9aaa; margin-bottom: 24px; }
+        .pricing-card .price span { font-size: 15px; font-weight: 400; color: var(--color-grey); }
+        .pricing-card .price-note { font-size: 13px; color: var(--color-grey); margin-bottom: 24px; }
         .pricing-card .btn-select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid var(--color-primary); background: #fff; color: var(--color-primary); font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; margin-bottom: 24px; }
         .pricing-card .btn-select:hover, .pricing-card .btn-select.active { background: var(--color-primary); color: #fff; }
         .pricing-card ul { list-style: none; }
@@ -195,23 +195,23 @@ $plans = getActivePlans();
         .form-section { max-width: 520px; margin: 0 auto; padding: 60px 24px; }
         .form-card { background: #fff; border-radius: 16px; padding: 40px; border: 1px solid #e8e8ef; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
         .form-card h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; text-align: center; }
-        .form-card .subtitle { text-align: center; color: #6a6a7a; font-size: 15px; margin-bottom: 28px; }
+        .form-card .subtitle { text-align: center; color: var(--color-grey); font-size: 15px; margin-bottom: 28px; }
         .form-group { margin-bottom: 16px; }
         .form-label { display: block; font-size: 13px; font-weight: 600; color: #3a3a4a; margin-bottom: 6px; }
         .form-control { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e8; border-radius: 10px; font-size: 15px; transition: all 0.2s; font-family: inherit; }
-        .form-control:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(217,28,72,0.1); }
+        .form-control:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(221, 45, 74,0.1); }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .btn-submit { width: 100%; padding: 16px; background: var(--color-primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
         .btn-submit:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
-        .form-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #7a7a8a; }
+        .form-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--color-grey); }
         .form-footer a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
 
         /* Features */
         .features-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
         .feature { text-align: center; padding: 20px; }
-        .feature-icon { width: 56px; height: 56px; background: rgba(217,28,72,0.08); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
+        .feature-icon { width: 56px; height: 56px; background: rgba(221, 45, 74,0.08); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
         .feature h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .feature p { font-size: 15px; color: #6a6a7a; }
+        .feature p { font-size: 15px; color: var(--color-grey); }
 
         /* Comparison */
         .comparison-section { background: #f8f9fb; }
@@ -226,11 +226,11 @@ $plans = getActivePlans();
         /* Trust */
         .trust-section { text-align: center; padding: 60px 24px; }
         .trust-badges { display: flex; justify-content: center; gap: 48px; margin-top: 32px; flex-wrap: wrap; }
-        .trust-badge { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #5a5a6a; font-size: 14px; }
+        .trust-badge { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--color-grey); font-size: 14px; }
         .trust-badge .icon { width: 48px; height: 48px; background: #f0f0f5; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
         /* Footer */
-        .footer { background: #1a1a2e; color: #9a9aaa; padding: 40px 24px; text-align: center; font-size: 14px; }
+        .footer { background: #1a1a2e; color: var(--color-grey); padding: 40px 24px; text-align: center; font-size: 14px; }
         .footer a { color: #ccc; text-decoration: none; }
 
         @media (max-width: 768px) {
@@ -250,8 +250,8 @@ $plans = getActivePlans();
 <nav class="nav">
     <div class="nav-inner">
         <a href="/" class="nav-logo">
-            <img src="<?php echo getCompanyLogo(); ?>" alt="Pinpoint CRM">
-            <span>Pinpoint CRM</span>
+            <img src="<?php echo getCompanyLogo(); ?>" alt="<?php echo htmlspecialchars(getAppName()); ?>">
+            <span><?php echo htmlspecialchars(getAppName()); ?></span>
         </a>
         <div class="nav-links">
             <a href="#pricing">Pricing</a>
@@ -278,7 +278,7 @@ $plans = getActivePlans();
 <section class="hero">
     <div class="hero-badge">🚀 14-Day Free Trial - No Credit Card</div>
     <h1>The CRM that <span>supercharges</span> your sales team</h1>
-    <p>Pinpoint CRM gives your team the tools to manage leads, close deals faster, and grow revenue - all in one intuitive platform.</p>
+    <p><?php echo htmlspecialchars(getAppName()); ?> gives your team the tools to manage leads, close deals faster, and grow revenue - all in one intuitive platform.</p>
     <div class="hero-cta">
         <?php if (isLoggedIn()): ?>
             <a href="/pages/dashboard.php" class="btn-hero">Go to Dashboard</a>
@@ -443,7 +443,7 @@ $plans = getActivePlans();
 
 <!-- Trust -->
 <section class="trust-section">
-    <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">Why teams choose Pinpoint CRM</h2>
+    <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">Why teams choose <?php echo htmlspecialchars(getAppName()); ?></h2>
     <p style="color: #6a6a7a; font-size: 16px;">Everything you need, nothing you don't</p>
     <div class="trust-badges">
         <div class="trust-badge">
@@ -526,7 +526,7 @@ $plans = getActivePlans();
 
 <!-- Footer -->
 <footer class="footer">
-    <p>© 2026 Pinpoint CRM. All rights reserved. | <a href="/login.php">Sign In</a></p>
+    <p>© 2026 <?php echo htmlspecialchars(getAppName()); ?>. All rights reserved. | <a href="/login.php">Sign In</a></p>
 </footer>
 
 <script>

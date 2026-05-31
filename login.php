@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Sign In &mdash; <?php echo htmlspecialchars(getAppName()); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="icon" type="image/svg+xml" href="<?php echo getCompanyFavicon(); ?>">
+    <link rel="icon" href="<?php echo getCompanyFavicon(); ?>">
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>

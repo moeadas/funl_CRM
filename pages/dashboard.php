@@ -510,12 +510,12 @@ new Chart(trendCtx, {
         datasets: [{
             label: 'New Leads',
             data: <?php echo json_encode(array_column($monthly_trend, 'count')); ?>,
-            borderColor: '#D91C48',
-            backgroundColor: 'rgba(217, 28, 72, 0.1)',
+            borderColor: '#dd2d4a',
+            backgroundColor: 'rgba(221, 45, 74, 0.1)',
             fill: true,
             tension: 0.4,
             pointRadius: 4,
-            pointBackgroundColor: '#D91C48'
+            pointBackgroundColor: '#dd2d4a'
         }]
     },
     options: {

@@ -64,7 +64,7 @@ include '../includes/header.php';
 .stats-grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 24px; }
 .stat-card { background: #fff; border: 1px solid #e8e8ef; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 14px; }
 .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.icon-accent { background: rgba(217,28,72,0.08); color: #D91C48; }
+.icon-accent { background: rgba(221, 45, 74,0.08); color: #dd2d4a; }
 .icon-success { background: rgba(34,197,94,0.08); color: #22c55e; }
 .icon-info { background: rgba(59,130,246,0.08); color: #3b82f6; }
 .icon-warn { background: rgba(245,158,11,0.08); color: #f59e0b; }
