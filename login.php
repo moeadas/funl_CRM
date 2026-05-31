@@ -54,8 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="<?php echo getCompanyFavicon(); ?>">
     <link rel="stylesheet" href="/assets/css/style.css">
+    <?php echo getSetting('tracking_head_code'); ?>
 </head>
 <body>
+<?php echo getSetting('tracking_body_code'); ?>
 <?php require_once __DIR__ . '/includes/preloader.php'; ?>
     <div class="main-container">
         <div class="login-card">

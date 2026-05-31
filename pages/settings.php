@@ -45,7 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'voip_enabled', 'voip_recording_enabled', 'twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number', 'twilio_twiml_app_sid',
             'whatsapp_enabled', 'whatsapp_from_number', 'whatsapp_sandbox_mode',
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption',
-            'email_from_name', 'email_from_address', 'email_reply_to', 'email_batch_size', 'email_batch_delay'
+            'email_from_name', 'email_from_address', 'email_reply_to', 'email_batch_size', 'email_batch_delay',
+            'tracking_head_code', 'tracking_body_code'
         ];
 
         $pdo->beginTransaction();
@@ -198,6 +199,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="tab-link" onclick="switchTab('branding')">App Branding</div>
         <div class="tab-link" onclick="switchTab('voip')">VoIP &amp; WhatsApp</div>
         <div class="tab-link" onclick="switchTab('smtp')">SMTP &amp; Email</div>
+        <div class="tab-link" onclick="switchTab('tracking')">Pixels &amp; Tracking</div>
         <div class="tab-link" onclick="switchTab('custom_fields')">Custom Lead Fields</div>
     </div>
 
@@ -403,6 +405,29 @@ include __DIR__ . '/../includes/header.php';
                             <label class="form-label">Delay Between Batches (seconds)</label>
                             <input type="number" name="email_batch_delay" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_delay'] ?? '2'); ?>">
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Pixels & Tracking -->
+        <div class="tab-pane" id="pane-tracking">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Tracking Codes &amp; Pixels</h3></div>
+                <div class="card-body">
+                    <div class="alert alert-info" style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span>Add custom scripts (Google Tag Manager, Google Analytics, Meta Pixel, etc.) to your CRM website header and body tags. Only enter valid HTML scripts/tags.</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Header Tracking Code (injects in <code>&lt;head&gt;</code> tag on all pages)</label>
+                        <textarea name="tracking_head_code" class="form-control" rows="8" placeholder="&lt;script&gt;&#10;  // Your Google Tag Manager / Analytics / Meta Pixel header code here&#10;&lt;/script&gt;" style="font-family: monospace; font-size: 13px;"><?php echo htmlspecialchars($settings['tracking_head_code'] ?? ''); ?></textarea>
+                        <p class="text-muted" style="font-size:11px; margin-top:4px;">This code will be printed raw in the HTML <code>&lt;head&gt;</code> block of all client-facing pages (dashboard, leads, register, login, etc.).</p>
+                    </div>
+                    <div class="form-group" style="margin-top:24px;">
+                        <label class="form-label">Body Tracking Code (injects right after <code>&lt;body&gt;</code> tag on all pages)</label>
+                        <textarea name="tracking_body_code" class="form-control" rows="8" placeholder="&lt;noscript&gt;&#10;  &lt;iframe src=&quot;https://www.googletagmanager.com/ns.html?id=GTM-XXXXXX&quot; height=&quot;0&quot; width=&quot;0&quot; style=&quot;display:none;visibility:hidden&quot;&gt;&lt;/iframe&gt;&#10;&lt;/noscript&gt;" style="font-family: monospace; font-size: 13px;"><?php echo htmlspecialchars($settings['tracking_body_code'] ?? ''); ?></textarea>
+                        <p class="text-muted" style="font-size:11px; margin-top:4px;">This code is commonly used for noscript tracking fallbacks, injected immediately after the opening body tag.</p>
                     </div>
                 </div>
             </div>

@@ -9,8 +9,17 @@ function getSetting($key, $default = '') {
     if ($settings === null) {
         try {
             $db = Database::getInstance()->getConnection();
-            $stmt = $db->query("SELECT setting_key, setting_value FROM settings");
-            $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            $companyId = $_SESSION['company_id'] ?? null;
+            if ($companyId) {
+                // Load company specific settings or global fallback settings
+                // We order by company_id ASC so company-specific values overwrite global fallback values
+                $stmt = $db->prepare("SELECT setting_key, setting_value FROM settings WHERE company_id = ? OR company_id IS NULL ORDER BY company_id ASC");
+                $stmt->execute([$companyId]);
+                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            } else {
+                $stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL");
+                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            }
         } catch (Exception $e) {
             $settings = [];
         }

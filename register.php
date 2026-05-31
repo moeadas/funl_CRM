@@ -243,8 +243,10 @@ $plans = getActivePlans();
             .nav-links { display: none; }
         }
     </style>
+    <?php echo getSetting('tracking_head_code'); ?>
 </head>
 <body>
+<?php echo getSetting('tracking_body_code'); ?>
 <?php require_once __DIR__ . '/includes/preloader.php'; ?>
 
 <!-- Navigation -->

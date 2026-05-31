@@ -29,8 +29,10 @@ if ($_isAdminOrImpersonating) {
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/modal-system.css">
     <script src="/assets/js/main.js" defer></script>
+    <?php echo getSetting('tracking_head_code'); ?>
 </head>
 <body>
+<?php echo getSetting('tracking_body_code'); ?>
 <?php require_once __DIR__ . '/preloader.php'; ?>
     <!-- Mobile Menu Toggle -->
     <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle menu">
