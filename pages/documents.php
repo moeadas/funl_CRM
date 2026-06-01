@@ -125,7 +125,7 @@ include '../includes/header.php';
         <a href="?category=all" class="btn btn-sm <?php echo $category === 'all' ? 'btn-primary' : 'btn-outline'; ?>"><?php echo __('All'); ?></a>
         <?php foreach ($categories as $key => $label): ?>
             <a href="?category=<?php echo $key; ?>" class="btn btn-sm <?php echo $category === $key ? 'btn-primary' : 'btn-outline'; ?>">
-                <?php echo htmlspecialchars($label); ?>
+                <?php echo htmlspecialchars(__($label)); ?>
             </a>
         <?php endforeach; ?>
     </div>
@@ -165,7 +165,7 @@ include '../includes/header.php';
                             <div>
                                 <h4 style="margin:0;font-size:15px;"><?php echo htmlspecialchars($doc['title']); ?></h4>
                                 <p style="margin:2px 0 0;font-size:12px;color:var(--color-text-muted);">
-                                    <?php echo htmlspecialchars($categories[$doc['category']] ?? 'General'); ?>
+                                    <?php echo htmlspecialchars(__($categories[$doc['category']] ?? 'General')); ?>
                                     &middot;
                                     <?php echo number_format($doc['file_size'] / 1024, 1); ?> KB
                                 </p>
@@ -252,7 +252,7 @@ include '../includes/header.php';
                 <label class="form-label"><?php echo __('Category'); ?></label>
                 <select name="category" class="form-control">
                     <?php foreach ($categories as $key => $label): ?>
-                        <option value="<?php echo $key; ?>"><?php echo htmlspecialchars($label); ?></option>
+                        <option value="<?php echo $key; ?>"><?php echo htmlspecialchars(__($label)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>

@@ -25,7 +25,7 @@ table.data-table tr:hover { background: #f9fafb; }
 <div class="products-page">
     <div class="page-header">
         <h1><?php echo __('Products'); ?></h1>
-        <a href="/pages/product-form.php" class="btn btn-primary" style="text-decoration:none;">+ New Product</a>
+        <a href="/pages/product-form.php" class="btn btn-primary" style="text-decoration:none;">+ <?php echo __('New Product'); ?></a>
     </div>
     <div class="data-table-wrap">
         <table class="data-table">

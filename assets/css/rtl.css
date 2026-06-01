@@ -58,11 +58,13 @@ html[dir="rtl"] .modal-body,
 html[dir="rtl"] .page-header,
 html[dir="rtl"] .unsub-text,
 html[dir="rtl"] .unsub-footer {
-    text-align: right;
+    text-align: right !important;
 }
 
-html[dir="rtl"] .table thead th {
-    text-align: right;
+html[dir="rtl"] .table thead th,
+html[dir="rtl"] table.data-table th,
+html[dir="rtl"] .items-table th {
+    text-align: right !important;
 }
 
 html[dir="rtl"] .text-right {

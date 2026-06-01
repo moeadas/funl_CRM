@@ -9,7 +9,7 @@ require_once '../includes/functions.php';
 startSecureSession();
 requireLogin();
 
-$pageTitle = 'VoIP Calls';
+$pageTitle = __('VoIP Calls');
 $csrf_token = generateCSRFToken();
 $db = Database::getInstance();
 $isSalesRep = !hasRole('Sales Manager');
@@ -128,27 +128,27 @@ include '../includes/header.php';
     <div>
         <h1 class="page-title">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            VoIP Calls
+            <?php echo __('VoIP Calls'); ?>
         </h1>
         <p class="page-subtitle">
             <?php if ($isSalesRep): ?>
-                Your call history and statistics
+                <?php echo __('Your call history and statistics'); ?>
             <?php else: ?>
-                Team call history, statistics &amp; performance
+                <?php echo __('Team call history, statistics & performance'); ?>
             <?php endif; ?>
         </p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
         <span id="voip-ready-badge" class="voip-status-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;background:#86868b;color:#fff;"><?php echo __('Initializing...'); ?></span>
         <?php if ($isManager): ?>
-        <button class="btn btn-outline" onclick="checkVoIPSetup()" title="Diagnose Twilio webhook configuration" style="font-size:12px;padding:6px 12px;">
+        <button class="btn btn-outline" onclick="checkVoIPSetup()" title="<?php echo htmlspecialchars(__('Diagnose Twilio webhook configuration')); ?>" style="font-size:12px;padding:6px 12px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Setup
+            <?php echo __('Setup'); ?>
         </button>
         <?php endif; ?>
         <button class="btn btn-primary" onclick="showDialer()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            Quick Dial
+            <?php echo __('Quick Dial'); ?>
         </button>
     </div>
 </div>
@@ -324,7 +324,7 @@ include '../includes/header.php';
             <table class="table" id="callsTable">
                 <thead>
                     <tr>
-                        <th>Lead / Contact</th>
+                        <th><?php echo __('Lead / Contact'); ?></th>
                         <?php if ($isManager): ?><th><?php echo __("user"); ?></th><?php endif; ?>
                         <th><?php echo __("number"); ?></th>
                         <th><?php echo __("direction"); ?></th>
@@ -384,7 +384,7 @@ include '../includes/header.php';
                                         : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
                                     $dirClass = $call['direction'] === 'Inbound' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
                                     ?>
-                                    <span class="badge <?php echo $dirClass; ?>"><?php echo $dirIcon; ?> <?php echo $call['direction']; ?></span>
+                                    <span class="badge <?php echo $dirClass; ?>"><?php echo $dirIcon; ?> <?php echo __($call['direction']); ?></span>
                                 </td>
                                 <td>
                                     <?php
@@ -400,7 +400,7 @@ include '../includes/header.php';
                                     ];
                                     $sc = $statusColors[$call['status']] ?? 'bg-gray-100 text-gray-800';
                                     ?>
-                                    <span class="badge <?php echo $sc; ?>"><?php echo htmlspecialchars($call['status']); ?></span>
+                                    <span class="badge <?php echo $sc; ?>"><?php echo htmlspecialchars(__($call['status'])); ?></span>
                                 </td>
                                 <td>
                                     <?php if ($call['duration_seconds']): ?>
@@ -425,7 +425,7 @@ include '../includes/header.php';
                                         ];
                                         $oc = $outcomeColors[$call['outcome']] ?? 'bg-gray-100 text-gray-800';
                                         ?>
-                                        <span class="badge <?php echo $oc; ?>"><?php echo htmlspecialchars($call['outcome']); ?></span>
+                                        <span class="badge <?php echo $oc; ?>"><?php echo htmlspecialchars(__($call['outcome'])); ?></span>
                                     <?php else: ?>
                                         <span class="text-muted">-</span>
                                     <?php endif; ?>
@@ -447,12 +447,12 @@ include '../includes/header.php';
                                     <div style="display:flex;gap:4px;flex-wrap:wrap;">
                                         <button class="comm-btn comm-btn-call" style="font-size:11px;padding:4px 8px;" onclick="VoIPPhone.call('<?php echo htmlspecialchars($call['direction']==='Inbound' ? $call['from_number'] : $call['to_number']); ?>', <?php echo $call['lead_id'] ?: 0; ?>)" title="<?php echo __("redial"); ?>">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3"/></svg>
-                                            Redial
+                                            <?php echo __('Redial'); ?>
                                         </button>
                                         <?php if ($call['recording_url']): ?>
                                             <button class="comm-btn" style="font-size:11px;padding:4px 8px;background:#e8f0fe;color:#1a56db;" onclick="playRecording('<?php echo htmlspecialchars($call['recording_url']); ?>')" title="<?php echo __("play_recording"); ?>">
                                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                                                Play
+                                                <?php echo __('Play'); ?>
                                             </button>
                                         <?php endif; ?>
                                         <button class="comm-btn" style="font-size:11px;padding:4px 8px;background:#f5f5f7;color:#636366;" onclick="showCallDetail(<?php echo htmlspecialchars(json_encode($call)); ?>)" title="<?php echo __("view_details"); ?>">
@@ -468,7 +468,7 @@ include '../includes/header.php';
         </div>
         <?php if (count($calls) >= 200): ?>
             <div style="text-align:center;padding:12px;color:var(--text-muted);font-size:12px;">
-                Showing last 200 calls. Use filters to narrow results.
+                <?php echo __('Showing last 200 calls. Use filters to narrow results.'); ?>
             </div>
         <?php endif; ?>
     </div>
@@ -481,7 +481,7 @@ include '../includes/header.php';
         <div class="modal-header">
             <h3>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                Quick Dial
+                <?php echo __('Quick Dial'); ?>
             </h3>
             <button type="button" class="btn-close" onclick="hideDialer()">&times;</button>
         </div>
@@ -491,7 +491,7 @@ include '../includes/header.php';
                 <input type="tel" id="dialNumber" class="form-control" placeholder="+1 858 358 5260" autofocus
                     style="font-size:16px;letter-spacing:0.5px;"
                     onkeydown="if(event.key==='Enter'){event.preventDefault();dialNumber();}">
-                <small class="text-muted" style="font-size:11px;">Enter a phone number with country code (e.g. +1 for US)</small>
+                <small class="text-muted" style="font-size:11px;"><?php echo __('Enter a phone number with country code (e.g. +1 for US)'); ?></small>
             </div>
         </div>
         <div class="modal-footer">
