@@ -32,25 +32,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $planKey = sanitizeInput($_POST['plan'] ?? 'single');
 
         if (empty($companyName) || empty($email) || empty($password) || empty($fullName)) {
-            $error = 'All fields are required.';
+            $error = __('All fields are required.');
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Please enter a valid email address.';
+            $error = __('Please enter a valid email address.');
         } elseif (strlen($password) < 8) {
-            $error = 'Password must be at least 8 characters.';
+            $error = __('Password must be at least 8 characters.');
         } elseif ($password !== $confirmPassword) {
-            $error = 'Passwords do not match.';
+            $error = __('Passwords do not match.');
         } else {
             try {
                 $db = Database::getInstance();
 
                 $existing = $db->query("SELECT 1 FROM companies WHERE email = ? OR company_slug = ?", [$email, $companySlug])->fetch();
                 if ($existing) {
-                    $error = 'A company with this email or name already exists.';
+                    $error = __('A company with this email or name already exists.');
                     } else {
                         // Also check if email already exists in users table (could be from another company)
                         $existingUser = $db->query("SELECT 1 FROM users WHERE email = ?", [$email])->fetch();
                         if ($existingUser) {
-                            $error = 'This email address is already registered. Please use a different email or sign in.';
+                            $error = __('This email address is already registered. Please use a different email or sign in.');
                         } else {
                             $plan = getPlan($planKey);
                             if (!$plan) $plan = getPlan('single');
@@ -153,7 +153,7 @@ if (!$selectedPlan && !empty($plans)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Your Account - <?php echo htmlspecialchars(getAppName()); ?></title>
+    <title><?php echo __('Create Your Account'); ?> - <?php echo htmlspecialchars(getAppName()); ?></title>
     <link rel="icon" type="image/png" href="<?php echo getCompanyFavicon(); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="/assets/css/style.css">
@@ -485,14 +485,14 @@ if (!$selectedPlan && !empty($plans)) {
             <img src="<?php echo getCompanyLogo(); ?>" alt="<?php echo htmlspecialchars(getAppName()); ?>">
             <span><?php echo htmlspecialchars(getAppName()); ?></span>
         </a>
-        <a href="/login.php" class="nav-signin">Already have an account? <strong>Sign In</strong></a>
+        <a href="/login.php" class="nav-signin"><?php echo __('Already have an account?'); ?> <strong><?php echo __('Sign In'); ?></strong></a>
     </div>
 </nav>
 
 <?php if (isLoggedIn()): ?>
     <div style="max-width: 1140px; margin: 90px auto -60px; padding: 14px 20px; background: #fff8eb; border: 1px solid #ffe8cc; border-radius: 10px; color: #b45309; font-size: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.03); z-index: 50; position: relative;">
-        <span>👋 You are currently signed in as <strong><?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Administrator'); ?></strong>. You can view this page for testing, or return to your dashboard.</span>
-        <a href="/pages/dashboard.php" style="background: #d97706; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 12px; margin-left: 16px;">Go to Dashboard</a>
+        <span>👋 <?php echo sprintf(__('You are currently signed in as %s. You can view this page for testing, or return to your dashboard.'), '<strong>' . htmlspecialchars($_SESSION['full_name'] ?? 'Administrator') . '</strong>'); ?></span>
+        <a href="/pages/dashboard.php" style="background: #d97706; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 12px; margin-left: 16px;"><?php echo __('Go to Dashboard'); ?></a>
     </div>
 <?php endif; ?>
 
@@ -501,52 +501,52 @@ if (!$selectedPlan && !empty($plans)) {
         <!-- Left Column: Selected Plan Overview -->
         <div class="checkout-summary">
             <div class="summary-card">
-                <div class="summary-badge">Chosen Plan</div>
-                <h2><?php echo htmlspecialchars($selectedPlan['plan_name']); ?> Plan</h2>
+                <div class="summary-badge"><?php echo __('Chosen Plan'); ?></div>
+                <h2><?php echo sprintf(__('%s Plan'), htmlspecialchars($selectedPlan['plan_name'])); ?></h2>
                 <p class="summary-desc"><?php echo htmlspecialchars($selectedPlan['description'] ?? ''); ?></p>
                 
                 <div class="summary-price">
                     <span class="currency">$</span>
                     <span class="amount"><?php echo number_format($selectedPlan['monthly_price'], 0); ?></span>
-                    <span class="period">/month</span>
+                    <span class="period"><?php echo __('/month'); ?></span>
                 </div>
-                <p class="billing-note">Billed monthly after your 14-day free trial</p>
+                <p class="billing-note"><?php echo __('Billed monthly after your 14-day free trial'); ?></p>
                 
                 <div class="yearly-comparison">
-                    💡 Save with yearly billing at <strong>$<?php echo number_format($selectedPlan['yearly_price'] ?? $selectedPlan['monthly_price'] * 10, 0); ?>/year</strong> (2 months free!)
+                    💡 <?php echo sprintf(__('Save with yearly billing at %s (2 months free!)'), '<strong>$' . number_format($selectedPlan['yearly_price'] ?? $selectedPlan['monthly_price'] * 10, 0) . '/' . __('year') . '</strong>'); ?>
                 </div>
                 
                 <hr class="summary-divider">
                 
                 <ul class="summary-features">
-                    <li>Up to <strong><?php echo $selectedPlan['user_limit']; ?></strong> <?php echo $selectedPlan['user_limit'] > 1 ? 'users' : 'user'; ?></li>
-                    <li>Unlimited leads & contacts</li>
-                    <li>Lead pipeline management</li>
-                    <li>Email campaigns tool</li>
-                    <li>Task & interaction tracking</li>
-                    <li>Mobile-ready sales dashboard</li>
+                    <li><?php echo sprintf(__('Up to %s'), '<strong>' . $selectedPlan['user_limit'] . '</strong> ' . ($selectedPlan['user_limit'] > 1 ? __('users') : __('user'))); ?></li>
+                    <li><?php echo __('Unlimited leads & contacts'); ?></li>
+                    <li><?php echo __('Lead pipeline management'); ?></li>
+                    <li><?php echo __('Email campaigns tool'); ?></li>
+                    <li><?php echo __('Task & interaction tracking'); ?></li>
+                    <li><?php echo __('Mobile-ready sales dashboard'); ?></li>
                     <?php if ($selectedPlan['extra_user_price'] > 0): ?>
-                    <li>Extra users at $<?php echo number_format($selectedPlan['extra_user_price'], 0); ?>/user</li>
+                    <li><?php echo sprintf(__('Extra users at %s'), '$' . number_format($selectedPlan['extra_user_price'], 0) . '/' . __('user')); ?></li>
                     <?php endif; ?>
                 </ul>
                 
                 <hr class="summary-divider">
                 
                 <div class="trust-list">
-                    <div class="trust-item"><span class="icon">⚡</span> Setup in 60 seconds</div>
-                    <div class="trust-item"><span class="icon">🎁</span> 14-day full-access trial</div>
-                    <div class="trust-item"><span class="icon">💳</span> No credit card required</div>
+                    <div class="trust-item"><span class="icon">⚡</span> <?php echo __('Setup in 60 seconds'); ?></div>
+                    <div class="trust-item"><span class="icon">🎁</span> <?php echo __('14-day full-access trial'); ?></div>
+                    <div class="trust-item"><span class="icon">💳</span> <?php echo __('No credit card required'); ?></div>
                 </div>
             </div>
             
-            <a href="https://funl.online" class="back-link">← Back to Marketing Site</a>
+            <a href="https://funl.online" class="back-link">← <?php echo __('Back to Marketing Site'); ?></a>
         </div>
         
         <!-- Right Column: Sign-Up Form -->
         <div class="checkout-form-wrap">
             <div class="form-card">
-                <h2>Create your account</h2>
-                <p class="subtitle">Set up your sales CRM dashboard instantly.</p>
+                <h2><?php echo __('Create your account'); ?></h2>
+                <p class="subtitle"><?php echo __('Set up your sales CRM dashboard instantly.'); ?></p>
 
                 <?php if ($error): ?>
                     <div class="alert alert-error" style="margin-bottom:20px;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:14px;"><?php echo htmlspecialchars($error); ?></div>
@@ -559,36 +559,36 @@ if (!$selectedPlan && !empty($plans)) {
 
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">Company Name *</label>
-                            <input type="text" name="company_name" class="form-control" placeholder="Acme Inc." required>
+                            <label class="form-label"><?php echo __('Company Name'); ?> *</label>
+                            <input type="text" name="company_name" class="form-control" placeholder="<?php echo __('Acme Inc.'); ?>" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Your Full Name *</label>
-                            <input type="text" name="full_name" class="form-control" placeholder="John Doe" required>
+                            <label class="form-label"><?php echo __('Your Full Name'); ?> *</label>
+                            <input type="text" name="full_name" class="form-control" placeholder="<?php echo __('John Doe'); ?>" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Work Email *</label>
-                            <input type="email" name="email" class="form-control" placeholder="you@company.com" required>
+                            <label class="form-label"><?php echo __('Work Email'); ?> *</label>
+                            <input type="email" name="email" class="form-control" placeholder="<?php echo __('you@company.com'); ?>" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Phone (optional)</label>
+                            <label class="form-label"><?php echo __('Phone (optional)'); ?></label>
                             <input type="tel" name="phone" class="form-control" placeholder="+1 234 567 890">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Password *</label>
-                            <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required>
+                            <label class="form-label"><?php echo __('Password'); ?> *</label>
+                            <input type="password" name="password" class="form-control" placeholder="<?php echo __('Min 8 characters'); ?>" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Confirm Password *</label>
-                            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
+                            <label class="form-label"><?php echo __('Confirm Password'); ?> *</label>
+                            <input type="password" name="confirm_password" class="form-control" placeholder="<?php echo __('Repeat password'); ?>" required>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-submit">Start 14-Day Free Trial</button>
+                    <button type="submit" class="btn-submit"><?php echo __('Start 14-Day Free Trial'); ?></button>
                 </form>
 
                 <p class="form-footer">
-                    By signing up, you agree to our Terms of Service and Privacy Policy.
+                    <?php echo __('By signing up, you agree to our Terms of Service and Privacy Policy.'); ?>
                 </p>
             </div>
         </div>
@@ -597,7 +597,7 @@ if (!$selectedPlan && !empty($plans)) {
 
 <!-- Footer -->
 <footer class="footer">
-    <p>© 2026 <?php echo htmlspecialchars(getAppName()); ?>. All rights reserved. | <a href="/login.php">Sign In</a></p>
+    <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(getAppName()); ?><?php echo __('.&nbsp;All rights reserved.'); ?> | <a href="/login.php"><?php echo __('Sign In'); ?></a></p>
 </footer>
 
 </body>

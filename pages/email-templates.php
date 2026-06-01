@@ -13,18 +13,18 @@ $db = Database::getInstance()->getConnection();
 
 $templates = $db->query("SELECT t.*, u.full_name as creator FROM email_templates t LEFT JOIN users u ON t.created_by = u.user_id ORDER BY t.updated_at DESC")->fetchAll();
 
-$pageTitle = 'Email Templates';
+$pageTitle = __('email_templates');
 include '../includes/header.php';
 ?>
 
 <div class="page-header">
     <div>
-        <h1>Email Templates</h1>
-        <p class="text-muted">Reusable email designs for your campaigns</p>
+        <h1><?php echo __('email_templates'); ?></h1>
+        <p class="text-muted"><?php echo __('email_templates_subtitle'); ?></p>
     </div>
     <button class="btn btn-primary" onclick="createTemplate()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New Template
+        <?php echo __('new_template'); ?>
     </button>
 </div>
 
@@ -32,8 +32,8 @@ include '../includes/header.php';
     <div class="card">
         <div class="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-            <h3>No templates yet</h3>
-            <p>Create your first email template to use across campaigns</p>
+            <h3><?php echo __('no_templates_yet'); ?></h3>
+            <p><?php echo __('create_first_template_desc'); ?></p>
         </div>
     </div>
 <?php else: ?>
@@ -43,19 +43,19 @@ include '../includes/header.php';
                 <div class="card-body">
                     <div class="template-card-header">
                         <h3><?php echo htmlspecialchars($t['name']); ?></h3>
-                        <span class="badge badge-default"><?php echo $t['category']; ?></span>
+                        <span class="badge badge-default"><?php echo htmlspecialchars(__($t['category'])); ?></span>
                     </div>
                     <?php if ($t['subject']): ?>
                         <p class="text-muted fs-13"><?php echo htmlspecialchars($t['subject']); ?></p>
                     <?php endif; ?>
                     <div class="template-meta">
-                        <span>By <?php echo htmlspecialchars($t['creator'] ?? 'Unknown'); ?></span>
+                        <span><?php echo __('by'); ?> <?php echo htmlspecialchars($t['creator'] ?? __('unknown')); ?></span>
                         <span><?php echo timeAgo($t['updated_at']); ?></span>
                     </div>
                 </div>
                 <div class="card-footer template-actions">
-                    <a href="email-builder.php?mode=template&id=<?php echo $t['template_id']; ?>" class="btn btn-sm btn-outline">Edit Design</a>
-                    <button class="btn btn-sm btn-outline btn-danger-outline" onclick="deleteTemplate(<?php echo $t['template_id']; ?>)">Delete</button>
+                    <a href="email-builder.php?mode=template&id=<?php echo $t['template_id']; ?>" class="btn btn-sm btn-outline"><?php echo __('edit_design'); ?></a>
+                    <button class="btn btn-sm btn-outline btn-danger-outline" onclick="deleteTemplate(<?php echo $t['template_id']; ?>)"><?php echo __('delete'); ?></button>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -66,34 +66,34 @@ include '../includes/header.php';
 <div id="createTemplateModal" class="modal" style="display:none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>New Template</h2>
+            <h2><?php echo __('new_template'); ?></h2>
             <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
         </div>
         <form id="newTemplateForm">
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Template Name *</label>
-                    <input type="text" name="name" class="form-control" required placeholder="e.g., Monthly Newsletter">
+                    <label class="form-label"><?php echo __('template_name'); ?> *</label>
+                    <input type="text" name="name" class="form-control" required placeholder="<?php echo __('e_g_monthly_newsletter'); ?>">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Default Subject</label>
-                    <input type="text" name="subject" class="form-control" placeholder="e.g., Your monthly update from Your Company">
+                    <label class="form-label"><?php echo __('default_subject'); ?></label>
+                    <input type="text" name="subject" class="form-control" placeholder="<?php echo __('e_g_monthly_update'); ?>">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Category</label>
+                    <label class="form-label"><?php echo __('category'); ?></label>
                     <select name="category" class="form-control">
-                        <option value="Marketing">Marketing</option>
-                        <option value="Newsletter">Newsletter</option>
-                        <option value="Announcement">Announcement</option>
-                        <option value="Follow-up">Follow-up</option>
-                        <option value="Welcome">Welcome</option>
-                        <option value="Custom" selected>Custom</option>
+                        <option value="Marketing"><?php echo __('Marketing'); ?></option>
+                        <option value="Newsletter"><?php echo __('Newsletter'); ?></option>
+                        <option value="Announcement"><?php echo __('Announcement'); ?></option>
+                        <option value="Follow-up"><?php echo __('Follow-up'); ?></option>
+                        <option value="Welcome"><?php echo __('Welcome'); ?></option>
+                        <option value="Custom" selected><?php echo __('Custom'); ?></option>
                     </select>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create & Open Builder</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal()"><?php echo __('cancel'); ?></button>
+                <button type="submit" class="btn btn-primary"><?php echo __('create_open_builder'); ?></button>
             </div>
         </form>
     </div>

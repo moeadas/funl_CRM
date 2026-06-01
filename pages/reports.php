@@ -16,7 +16,7 @@ if (!hasRole('Sales Manager')) {
     exit;
 }
 
-$pageTitle = 'Reports & Analytics';
+$pageTitle = __('Reports & Analytics');
 
 // Get filter values
 $filterRepId   = isset($_GET['sales_rep']) ? intval($_GET['sales_rep']) : 0;
@@ -173,10 +173,10 @@ include '../includes/header.php';
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Reports &amp; Analytics</h1>
+        <h1 class="page-title"><?php echo __('Reports & Analytics'); ?></h1>
         <p class="page-subtitle">
             <?php if ($filterRepName): ?>
-                Showing data for <strong><?php echo htmlspecialchars($filterRepName); ?></strong>
+                <?php echo __('Showing data for'); ?> <strong><?php echo htmlspecialchars($filterRepName); ?></strong>
                 <?php if ($filterDateFrom || $filterDateTo): ?>
                     &middot;
                     <?php if ($filterDateFrom) echo htmlspecialchars($filterDateFrom); ?>
@@ -184,19 +184,19 @@ include '../includes/header.php';
                     <?php if ($filterDateTo) echo htmlspecialchars($filterDateTo); ?>
                 <?php endif; ?>
             <?php elseif ($filterDateFrom || $filterDateTo): ?>
-                Filtered by date:
+                <?php echo __('Filtered by date:'); ?>
                 <?php if ($filterDateFrom) echo htmlspecialchars($filterDateFrom); ?>
                 <?php if ($filterDateFrom && $filterDateTo) echo ' &ndash; '; ?>
                 <?php if ($filterDateTo) echo htmlspecialchars($filterDateTo); ?>
             <?php else: ?>
-                Comprehensive insights into your sales performance
+                <?php echo __('Comprehensive insights into your sales performance'); ?>
             <?php endif; ?>
         </p>
     </div>
     <div class="card-actions">
         <button class="btn btn-outline" onclick="window.print()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Print Report
+            <?php echo __('Print Report'); ?>
         </button>
     </div>
 </div>
@@ -207,9 +207,9 @@ include '../includes/header.php';
     <div class="card-body">
         <form method="GET" class="filter-form" id="reportFilterForm">
             <div class="form-group filter-group">
-                <label class="form-label">Sales Rep</label>
+                <label class="form-label"><?php echo __('Sales Rep'); ?></label>
                 <select name="sales_rep" class="form-control">
-                    <option value="">All Sales Reps</option>
+                    <option value=""><?php echo __('All Sales Reps'); ?></option>
                     <?php foreach ($salesReps as $rep): ?>
                         <option value="<?php echo $rep['user_id']; ?>" <?php echo $filterRepId == $rep['user_id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($rep['full_name']); ?> (<?php echo htmlspecialchars($rep['role']); ?>)
@@ -218,19 +218,19 @@ include '../includes/header.php';
                 </select>
             </div>
             <div class="form-group filter-group">
-                <label class="form-label">Date From</label>
+                <label class="form-label"><?php echo __('Date From'); ?></label>
                 <input type="date" name="date_from" class="form-control" value="<?php echo htmlspecialchars($filterDateFrom); ?>">
             </div>
             <div class="form-group filter-group">
-                <label class="form-label">Date To</label>
+                <label class="form-label"><?php echo __('Date To'); ?></label>
                 <input type="date" name="date_to" class="form-control" value="<?php echo htmlspecialchars($filterDateTo); ?>">
             </div>
             <button type="submit" class="btn btn-primary">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                Apply Filters
+                <?php echo __('Apply Filters'); ?>
             </button>
             <?php if ($filterRepId || $filterDateFrom || $filterDateTo): ?>
-                <a href="/pages/reports.php" class="btn btn-outline">Clear</a>
+                <a href="/pages/reports.php" class="btn btn-outline"><?php echo __('Clear'); ?></a>
             <?php endif; ?>
         </form>
     </div>
@@ -245,8 +245,8 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $leadStats['total_leads'] ?? 0; ?></div>
-            <div class="stat-label">Total Leads</div>
-            <div class="stat-change positive">+<?php echo $leadStats['leads_this_month'] ?? 0; ?> this month</div>
+            <div class="stat-label"><?php echo __('Total Leads'); ?></div>
+            <div class="stat-change positive">+<?php echo $leadStats['leads_this_month'] ?? 0; ?> <?php echo __('this month'); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -255,8 +255,8 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $conversionRate; ?>%</div>
-            <div class="stat-label">Conversion Rate</div>
-            <div class="stat-change"><?php echo $conversionData['won'] ?? 0; ?> won / <?php echo $conversionData['total'] ?? 0; ?> total</div>
+            <div class="stat-label"><?php echo __('Conversion Rate'); ?></div>
+            <div class="stat-change"><?php echo $conversionData['won'] ?? 0; ?> <?php echo __('won'); ?> / <?php echo $conversionData['total'] ?? 0; ?> <?php echo __('total'); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -265,8 +265,8 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $interactionStats['total_interactions'] ?? 0; ?></div>
-            <div class="stat-label">Total Updates</div>
-            <div class="stat-change positive">+<?php echo $interactionStats['interactions_this_month'] ?? 0; ?> this month</div>
+            <div class="stat-label"><?php echo __('Total Updates'); ?></div>
+            <div class="stat-change positive">+<?php echo $interactionStats['interactions_this_month'] ?? 0; ?> <?php echo __('this month'); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -275,8 +275,8 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $leadStats['won'] ?? 0; ?></div>
-            <div class="stat-label">Won</div>
-            <div class="stat-change negative"><?php echo $leadStats['lost'] ?? 0; ?> lost</div>
+            <div class="stat-label"><?php echo __('Won'); ?></div>
+            <div class="stat-change negative"><?php echo $leadStats['lost'] ?? 0; ?> <?php echo __('lost'); ?></div>
         </div>
     </div>
 </div>
@@ -290,7 +290,7 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $interactionStats['calls'] ?? 0; ?></div>
-            <div class="stat-label">Calls</div>
+            <div class="stat-label"><?php echo __('Calls'); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -299,7 +299,7 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $interactionStats['emails'] ?? 0; ?></div>
-            <div class="stat-label">Emails</div>
+            <div class="stat-label"><?php echo __('Emails'); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -308,7 +308,7 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $interactionStats['meetings'] ?? 0; ?></div>
-            <div class="stat-label">Meetings</div>
+            <div class="stat-label"><?php echo __('Meetings'); ?></div>
         </div>
     </div>
     <div class="stat-card">
@@ -317,28 +317,28 @@ include '../includes/header.php';
         </div>
         <div class="stat-details">
             <div class="stat-value"><?php echo $leadStats['new_leads'] ?? 0; ?></div>
-            <div class="stat-label">New Leads</div>
+            <div class="stat-label"><?php echo __('New Leads'); ?></div>
         </div>
     </div>
 </div>
 <?php endif; ?>
 
 <div class="grid grid-2">
-    <div class="card"><div class="card-header"><h3 class="card-title">Leads by Status</h3></div><div class="card-body"><canvas id="statusChart" height="300"></canvas></div></div>
-    <div class="card"><div class="card-header"><h3 class="card-title">Leads by Type</h3></div><div class="card-body"><canvas id="typeChart" height="300"></canvas></div></div>
+    <div class="card"><div class="card-header"><h3 class="card-title"><?php echo __('Leads by Status'); ?></h3></div><div class="card-body"><canvas id="statusChart" height="300"></canvas></div></div>
+    <div class="card"><div class="card-header"><h3 class="card-title"><?php echo __('Leads by Type'); ?></h3></div><div class="card-body"><canvas id="typeChart" height="300"></canvas></div></div>
 </div>
 
 <div class="card">
-    <div class="card-header"><h3 class="card-title">Lead Generation Trend (Last 6 Months)</h3></div>
+    <div class="card-header"><h3 class="card-title"><?php echo __('Lead Generation Trend (Last 6 Months)'); ?></h3></div>
     <div class="card-body"><canvas id="trendChart" height="100"></canvas></div>
 </div>
 
 <div class="card">
-    <div class="card-header"><h3 class="card-title">Leads by Country</h3></div>
+    <div class="card-header"><h3 class="card-title"><?php echo __('Leads by Country'); ?></h3></div>
     <div class="card-body">
         <div class="table-container">
             <table class="table">
-                <thead><tr><th>Country</th><th>Count</th><th>%</th><th>Progress</th></tr></thead>
+                <thead><tr><th><?php echo __('Country'); ?></th><th><?php echo __('Count'); ?></th><th>%</th><th><?php echo __('Progress'); ?></th></tr></thead>
                 <tbody>
                     <?php $totalLeads = max($leadStats['total_leads'] ?? 1, 1);
                     foreach ($leadsByCountry as $country): $pct = round(($country['count'] / $totalLeads) * 100, 1); ?>
@@ -357,11 +357,11 @@ include '../includes/header.php';
 
 <!-- Team Performance -->
 <div class="card">
-    <div class="card-header"><h3 class="card-title">Team Performance</h3></div>
+    <div class="card-header"><h3 class="card-title"><?php echo __('Team Performance'); ?></h3></div>
     <div class="card-body">
         <div class="table-container">
             <table class="table">
-                <thead><tr><th>User</th><th>Role</th><th>Leads</th><th>Interactions</th><th>Won</th><th>Win Rate</th></tr></thead>
+                <thead><tr><th><?php echo __('User'); ?></th><th><?php echo __('Role'); ?></th><th><?php echo __('Leads'); ?></th><th><?php echo __('Interactions'); ?></th><th><?php echo __('Won'); ?></th><th><?php echo __('Win Rate'); ?></th></tr></thead>
                 <tbody>
                     <?php foreach ($userPerformance as $user):
                         $winRate = $user['assigned_leads'] > 0 ? round(($user['deals_won'] / $user['assigned_leads']) * 100, 1) : 0; ?>
@@ -411,7 +411,7 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
     type: 'line',
     data: {
         labels: <?php echo json_encode(array_column($monthlyTrend, 'month')); ?>,
-        datasets: [{ label: 'New Leads', data: <?php echo json_encode(array_column($monthlyTrend, 'count')); ?>, borderColor: '#0071e3', backgroundColor: 'rgba(0,113,227,0.08)', tension: 0.4, fill: true }]
+        datasets: [{ label: window.__('New Leads'), data: <?php echo json_encode(array_column($monthlyTrend, 'count')); ?>, borderColor: '#0071e3', backgroundColor: 'rgba(0,113,227,0.08)', tension: 0.4, fill: true }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
 });

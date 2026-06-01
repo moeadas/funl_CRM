@@ -20,13 +20,13 @@ $csrf_token = generateCSRFToken();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verify CSRF
     if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
-        $error = 'Invalid request. Please try again.';
+        $error = __('Invalid request. Please try again.');
     } else {
         $username = sanitizeInput($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 
         if (empty($username) || empty($password)) {
-            $error = 'Please enter both username and password.';
+            $error = __('Please enter both username and password.');
         } elseif (authenticateUser($username, $password)) {
             // Check if email is verified (skip for super admin)
             if (!empty($_SESSION['email_verified']) || !empty($_SESSION['is_super_admin'])) {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } else {
-            $error = 'Invalid username or password.';
+            $error = __('Invalid username or password.');
         }
     }
 }
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
-    <title>Sign In &mdash; <?php echo htmlspecialchars(getAppName()); ?></title>
+    <title><?php echo __('Sign In'); ?> &mdash; <?php echo htmlspecialchars(getAppName()); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="<?php echo getCompanyFavicon(); ?>">
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="login-header">
                 <img src="<?php echo getCompanyLogo(); ?>" alt="<?php echo htmlspecialchars(getAppName()); ?>" class="login-logo" style="max-height:60px;max-width:200px;">
                 <h1 class="login-title"><?php echo htmlspecialchars(getAppName()); ?></h1>
-                <p class="login-subtitle">Sign in to your account</p>
+                <p class="login-subtitle"><?php echo __('Sign in to your account'); ?></p>
             </div>
 
             <?php if ($error): ?>
@@ -78,25 +78,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php echo csrfField(); ?>
 
                 <div class="form-group">
-                    <label class="form-label" for="username">Username</label>
-                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required autofocus autocomplete="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
+                    <label class="form-label" for="username"><?php echo __('Username'); ?></label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="<?php echo __('Enter your username'); ?>" required autofocus autocomplete="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+                    <label class="form-label" for="password"><?php echo __('Password'); ?></label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="<?php echo __('Enter your password'); ?>" required autocomplete="current-password">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block btn-lg">
-                    Sign In
+                    <?php echo __('Sign In'); ?>
                 </button>
             </form>
 
             <div class="login-footer">
                 <p style="text-align:center;margin-bottom:12px;">
-                    Don't have an account? <a href="/register.php">Create one</a>
+                    <?php echo __('Don\'t have an account?'); ?> <a href="/register.php"><?php echo __('Create one'); ?></a>
                 </p>
-                <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(getAppName()); ?>. All rights reserved.</p>
+                <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(getAppName()); ?><?php echo __('.&nbsp;All rights reserved.'); ?></p>
             </div>
         </div>
     </div>

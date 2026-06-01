@@ -5,13 +5,14 @@
  * Variables available: $log, $token
  */
 if (!isset($log) && !isset($token)) { header('Location: /login.php'); exit; }
+if (!function_exists('__')) { require_once __DIR__ . '/../includes/functions.php'; }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unsubscribe — Your Company</title>
+    <title><?php echo __('Unsubscribe'); ?> — Your Company</title>
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
@@ -20,26 +21,26 @@ if (!isset($log) && !isset($token)) { header('Location: /login.php'); exit; }
         <div class="login-card unsub-card">
             <div class="login-header">
                 <img src="/assets/images/VG%20logo.svg" alt="Your Company" class="login-logo">
-                <h1 class="login-title">Unsubscribe</h1>
+                <h1 class="login-title"><?php echo __('Unsubscribe'); ?></h1>
             </div>
 
             <?php if ($log): ?>
                 <div id="unsubContent">
                     <p class="unsub-text">
-                        Are you sure you want to unsubscribe <strong><?php echo htmlspecialchars($log['email']); ?></strong> from our mailing list?
+                        <?php echo sprintf(__('Are you sure you want to unsubscribe %s from our mailing list?'), '<strong>' . htmlspecialchars($log['email']) . '</strong>'); ?>
                     </p>
-                    <button onclick="confirmUnsub()" class="btn btn-primary btn-block" id="unsubBtn">Yes, Unsubscribe Me</button>
+                    <button onclick="confirmUnsub()" class="btn btn-primary btn-block" id="unsubBtn"><?php echo __('Yes, Unsubscribe Me'); ?></button>
                     <p class="unsub-footer">
-                        You can also contact us at <a href="mailto:info@victorygenomics.com">info@victorygenomics.com</a>
+                        <?php echo __('You can also contact us at'); ?> <a href="mailto:info@victorygenomics.com">info@victorygenomics.com</a>
                     </p>
                 </div>
                 <div id="unsubDone" class="unsub-done" style="display:none;">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <h2>You've been unsubscribed</h2>
-                    <p>You will no longer receive marketing emails from us.</p>
+                    <h2><?php echo __('You\'ve been unsubscribed'); ?></h2>
+                    <p><?php echo __('You will no longer receive marketing emails from us.'); ?></p>
                 </div>
             <?php else: ?>
-                <p class="unsub-text">Invalid or expired unsubscribe link.</p>
+                <p class="unsub-text"><?php echo __('Invalid or expired unsubscribe link.'); ?></p>
             <?php endif; ?>
         </div>
     </div>

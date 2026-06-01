@@ -24,18 +24,18 @@ $sent = count(array_filter($campaigns, fn($c) => $c['status'] === 'Sent'));
 $drafts = count(array_filter($campaigns, fn($c) => $c['status'] === 'Draft'));
 $totalSent = array_sum(array_column($campaigns, 'total_sent'));
 
-$pageTitle = 'Email Campaigns';
+$pageTitle = __('email_campaigns');
 include '../includes/header.php';
 ?>
 
 <div class="page-header">
     <div>
-        <h1>Email Campaigns</h1>
-        <p class="text-muted">Create and manage email marketing campaigns</p>
+        <h1><?php echo __('email_campaigns'); ?></h1>
+        <p class="text-muted"><?php echo __('email_campaigns_subtitle'); ?></p>
     </div>
     <a href="email-campaign-form.php" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New Campaign
+        <?php echo __('new_campaign'); ?>
     </a>
 </div>
 
@@ -45,7 +45,7 @@ include '../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <div>
-            <div class="stat-label">TOTAL CAMPAIGNS</div>
+            <div class="stat-label"><?php echo __('total_campaigns'); ?></div>
             <div class="stat-value"><?php echo $totalCampaigns; ?></div>
         </div>
     </div>
@@ -54,7 +54,7 @@ include '../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div>
-            <div class="stat-label">SENT</div>
+            <div class="stat-label"><?php echo __('sent'); ?></div>
             <div class="stat-value"><?php echo $sent; ?></div>
         </div>
     </div>
@@ -63,7 +63,7 @@ include '../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </div>
         <div>
-            <div class="stat-label">DRAFTS</div>
+            <div class="stat-label"><?php echo __('drafts'); ?></div>
             <div class="stat-value"><?php echo $drafts; ?></div>
         </div>
     </div>
@@ -72,7 +72,7 @@ include '../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </div>
         <div>
-            <div class="stat-label">EMAILS SENT</div>
+            <div class="stat-label"><?php echo __('emails_sent'); ?></div>
             <div class="stat-value"><?php echo number_format($totalSent); ?></div>
         </div>
     </div>
@@ -80,25 +80,25 @@ include '../includes/header.php';
 
 <div class="card">
     <div class="card-header">
-        <h2 class="card-title">All Campaigns</h2>
+        <h2 class="card-title"><?php echo __('all_campaigns'); ?></h2>
     </div>
     <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr>
-                    <th>Campaign</th>
-                    <th>Status</th>
-                    <th>List</th>
-                    <th>Sent</th>
-                    <th>Opened</th>
-                    <th>Clicked</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+                    <th><?php echo __('campaign'); ?></th>
+                    <th><?php echo __('status'); ?></th>
+                    <th><?php echo __('list'); ?></th>
+                    <th><?php echo __('sent'); ?></th>
+                    <th><?php echo __('opened'); ?></th>
+                    <th><?php echo __('clicked'); ?></th>
+                    <th><?php echo __('created'); ?></th>
+                    <th><?php echo __('actions'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($campaigns)): ?>
-                    <tr><td colspan="8" class="text-center text-muted">No campaigns yet. Create your first campaign!</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted"><?php echo __('no_campaigns_yet'); ?></td></tr>
                 <?php else: foreach ($campaigns as $c): 
                     $openRate = $c['total_sent'] > 0 ? round(($c['total_opened'] / $c['total_sent']) * 100, 1) : 0;
                     $clickRate = $c['total_sent'] > 0 ? round(($c['total_clicked'] / $c['total_sent']) * 100, 1) : 0;
@@ -108,7 +108,7 @@ include '../includes/header.php';
                             <strong><?php echo htmlspecialchars($c['name']); ?></strong>
                             <div class="text-muted fs-12"><?php echo htmlspecialchars($c['subject']); ?></div>
                         </td>
-                        <td><span class="badge badge-<?php echo strtolower($c['status']); ?>"><?php echo $c['status']; ?></span></td>
+                        <td><span class="badge badge-<?php echo strtolower($c['status']); ?>"><?php echo htmlspecialchars(__($c['status'])); ?></span></td>
                         <td><?php echo htmlspecialchars($c['list_name'] ?? '—'); ?></td>
                         <td><?php echo number_format($c['total_sent']); ?></td>
                         <td><?php echo $c['total_opened']; ?> <span class="text-muted">(<?php echo $openRate; ?>%)</span></td>
@@ -117,14 +117,14 @@ include '../includes/header.php';
                         <td>
                             <div class="action-btns">
                                 <?php if ($c['status'] === 'Draft'): ?>
-                                    <a href="email-campaign-form.php?id=<?php echo $c['campaign_id']; ?>" class="btn btn-sm btn-outline" title="Edit">Edit</a>
+                                    <a href="email-campaign-form.php?id=<?php echo $c['campaign_id']; ?>" class="btn btn-sm btn-outline" title="<?php echo __('edit'); ?>"><?php echo __('edit'); ?></a>
                                 <?php endif; ?>
                                 <?php if (in_array($c['status'], ['Sent', 'Sending'])): ?>
-                                    <a href="email-campaign-report.php?id=<?php echo $c['campaign_id']; ?>" class="btn btn-sm btn-outline" title="Report">Report</a>
+                                    <a href="email-campaign-report.php?id=<?php echo $c['campaign_id']; ?>" class="btn btn-sm btn-outline" title="<?php echo __('report'); ?>"><?php echo __('report'); ?></a>
                                 <?php endif; ?>
-                                <button class="btn btn-sm btn-outline" onclick="duplicateCampaign(<?php echo $c['campaign_id']; ?>)" title="Duplicate">Copy</button>
+                                <button class="btn btn-sm btn-outline" onclick="duplicateCampaign(<?php echo $c['campaign_id']; ?>)" title="<?php echo __('duplicate'); ?>"><?php echo __('copy'); ?></button>
                                 <?php if ($c['status'] === 'Draft'): ?>
-                                    <button class="btn btn-sm btn-outline btn-danger-outline" onclick="deleteCampaign(<?php echo $c['campaign_id']; ?>)" title="Delete">Del</button>
+                                    <button class="btn btn-sm btn-outline btn-danger-outline" onclick="deleteCampaign(<?php echo $c['campaign_id']; ?>)" title="<?php echo __('delete'); ?>"><?php echo __('delete'); ?></button>
                                 <?php endif; ?>
                             </div>
                         </td>

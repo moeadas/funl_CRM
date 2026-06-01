@@ -24,13 +24,13 @@ table.data-table tr:hover { background: #f9fafb; }
 
 <div class="products-page">
     <div class="page-header">
-        <h1>Products</h1>
+        <h1><?php echo __('Products'); ?></h1>
         <a href="/pages/product-form.php" class="btn btn-primary" style="text-decoration:none;">+ New Product</a>
     </div>
     <div class="data-table-wrap">
         <table class="data-table">
-            <thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr></thead>
-            <tbody id="products-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af">Loading...</td></tr></tbody>
+            <thead><tr><th><?php echo __('Product'); ?></th><th><?php echo __('SKU'); ?></th><th><?php echo __('Category'); ?></th><th><?php echo __('Price'); ?></th><th><?php echo __('Stock'); ?></th><th></th></tr></thead>
+            <tbody id="products-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af"><?php echo __('Loading...'); ?></td></tr></tbody>
         </table>
     </div>
 </div>

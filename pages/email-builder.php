@@ -68,11 +68,11 @@ require_once __DIR__ . '/../includes/header.php';
   <div class="eb-topbar">
     <h2>
       <?php if ($campaignId): ?>
-        Campaign #<?php echo $campaignId; ?>
+        <?php echo __('Campaign'); ?> #<?php echo $campaignId; ?>
       <?php elseif ($templateId): ?>
-        Template #<?php echo $templateId; ?>
+        <?php echo __('Template'); ?> #<?php echo $templateId; ?>
       <?php else: ?>
-        Untitled email
+        <?php echo __('Untitled email'); ?>
       <?php endif; ?>
       <?php if ($recordName): ?>
         <span style="color:#6b7280;font-weight:400;font-size:14px;">— <?php echo htmlspecialchars($recordName); ?></span>
@@ -80,75 +80,75 @@ require_once __DIR__ . '/../includes/header.php';
     </h2>
     <div id="eb-toolbar-extra"></div>
     <div class="eb-spacer"></div>
-    <button class="eb-btn" id="eb-tab-design" title="Design view">🎨</button>
-    <button class="eb-btn" id="eb-tab-preview" title="Preview">👁</button>
-    <button class="eb-save-btn" id="eb-save-btn">Save</button>
+    <button class="eb-btn" id="eb-tab-design" title="<?php echo __('Design view'); ?>">🎨</button>
+    <button class="eb-btn" id="eb-tab-preview" title="<?php echo __('Preview'); ?>">👁</button>
+    <button class="eb-save-btn" id="eb-save-btn"><?php echo __('Save'); ?></button>
   </div>
   <!-- ============ Left palette ============ -->
   <aside class="eb-palette">
-    <h4>Pre-built sections</h4>
+    <h4><?php echo __('Pre-built sections'); ?></h4>
     <div class="eb-pal-grid" id="eb-palette-sections">
       <div class="eb-pal-item is-wide" data-section-key="hero">
-        <span class="eb-pal-ico">🎯</span><span>Hero</span>
+        <span class="eb-pal-ico">🎯</span><span><?php echo __('Hero'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="twoCol">
-        <span class="eb-pal-ico">▌▌</span><span>Image + Text</span>
+        <span class="eb-pal-ico">▌▌</span><span><?php echo __('Image + Text'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="features">
-        <span class="eb-pal-ico">✨</span><span>3-Feature Grid</span>
+        <span class="eb-pal-ico">✨</span><span><?php echo __('3-Feature Grid'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="cta">
-        <span class="eb-pal-ico">📣</span><span>Call to Action</span>
+        <span class="eb-pal-ico">📣</span><span><?php echo __('Call to Action'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="footer">
-        <span class="eb-pal-ico">⬇</span><span>Footer + Social</span>
+        <span class="eb-pal-ico">⬇</span><span><?php echo __('Footer + Social'); ?></span>
       </div>
     </div>
-    <h4>Full templates</h4>
+    <h4><?php echo __('Full templates'); ?></h4>
     <div class="eb-pal-grid" id="eb-palette-templates">
       <div class="eb-pal-item is-wide" data-section-key="welcome">
-        <span class="eb-pal-ico">👋</span><span>Welcome Email</span>
+        <span class="eb-pal-ico">👋</span><span><?php echo __('Welcome Email'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="newsletter">
-        <span class="eb-pal-ico">📰</span><span>Newsletter</span>
+        <span class="eb-pal-ico">📰</span><span><?php echo __('Newsletter'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="productLaunch">
-        <span class="eb-pal-ico">🚀</span><span>Product Launch</span>
+        <span class="eb-pal-ico">🚀</span><span><?php echo __('Product Launch'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="eventInvite">
-        <span class="eb-pal-ico">🎟</span><span>Event Invite</span>
+        <span class="eb-pal-ico">🎟</span><span><?php echo __('Event Invite'); ?></span>
       </div>
       <div class="eb-pal-item is-wide" data-section-key="promoSale">
-        <span class="eb-pal-ico">⚡</span><span>Promo / Sale</span>
+        <span class="eb-pal-ico">⚡</span><span><?php echo __('Promo / Sale'); ?></span>
       </div>
     </div>
-    <h4>Empty layouts</h4>
+    <h4><?php echo __('Empty layouts'); ?></h4>
     <div class="eb-pal-grid" id="eb-palette-layouts">
       <div class="eb-pal-item" data-cols="1" draggable="false">
-        <span class="eb-pal-ico">▌</span><span>1 col</span>
+        <span class="eb-pal-ico">▌</span><span><?php echo __('1 col'); ?></span>
       </div>
       <div class="eb-pal-item" data-cols="2">
-        <span class="eb-pal-ico">▌▌</span><span>2 col</span>
+        <span class="eb-pal-ico">▌▌</span><span><?php echo __('2 col'); ?></span>
       </div>
       <div class="eb-pal-item" data-cols="3">
-        <span class="eb-pal-ico">▌▌▌</span><span>3 col</span>
+        <span class="eb-pal-ico">▌▌▌</span><span><?php echo __('3 col'); ?></span>
       </div>
       <div class="eb-pal-item" data-cols="4">
-        <span class="eb-pal-ico">▌▌▌▌</span><span>4 col</span>
+        <span class="eb-pal-ico">▌▌▌▌</span><span><?php echo __('4 col'); ?></span>
       </div>
     </div>
-    <h4>Blocks</h4>
+    <h4><?php echo __('Blocks'); ?></h4>
     <div class="eb-pal-grid" id="eb-palette-blocks">
-      <div class="eb-pal-item" data-block-type="heading"><span class="eb-pal-ico">H</span><span>Heading</span></div>
-      <div class="eb-pal-item" data-block-type="text"><span class="eb-pal-ico">T</span><span>Text</span></div>
-      <div class="eb-pal-item" data-block-type="image"><span class="eb-pal-ico">🖼</span><span>Image</span></div>
-      <div class="eb-pal-item" data-block-type="button"><span class="eb-pal-ico">🔘</span><span>Button</span></div>
-      <div class="eb-pal-item" data-block-type="divider"><span class="eb-pal-ico">—</span><span>Divider</span></div>
-      <div class="eb-pal-item" data-block-type="spacer"><span class="eb-pal-ico">⇳</span><span>Spacer</span></div>
-      <div class="eb-pal-item" data-block-type="social"><span class="eb-pal-ico">@</span><span>Social</span></div>
-      <div class="eb-pal-item" data-block-type="video"><span class="eb-pal-ico">▶</span><span>Video</span></div>
-      <div class="eb-pal-item" data-block-type="html"><span class="eb-pal-ico">&lt;/&gt;</span><span>HTML</span></div>
-      <div class="eb-pal-item" data-block-type="footer"><span class="eb-pal-ico">⬇</span><span>Footer</span></div>
+      <div class="eb-pal-item" data-block-type="heading"><span class="eb-pal-ico">H</span><span><?php echo __('Heading'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="text"><span class="eb-pal-ico">T</span><span><?php echo __('Text'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="image"><span class="eb-pal-ico">🖼</span><span><?php echo __('Image'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="button"><span class="eb-pal-ico">🔘</span><span><?php echo __('Button'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="divider"><span class="eb-pal-ico">—</span><span><?php echo __('Divider'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="spacer"><span class="eb-pal-ico">⇳</span><span><?php echo __('Spacer'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="social"><span class="eb-pal-ico">@</span><span><?php echo __('Social'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="video"><span class="eb-pal-ico">▶</span><span><?php echo __('Video'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="html"><span class="eb-pal-ico">&lt;/&gt;</span><span><?php echo __('HTML'); ?></span></div>
+      <div class="eb-pal-item" data-block-type="footer"><span class="eb-pal-ico">⬇</span><span><?php echo __('Footer'); ?></span></div>
     </div>
   </aside>
   <!-- ============ Center canvas ============ -->
@@ -159,8 +159,8 @@ require_once __DIR__ . '/../includes/header.php';
   <aside class="eb-props" id="eb-properties"></aside>
   <!-- Preview overlay (toggled by 👁 button) -->
   <div class="eb-preview-wrap" id="eb-preview-wrap">
-    <button class="eb-preview-close" id="eb-preview-close" title="Close preview">✕</button>
-    <iframe id="eb-preview" title="Email preview"></iframe>
+    <button class="eb-preview-close" id="eb-preview-close" title="<?php echo __('Close preview'); ?>">✕</button>
+    <iframe id="eb-preview" title="<?php echo __('Email preview'); ?>"></iframe>
   </div>
 </div>
 <!-- SortableJS for drag-and-drop -->

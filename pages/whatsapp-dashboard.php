@@ -100,11 +100,10 @@ include '../includes/header.php';
 ?>
 
 <div class="page-header">
-    <h1 class="page-title">WhatsApp Messaging</h1>
+    <h1 class="page-title"><?php echo __("whatsapp_messaging"); ?></h1>
     <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="showNewMessage()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        New Message
-    </button>
+        <?php echo __("new_message"); ?></button>
 </div>
 
 <!-- Stats -->
@@ -113,47 +112,45 @@ include '../includes/header.php';
         <div class="stat-icon" style="background:#25D366;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Messages Sent</div><div class="stat-value"><?php echo $stats['sent']; ?></div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("messages_sent"); ?></div><div class="stat-value"><?php echo $stats['sent']; ?></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon bg-gradient-info">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Received</div><div class="stat-value"><?php echo $stats['received']; ?></div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("received"); ?></div><div class="stat-value"><?php echo $stats['received']; ?></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon bg-gradient-warning">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Today</div><div class="stat-value"><?php echo $stats['today']; ?></div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("due_today"); ?></div><div class="stat-value"><?php echo $stats['today']; ?></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon bg-gradient-primary">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Templates</div><div class="stat-value" id="tpl-count-stat">-</div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("templates"); ?></div><div class="stat-value" id="tpl-count-stat">-</div></div>
     </div>
 </div>
 
 <!-- Tabs -->
 <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--color-border-light);">
     <button class="wa-tab active" onclick="switchTab('inbox',this)" style="padding:10px 20px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:2px solid #25D366;margin-bottom:-2px;cursor:pointer;color:#25D366;">
-        Inbox <?php if (!empty($conversations)): ?><span class="badge" style="background:#25D366;color:#fff;font-size:10px;margin-left:4px;"><?php echo count($conversations); ?></span><?php endif; ?>
+        <?php echo __("inbox"); ?> <?php if (!empty($conversations)): ?><span class="badge" style="background:#25D366;color:#fff;font-size:10px;margin-left:4px;"><?php echo count($conversations); ?></span><?php endif; ?>
     </button>
     <button class="wa-tab" onclick="switchTab('messages',this)" style="padding:10px 20px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--color-text-secondary);">
-        All Messages
-    </button>
+        <?php echo __("all_messages"); ?></button>
     <?php if ($isManager): ?>
     <button class="wa-tab" onclick="switchTab('unmatched',this)" style="padding:10px 20px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--color-text-secondary);">
-        Unmatched
+        <?php echo __("unmatched"); ?>
         <?php if ($unmatchedCount > 0): ?>
             <span class="badge" style="background:#ff9500;color:#fff;font-size:10px;margin-left:4px;"><?php echo $unmatchedCount; ?></span>
         <?php endif; ?>
     </button>
     <?php endif; ?>
     <button class="wa-tab" onclick="switchTab('templates',this)" style="padding:10px 20px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--color-text-secondary);">
-        Templates
-    </button>
+        <?php echo __("templates"); ?></button>
 </div>
 
 <!-- ========== TAB: INBOX (Conversations) ========== -->
@@ -162,8 +159,8 @@ include '../includes/header.php';
         <div class="card">
             <div class="card-body" style="text-align:center;padding:40px;">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="1.5" style="margin-bottom:12px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                <p style="font-size:15px;font-weight:500;">No WhatsApp conversations yet</p>
-                <p class="text-muted" style="font-size:13px;">Start by messaging a lead from their detail page or click "New Message" above.</p>
+                <p style="font-size:15px;font-weight:500;"><?php echo __("no_whatsapp_conversations_yet"); ?></p>
+                <p class="text-muted" style="font-size:13px;"><?php echo __("whatsapp_inbox_empty_desc"); ?></p>
             </div>
         </div>
     <?php else: ?>
@@ -213,10 +210,10 @@ include '../includes/header.php';
 <div id="tab-messages" style="display:none;">
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">All Messages</h2>
+            <h2 class="card-title"><?php echo __("all_messages"); ?></h2>
             <?php if (!$isSalesRep && !empty($allUsers)): ?>
                 <select id="filterUser" onchange="filterMessages()" class="form-control" style="width:auto;font-size:12px;padding:6px 8px;">
-                    <option value="">All Users</option>
+                    <option value=""><?php echo __("all_users"); ?></option>
                     <?php foreach ($allUsers as $u): ?>
                         <option value="<?php echo $u['user_id']; ?>"><?php echo htmlspecialchars($u['full_name']); ?></option>
                     <?php endforeach; ?>
@@ -228,18 +225,18 @@ include '../includes/header.php';
                 <table class="table" id="messagesTable">
                     <thead>
                         <tr>
-                            <th>Lead</th>
-                            <?php if (!$isSalesRep): ?><th>User</th><?php endif; ?>
-                            <th>Direction</th>
-                            <th>To/From</th>
-                            <th>Message</th>
-                            <th>Status</th>
-                            <th>Date</th>
+                            <th><?php echo __("lead"); ?></th>
+                            <?php if (!$isSalesRep): ?><th><?php echo __("user"); ?></th><?php endif; ?>
+                            <th><?php echo __("direction"); ?></th>
+                            <th><?php echo __("to_from"); ?></th>
+                            <th><?php echo __("message"); ?></th>
+                            <th><?php echo __("status"); ?></th>
+                            <th><?php echo __("date"); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($recentMessages)): ?>
-                            <tr><td colspan="<?php echo $isSalesRep ? 6 : 7; ?>" class="text-center text-muted">No messages yet</td></tr>
+                            <tr><td colspan="<?php echo $isSalesRep ? 6 : 7; ?>" class="text-center text-muted"><?php echo __("no_messages_yet"); ?></td></tr>
                         <?php else: ?>
                             <?php foreach ($recentMessages as $msg): ?>
                                 <tr data-user-id="<?php echo $msg['user_id'] ?: ''; ?>">
@@ -255,7 +252,7 @@ include '../includes/header.php';
                                             <?php if ($msg['user_name']): ?>
                                                 <span class="badge" style="background:#e8f0fe;color:#1a56db;font-size:10px;"><?php echo htmlspecialchars($msg['user_name']); ?></span>
                                             <?php else: ?>
-                                                <span class="text-muted" style="font-size:11px;">System</span>
+                                                <span class="text-muted" style="font-size:11px;"><?php echo __("system"); ?></span>
                                             <?php endif; ?>
                                         </td>
                                     <?php endif; ?>
@@ -295,11 +292,9 @@ include '../includes/header.php';
             <div style="display:flex;align-items:flex-start;gap:12px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <div>
-                    <strong style="font-size:14px;">Unmatched Inbound Messages</strong>
+                    <strong style="font-size:14px;"><?php echo __("unmatched_inbound_messages"); ?></strong>
                     <p style="font-size:12px;color:var(--color-text-secondary);margin:6px 0 0;">
-                        These are WhatsApp messages received from phone numbers that <strong>don't match any lead</strong> in the CRM.
-                        You can <strong>view the full conversation, reply directly</strong> to qualify them, and then
-                        <strong>link them to an existing lead</strong> or <strong>create a new lead</strong> when ready.
+                        <?php echo __("unmatched_desc"); ?>
                     </p>
                 </div>
             </div>
@@ -308,16 +303,15 @@ include '../includes/header.php';
 
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">Unmatched Senders <span id="unmatched-count-badge" class="badge" style="background:#ff9500;color:#fff;font-size:10px;margin-left:6px;"><?php echo $unmatchedCount; ?></span></h2>
+            <h2 class="card-title"><?php echo __("unmatched_senders"); ?> <span id="unmatched-count-badge" class="badge" style="background:#ff9500;color:#fff;font-size:10px;margin-left:6px;"><?php echo $unmatchedCount; ?></span></h2>
             <button class="btn btn-sm btn-outline" onclick="loadUnmatchedMessages()" title="Refresh">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                Refresh
-            </button>
+                <?php echo __("refresh"); ?></button>
         </div>
         <div class="card-body" id="unmatched-container">
             <div style="text-align:center;padding:30px;color:var(--color-text-secondary);">
                 <div class="spinner" style="margin:0 auto 12px;width:28px;height:28px;border:3px solid var(--color-border);border-top-color:#ff9500;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-                <p style="font-size:13px;">Loading unmatched messages...</p>
+                <p style="font-size:13px;"><?php echo __("loading_unmatched_messages"); ?></p>
             </div>
         </div>
     </div>
@@ -330,7 +324,7 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="closeLinkLeadModal()"></div>
     <div class="modal-content modal-sm">
         <div class="modal-header" style="background:#ff9500;">
-            <h3 style="color:#fff;">Link to Existing Lead</h3>
+            <h3 style="color:#fff;"><?php echo __("link_to_existing_lead"); ?></h3>
             <button type="button" class="btn-close" onclick="closeLinkLeadModal()" style="color:#fff;">&times;</button>
         </div>
         <div class="modal-body">
@@ -339,8 +333,8 @@ include '../includes/header.php';
             </p>
             <input type="hidden" id="linkFromNumberHidden">
             <div class="form-group">
-                <label class="form-label">Search Lead</label>
-                <input type="text" id="linkLeadSearch" class="form-control" placeholder="Type lead name or company..."
+                <label class="form-label"><?php echo __("search_lead"); ?></label>
+                <input type="text" id="linkLeadSearch" class="form-control" placeholder="<?php echo __("type_lead_name_or_company"); ?>"
                        oninput="searchLeadsForLink(this.value)" autocomplete="off">
             </div>
             <div id="linkLeadResults" style="max-height:200px;overflow-y:auto;border:1px solid var(--color-border-light);border-radius:8px;display:none;"></div>
@@ -351,11 +345,9 @@ include '../includes/header.php';
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeLinkLeadModal()">Cancel</button>
-            <button class="btn btn-primary" style="background:#ff9500;border-color:#ff9500;" onclick="submitLinkToLead()" id="linkSubmitBtn">
+            <button class="btn btn-outline" onclick="closeLinkLeadModal()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#ff9500;border-color:#ff9500;" onclick="submitLinkToLead()" id="linkSubmitBtn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                Link Messages
-            </button>
+                <?php echo __("link_messages"); ?></button>
         </div>
     </div>
 </div>
@@ -365,33 +357,31 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="closeCreateLeadModal()"></div>
     <div class="modal-content modal-sm">
         <div class="modal-header" style="background:#25D366;">
-            <h3 style="color:#fff;">Create New Lead</h3>
+            <h3 style="color:#fff;"><?php echo __("create_new_lead"); ?></h3>
             <button type="button" class="btn-close" onclick="closeCreateLeadModal()" style="color:#fff;">&times;</button>
         </div>
         <div class="modal-body">
             <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;">
-                Create a new lead from the unmatched WhatsApp sender. All messages from this number will be automatically linked.
+                <?php echo __("create_lead_unmatched_desc"); ?>
             </p>
             <input type="hidden" id="createLeadFromNumber">
             <div class="form-group">
-                <label class="form-label">Phone Number</label>
+                <label class="form-label"><?php echo __("phone_number"); ?></label>
                 <input type="text" id="createLeadPhone" class="form-control" readonly style="background:var(--color-bg);">
             </div>
             <div class="form-group">
-                <label class="form-label">Contact Name <span style="color:#ff3b30;">*</span></label>
-                <input type="text" id="createLeadName" class="form-control" placeholder="e.g. John Smith">
+                <label class="form-label"><?php echo __("contact_person"); ?></label>
+                <input type="text" id="createLeadName" class="form-control" placeholder="<?php echo __("e_g_john_smith"); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label">Company Name</label>
-                <input type="text" id="createLeadCompany" class="form-control" placeholder="e.g. Acme Corp (optional)">
+                <label class="form-label"><?php echo __("company_name"); ?></label>
+                <input type="text" id="createLeadCompany" class="form-control" placeholder="<?php echo __("e_g_acme_corp_optional"); ?>">
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeCreateLeadModal()">Cancel</button>
-            <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="submitCreateLead()" id="createLeadSubmitBtn">
+            <button class="btn btn-outline" onclick="closeCreateLeadModal()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="submitCreateLead()" id="createLeadSubmitBtn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                Create Lead
-            </button>
+                <?php echo __("create_lead"); ?></button>
         </div>
     </div>
 </div>
@@ -406,22 +396,20 @@ include '../includes/header.php';
             <div style="display:flex;align-items:flex-start;gap:12px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                 <div>
-                    <strong style="font-size:14px;">About WhatsApp Message Templates</strong>
+                    <strong style="font-size:14px;"><?php echo __("about_whatsapp_message_templates"); ?></strong>
                     <p style="font-size:12px;color:var(--color-text-secondary);margin:6px 0 0;">
-                        WhatsApp requires <strong>pre-approved templates</strong> for business-initiated messages (when the contact hasn't messaged you in the last 24 hours).
-                        Templates are created here and submitted to <strong>Meta for approval</strong> (usually takes minutes to a few hours).
-                        Once approved, all users can use them to start conversations with leads.
+                        <?php echo __("whatsapp_templates_desc"); ?>
                     </p>
                     <details style="margin-top:10px;">
-                        <summary style="font-size:12px;font-weight:600;cursor:pointer;color:#25D366;">Variable Reference Guide</summary>
+                        <summary style="font-size:12px;font-weight:600;cursor:pointer;color:#25D366;"><?php echo __("variable_reference_guide"); ?></summary>
                         <div style="margin-top:8px;font-size:12px;color:var(--color-text-secondary);line-height:1.7;">
-                            <p>Use numbered placeholders <code>{{1}}</code>, <code>{{2}}</code>, etc. in your template body. Each variable needs a description.</p>
+                            <p><?php echo __("use_numbered_placeholders"); ?></p>
                             <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:11px;">
                                 <thead>
                                     <tr style="background:var(--color-bg);border-bottom:1px solid var(--color-border-light);">
-                                        <th style="padding:6px 8px;text-align:left;">Variable</th>
-                                        <th style="padding:6px 8px;text-align:left;">Suggested Use</th>
-                                        <th style="padding:6px 8px;text-align:left;">Example Value</th>
+                                        <th style="padding:6px 8px;text-align:left;"><?php echo __("variable"); ?></th>
+                                        <th style="padding:6px 8px;text-align:left;"><?php echo __("suggested_use"); ?></th>
+                                        <th style="padding:6px 8px;text-align:left;"><?php echo __("example_value"); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -442,14 +430,14 @@ include '../includes/header.php';
                                     </tr>
                                 </tbody>
                             </table>
-                            <p style="margin-top:8px;"><strong>Meta Rules:</strong></p>
+                            <p style="margin-top:8px;"><strong><?php echo __("meta_rules"); ?></strong></p>
                             <ul style="padding-left:18px;margin:4px 0;">
-                                <li>Template must start and end with static text (not a variable)</li>
-                                <li>Variables cannot be consecutive without static text between them</li>
-                                <li>Max 10 emojis, no more than 2 consecutive newlines</li>
-                                <li>Keep it professional and relevant to your business</li>
+                                <li><?php echo __("meta_rule_1"); ?></li>
+                                <li><?php echo __("meta_rule_2"); ?></li>
+                                <li><?php echo __("meta_rule_3"); ?></li>
+                                <li><?php echo __("meta_rule_4"); ?></li>
                             </ul>
-                            <p style="margin-top:8px;"><strong>Example Template:</strong></p>
+                            <p style="margin-top:8px;"><strong><?php echo __("example_template"); ?></strong></p>
                             <div style="background:var(--color-bg);padding:10px;border-radius:6px;margin-top:4px;font-family:monospace;font-size:11px;">
                                 Hello {{1}}, this is {{2}} from Your Company. We noticed your interest in our genomics solutions and would love to schedule a brief call to discuss how we can help your organization. Would you be available {{3}}? Please reply to this message to let us know.
                             </div>
@@ -463,24 +451,22 @@ include '../includes/header.php';
 
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">WhatsApp Templates</h2>
+            <h2 class="card-title"><?php echo __("whatsapp_templates"); ?></h2>
             <div style="display:flex;gap:8px;align-items:center;">
                 <button class="btn btn-sm btn-outline" onclick="loadDashboardTemplates()" title="Refresh">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                    Refresh
-                </button>
+                    <?php echo __("refresh"); ?></button>
                 <?php if ($isManager): ?>
                     <button class="btn btn-sm btn-primary" style="background:#25D366;border-color:#25D366;" onclick="showCreateTemplate()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Create Template
-                    </button>
+                        <?php echo __("create_whatsapp_template"); ?></button>
                 <?php endif; ?>
             </div>
         </div>
         <div class="card-body" id="templates-container">
             <div style="text-align:center;padding:30px;color:var(--color-text-secondary);">
                 <div class="spinner" style="margin:0 auto 12px;width:28px;height:28px;border:3px solid var(--color-border);border-top-color:#25D366;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-                <p style="font-size:13px;">Loading templates from Twilio...</p>
+                <p style="font-size:13px;"><?php echo __("loading_templates_from_twilio"); ?></p>
             </div>
         </div>
     </div>
@@ -491,25 +477,23 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="hideNewMessage()"></div>
     <div class="modal-content modal-sm">
         <div class="modal-header" style="background:#25D366;">
-            <h3 style="color:#fff;">New WhatsApp Message</h3>
+            <h3 style="color:#fff;"><?php echo __("new_whatsapp_message"); ?></h3>
             <button type="button" class="btn-close" onclick="hideNewMessage()" style="color:#fff;">&times;</button>
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label class="form-label">Phone Number</label>
+                <label class="form-label"><?php echo __("phone_number"); ?></label>
                 <input type="tel" id="waMsgNumber" class="form-control" placeholder="+971 50 123 4567">
             </div>
             <div class="form-group">
-                <label class="form-label">Message</label>
-                <textarea id="waMsgBody" class="form-control" rows="4" placeholder="Type your message..."></textarea>
+                <label class="form-label"><?php echo __("message"); ?></label>
+                <textarea id="waMsgBody" class="form-control" rows="4" placeholder="<?php echo __("type_your_message"); ?>"></textarea>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideNewMessage()">Cancel</button>
-            <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="sendQuickMessage()">
+            <button class="btn btn-outline" onclick="hideNewMessage()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="sendQuickMessage()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                Send
-            </button>
+                <?php echo __("send"); ?></button>
         </div>
     </div>
 </div>
@@ -520,26 +504,26 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="hideCreateTemplate()"></div>
     <div class="modal-content" style="max-width:600px;">
         <div class="modal-header" style="background:#25D366;">
-            <h3 style="color:#fff;">Create WhatsApp Template</h3>
+            <h3 style="color:#fff;"><?php echo __("create_whatsapp_template"); ?></h3>
             <button type="button" class="btn-close" onclick="hideCreateTemplate()" style="color:#fff;">&times;</button>
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label class="form-label">Template Name</label>
-                <input type="text" id="ctplName" class="form-control" placeholder="e.g. welcome_message (lowercase, underscores)">
-                <small class="text-muted">Lowercase letters, numbers, and underscores only. This is the internal name.</small>
+                <label class="form-label"><?php echo __("template_name"); ?></label>
+                <input type="text" id="ctplName" class="form-control" placeholder="<?php echo __("e_g_template_name_lowercase"); ?>">
+                <small class="text-muted"><?php echo __("template_name_lowercase_desc"); ?></small>
             </div>
             <div class="grid grid-2" style="gap:12px;">
                 <div class="form-group">
-                    <label class="form-label">Category</label>
+                    <label class="form-label"><?php echo __("category"); ?></label>
                     <select id="ctplCategory" class="form-control">
-                        <option value="UTILITY">Utility (transactional, updates)</option>
-                        <option value="MARKETING">Marketing (promotions, offers)</option>
+                        <option value="UTILITY"><?php echo __("utility_transactional"); ?></option>
+                        <option value="MARKETING"><?php echo __("marketing_promotional"); ?></option>
                     </select>
-                    <small class="text-muted">Utility templates are more likely to be approved and have lower costs.</small>
+                    <small class="text-muted"><?php echo __("utility_templates_approval_note"); ?></small>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Language</label>
+                    <label class="form-label"><?php echo __("language"); ?></label>
                     <select id="ctplLanguage" class="form-control">
                         <option value="en">English (en)</option>
                         <option value="ar">Arabic (ar)</option>
@@ -553,36 +537,35 @@ include '../includes/header.php';
                         <option value="ja">Japanese (ja)</option>
                         <option value="zh_CN">Chinese Simplified (zh_CN)</option>
                     </select>
-                    <small class="text-muted">Must match the language of the template body per Meta guidelines. Arabic templates use RTL.</small>
+                    <small class="text-muted"><?php echo __("meta_lang_guidelines_note"); ?></small>
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Template Body</label>
-                <textarea id="ctplBody" class="form-control" rows="5" placeholder="Hello {{1}}, this is {{2}} from Your Company. We would like to discuss how our genomics solutions can benefit your organization. Would you be available for a brief call? Please reply to continue the conversation."
+                <label class="form-label"><?php echo __("template_body"); ?></label>
+                <textarea id="ctplBody" class="form-control" rows="5" placeholder="<?php echo __("ctpl_body_placeholder"); ?>"
                     oninput="updateCreatePreview()"></textarea>
-                <small class="text-muted">Use <code>{{1}}</code>, <code>{{2}}</code>, etc. for variables. Must start and end with static text.</small>
+                <small class="text-muted"><?php echo __("ctpl_body_desc"); ?></small>
             </div>
 
             <!-- Dynamic variable descriptions -->
             <div id="ctplVarsContainer" style="display:none;">
-                <label class="form-label" style="margin-bottom:8px;">Variable Descriptions</label>
+                <label class="form-label" style="margin-bottom:8px;"><?php echo __("variable_descriptions"); ?></label>
                 <div id="ctplVarsList"></div>
-                <small class="text-muted">Describe what each variable represents. This helps sales reps fill them correctly.</small>
+                <small class="text-muted"><?php echo __("ctpl_vars_desc"); ?></small>
             </div>
 
             <!-- Live Preview -->
             <div style="margin-top:16px;">
-                <label class="form-label">Preview</label>
+                <label class="form-label"><?php echo __("preview"); ?></label>
                 <div id="ctplPreview" style="background:#ECE5DD;padding:12px 16px;border-radius:8px;font-size:13px;line-height:1.5;color:#333;min-height:40px;">
-                    <em class="text-muted">Start typing your template body above...</em>
+                    <em class="text-muted"><?php echo __("start_typing_template_preview"); ?></em>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideCreateTemplate()">Cancel</button>
-            <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="submitCreateTemplate()" id="ctplSubmitBtn">
+            <button class="btn btn-outline" onclick="hideCreateTemplate()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="submitCreateTemplate()" id="ctplSubmitBtn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                Create &amp; Submit for Approval
+                <?php echo __("create_submit_approval"); ?>
             </button>
         </div>
     </div>
@@ -712,7 +695,7 @@ async function loadDashboardTemplates() {
 
     container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--color-text-secondary);">' +
         '<div class="spinner" style="margin:0 auto 12px;width:28px;height:28px;border:3px solid var(--color-border);border-top-color:#25D366;border-radius:50%;animation:spin 0.8s linear infinite;"></div>' +
-        '<p style="font-size:13px;">Loading templates from Twilio...</p></div>';
+        '<p style="font-size:13px;"><?php echo __("loading_templates_from_twilio"); ?></p></div>';
 
     try {
         var resp = await fetch('/api/whatsapp.php?action=content_templates');
@@ -740,7 +723,7 @@ async function loadDashboardTemplates() {
 
         var isManager = <?php echo $isManager ? 'true' : 'false'; ?>;
         var html = '<div class="table-container"><table class="table"><thead><tr>' +
-            '<th>Template Name</th><th>Language</th><th>Category</th><th>Body Preview</th><th>Variables</th><th>Status</th><th>Created</th>' +
+            '<th>Template Name</th><th>Language</th><th>Category</th><th>Body Preview</th><th>Variables</th><th><?php echo __("status"); ?></th><th>Created</th>' +
             (isManager ? '<th style="width:70px;text-align:center;">Actions</th>' : '') +
             '</tr></thead><tbody>';
 
@@ -820,7 +803,7 @@ function showCreateTemplate() {
     document.getElementById('ctplBody').value = '';
     document.getElementById('ctplVarsContainer').style.display = 'none';
     document.getElementById('ctplVarsList').innerHTML = '';
-    document.getElementById('ctplPreview').innerHTML = '<em class="text-muted">Start typing your template body above...</em>';
+    document.getElementById('ctplPreview').innerHTML = '<em class="text-muted"><?php echo __("start_typing_template_preview"); ?></em>';
 }
 function hideCreateTemplate() {
     document.getElementById('createTplModal').style.display = 'none';
@@ -833,7 +816,7 @@ function updateCreatePreview() {
     var varsList = document.getElementById('ctplVarsList');
 
     if (!body.trim()) {
-        previewEl.innerHTML = '<em class="text-muted">Start typing your template body above...</em>';
+        previewEl.innerHTML = '<em class="text-muted"><?php echo __("start_typing_template_preview"); ?></em>';
         varsContainer.style.display = 'none';
         return;
     }
@@ -951,7 +934,7 @@ async function submitCreateTemplate() {
         console.error('Create template error:', e);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Create &amp; Submit for Approval';
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> <?php echo __("create_submit_approval"); ?>';
     }
 }
 
@@ -1024,7 +1007,7 @@ async function loadUnmatchedMessages() {
 
     container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--color-text-secondary);">' +
         '<div class="spinner" style="margin:0 auto 12px;width:28px;height:28px;border:3px solid var(--color-border);border-top-color:#ff9500;border-radius:50%;animation:spin 0.8s linear infinite;"></div>' +
-        '<p style="font-size:13px;">Loading unmatched messages...</p></div>';
+        '<p style="font-size:13px;"><?php echo __("loading_unmatched_messages"); ?></p></div>';
 
     try {
         var resp = await fetch('/api/whatsapp.php?action=unmatched_messages');

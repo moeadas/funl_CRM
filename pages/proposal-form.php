@@ -15,47 +15,47 @@ require_once __DIR__ . '/../includes/header.php';
         <h1><?= $proposalId ? 'Edit Proposal' : 'New Proposal' ?></h1>
     </div>
     <div class="header-actions">
-        <button type="button" class="btn btn-primary btn-sm" onclick="saveProposal()">Save</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveProposal()"><?php echo __('Save'); ?></button>
     </div>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
     <div>
         <div class="card" style="padding:20px;">
-            <h3 style="margin:0 0 16px;font-size:15px;font-weight:600;">Proposal Details</h3>
+            <h3 style="margin:0 0 16px;font-size:15px;font-weight:600;"><?php echo __('Proposal Details'); ?></h3>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="form-group">
                     <label class="form-label">Estimate #</label>
                     <input type="text" id="estimateNumber" class="form-control" readonly style="background:#f5f5f7;">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Date</label>
+                    <label class="form-label"><?php echo __('Date'); ?></label>
                     <input type="date" id="proposalDate" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Status</label>
+                    <label class="form-label"><?php echo __('Status'); ?></label>
                     <select id="proposalStatus" class="form-control">
-                        <option value="Draft">Draft</option>
-                        <option value="Sent">Sent</option>
-                        <option value="Accepted">Accepted</option>
-                        <option value="Declined">Declined</option>
+                        <option value="Draft"><?php echo __('Draft'); ?></option>
+                        <option value="Sent"><?php echo __('Sent'); ?></option>
+                        <option value="Accepted"><?php echo __('Accepted'); ?></option>
+                        <option value="Declined"><?php echo __('Declined'); ?></option>
                     </select>
                 </div>
             </div>
         </div>
 
         <div class="card" style="padding:20px;margin-top:16px;">
-            <h3 style="margin:0 0 16px;font-size:15px;font-weight:600;">Customer Information</h3>
+            <h3 style="margin:0 0 16px;font-size:15px;font-weight:600;"><?php echo __('Customer Information'); ?></h3>
             <div class="form-group">
                 <label class="form-label">Company Name *</label>
                 <input type="text" id="customerCompany" class="form-control" placeholder="e.g., Acme Corp">
             </div>
             <div class="form-group">
-                <label class="form-label">Contact Name</label>
+                <label class="form-label"><?php echo __('Contact Name'); ?></label>
                 <input type="text" id="contactName" class="form-control" placeholder="e.g., John Doe">
             </div>
             <div class="form-group">
-                <label class="form-label">Address</label>
+                <label class="form-label"><?php echo __('Address'); ?></label>
                 <textarea id="customerAddress" class="form-control" rows="3"></textarea>
             </div>
         </div>
@@ -64,13 +64,13 @@ require_once __DIR__ . '/../includes/header.php';
     <div>
         <div class="card" style="padding:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <h3 style="margin:0;font-size:15px;font-weight:600;">Line Items</h3>
+                <h3 style="margin:0;font-size:15px;font-weight:600;"><?php echo __('Line Items'); ?></h3>
                 <button type="button" class="btn btn-outline btn-sm" onclick="addLineItem()">+ Add Item</button>
             </div>
             <div id="lineItemsContainer"></div>
             <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:2px solid #e8e8ed;">
                 <div style="text-align:right;">
-                    <span class="text-muted" style="font-size:13px;">TOTAL</span>
+                    <span class="text-muted" style="font-size:13px;"><?php echo __('TOTAL'); ?></span>
                     <div style="font-size:22px;font-weight:700;" id="totalDisplay">$0.00</div>
                 </div>
             </div>
@@ -148,22 +148,22 @@ function renderLineItems() {
             <div style="border:1px solid #e8e8ed;border-radius:8px;padding:14px;margin-bottom:10px;background:#fafbfc;">
                 <div style="display:grid;grid-template-columns:1fr 80px 120px 100px 40px;gap:10px;align-items:end;">
                     <div class="form-group" style="margin:0;">
-                        <label style="font-size:11px;color:#6b7280;">Description</label>
-                        <input type="text" class="form-control" value="${(item.description || '').replace(/"/g, '&quot;')}" onchange="updateLineItem(${i},'description',this.value)" placeholder="Item description..." style="font-size:13px;">
+                        <label style="font-size:11px;color:#6b7280;">${window.__('Description')}</label>
+                        <input type="text" class="form-control" value="${(item.description || '').replace(/"/g, '&quot;')}" onchange="updateLineItem(${i},'description',this.value)" placeholder="${window.__('Item description...')}" style="font-size:13px;">
                     </div>
                     <div class="form-group" style="margin:0;">
-                        <label style="font-size:11px;color:#6b7280;">Qty</label>
+                        <label style="font-size:11px;color:#6b7280;">${window.__('Qty')}</label>
                         <input type="number" class="form-control" value="${item.qty || 1}" min="1" step="1" oninput="updateLineItem(${i},'qty',this.value)" style="font-size:13px;">
                     </div>
                     <div class="form-group" style="margin:0;">
-                        <label style="font-size:11px;color:#6b7280;">Rate</label>
+                        <label style="font-size:11px;color:#6b7280;">${window.__('Rate')}</label>
                         <input type="number" class="form-control" value="${item.rate || 0}" min="0" step="0.01" oninput="updateLineItem(${i},'rate',this.value)" style="font-size:13px;">
                     </div>
                     <div class="form-group" style="margin:0;">
-                        <label style="font-size:11px;color:#6b7280;">Amount</label>
+                        <label style="font-size:11px;color:#6b7280;">${window.__('Amount')}</label>
                         <div id="line-item-amount-${i}" class="form-control" style="background:#f0f0f5;font-weight:600;font-size:13px;">$${parseFloat(amt).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                     </div>
-                    <button type="button" class="btn btn-outline btn-xs" onclick="removeLineItem(${i})" title="Remove" style="margin-bottom:2px;${lineItems.length <= 1 ? 'visibility:hidden;' : ''}">×</button>
+                    <button type="button" class="btn btn-outline btn-xs" onclick="removeLineItem(${i})" title="${window.__('Remove')}" style="margin-bottom:2px;${lineItems.length <= 1 ? 'visibility:hidden;' : ''}">×</button>
                 </div>
             </div>`;
     }).join('');

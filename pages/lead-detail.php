@@ -908,7 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     + '<span>' + f.name + ' (' + sizeMB + ' MB)</span></div>';
             }
             if (totalSize > 25 * 1048576) {
-                html += '<div style="color:var(--color-danger);font-weight:600;margin-top:4px;">Total size exceeds 25MB limit</div>';
+                html += '<div style="color:var(--color-danger);font-weight:600;margin-top:4px;">' + __('Total size exceeds 25MB limit') + '</div>';
             }
             list.innerHTML = html;
         });

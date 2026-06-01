@@ -71,43 +71,43 @@ textarea.form-control { min-height:80px; resize:vertical; }
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/webforms.php" class="btn btn-outline" style="padding:8px 14px;">← Back to Web Forms</a>
-        <h1><?= $formId ? 'Edit Web Form' : 'New Web Form' ?></h1>
+        <a href="/pages/webforms.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo __('Back to Web Forms'); ?></a>
+        <h1><?php echo $formId ? __('Edit Web Form') : __('New Web Form'); ?></h1>
     </div>
     <div style="display:flex; gap:10px;">
         <?php if ($formId): ?>
-            <button type="button" class="btn btn-danger" onclick="deleteForm()">Delete Form</button>
+            <button type="button" class="btn btn-danger" onclick="deleteForm()"><?php echo __('Delete Form'); ?></button>
         <?php endif; ?>
-        <button type="button" class="btn btn-primary" onclick="saveForm()">Save Form</button>
+        <button type="button" class="btn btn-primary" onclick="saveForm()"><?php echo __('Save Form'); ?></button>
     </div>
 </div>
 
 <div style="max-width:1000px;">
     <div class="card">
-        <h3 class="card-title">Form Profile</h3>
+        <h3 class="card-title"><?php echo __('Form Profile'); ?></h3>
         <div class="row-2">
             <div class="form-group">
-                <label class="form-label">Form Name *</label>
-                <input type="text" id="formName" class="form-control" placeholder="e.g. Contact Us Form" required>
+                <label class="form-label"><?php echo __('Form Name'); ?> *</label>
+                <input type="text" id="formName" class="form-control" placeholder="<?php echo __('e.g. Contact Us Form'); ?>" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Status</label>
+                <label class="form-label"><?php echo __('Status'); ?></label>
                 <select id="formStatus" class="form-control">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active"><?php echo __('Active'); ?></option>
+                    <option value="inactive"><?php echo __('Inactive'); ?></option>
                 </select>
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Description / Helper Text</label>
-            <input type="text" id="formDescription" class="form-control" placeholder="What this form is for, or instructions for users">
+            <label class="form-label"><?php echo __('Description / Helper Text'); ?></label>
+            <input type="text" id="formDescription" class="form-control" placeholder="<?php echo __('What this form is for, or instructions for users'); ?>">
         </div>
     </div>
 
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3 class="card-title" style="margin:0;">Form Fields & Field Mapping</h3>
-            <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" onclick="addFieldRow()">+ Add Field</button>
+            <h3 class="card-title" style="margin:0;"><?php echo __('Form Fields & Field Mapping'); ?></h3>
+            <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" onclick="addFieldRow()">+ <?php echo __('Add Field'); ?></button>
         </div>
         
         <div id="fieldsContainer">
@@ -145,29 +145,29 @@ function addFieldRow(data = null) {
     
     row.innerHTML = `
         <div class="form-group">
-            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">Field Label *</label>
-            <input type="text" class="form-control field-label" value="${data ? escapeHtml(data.field_label || '') : ''}" placeholder="e.g. Your Name" required>
+            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">${window.__('Field Label')} *</label>
+            <input type="text" class="form-control field-label" value="${data ? escapeHtml(data.field_label || '') : ''}" placeholder="${window.__('e.g. Your Name')}" required>
         </div>
         <div class="form-group">
-            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">Map to CRM Field *</label>
+            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">${window.__('Map to CRM Field')} *</label>
             <select class="form-control field-crm" required>
-                <option value="">Select Field...</option>
+                <option value="">${window.__('Select Field...')}</option>
                 ${options}
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">Field Type</label>
+            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">${window.__('Field Type')}</label>
             <select class="form-control field-type">
-                <option value="text" ${data && data.field_type === 'text' ? 'selected' : ''}>Text Input</option>
-                <option value="email" ${data && data.field_type === 'email' ? 'selected' : ''}>Email Address</option>
-                <option value="tel" ${data && data.field_type === 'tel' ? 'selected' : ''}>Phone Number</option>
-                <option value="textarea" ${data && data.field_type === 'textarea' ? 'selected' : ''}>Paragraph Text</option>
-                <option value="number" ${data && data.field_type === 'number' ? 'selected' : ''}>Number</option>
-                <option value="url" ${data && data.field_type === 'url' ? 'selected' : ''}>Website URL</option>
+                <option value="text" ${data && data.field_type === 'text' ? 'selected' : ''}>${window.__('Text Input')}</option>
+                <option value="email" ${data && data.field_type === 'email' ? 'selected' : ''}>${window.__('Email Address')}</option>
+                <option value="tel" ${data && data.field_type === 'tel' ? 'selected' : ''}>${window.__('Phone Number')}</option>
+                <option value="textarea" ${data && data.field_type === 'textarea' ? 'selected' : ''}>${window.__('Paragraph Text')}</option>
+                <option value="number" ${data && data.field_type === 'number' ? 'selected' : ''}>${window.__('Number')}</option>
+                <option value="url" ${data && data.field_type === 'url' ? 'selected' : ''}>${window.__('Website URL')}</option>
             </select>
         </div>
         <div class="form-group" style="text-align:center;">
-            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">Required?</label>
+            <label class="form-label" style="font-size:11px;color:var(--color-text-muted);">${window.__('Required?')}</label>
             <div style="height:38px; display:flex; align-items:center; justify-content:center;">
                 <input type="checkbox" class="field-required" ${data && data.required == 1 ? 'checked' : ''} style="width:18px; height:18px;">
             </div>

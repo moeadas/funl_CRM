@@ -180,21 +180,21 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Interactions &amp; Activities</h1>
+        <h1 class="page-title"><?php echo __('Interactions & Activities'); ?></h1>
         <p class="page-subtitle">
             <?php if ($followUpFilter): ?>
-                Showing leads that require follow-up
+                <?php echo __('Showing leads that require follow-up'); ?>
             <?php elseif ($leadData): ?>
-                Log communication with <?php echo htmlspecialchars($leadData['company_name']); ?>
+                <?php echo __('Log communication with'); ?> <?php echo htmlspecialchars($leadData['company_name']); ?>
             <?php else: ?>
-                Track all communication with your leads
+                <?php echo __('Track all communication with your leads'); ?>
             <?php endif; ?>
         </p>
     </div>
     <?php if ($leadData): ?>
         <a href="lead-detail.php?id=<?php echo $leadId; ?>" class="btn btn-outline">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            Back to Lead
+            <?php echo __('Back to Lead'); ?>
         </a>
     <?php endif; ?>
 </div>
@@ -233,7 +233,7 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
     <div class="ix-toolbar-right">
         <div style="position:relative;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" stroke-linecap="round" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="searchInteractions" class="form-control" placeholder="Search..." style="padding-left:32px;width:180px;font-size:13px;">
+            <input type="text" id="searchInteractions" class="form-control" placeholder="<?php echo __('Search...'); ?>" style="padding-left:32px;width:180px;font-size:13px;">
         </div>
     </div>
 </div>
@@ -246,26 +246,26 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
             <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <h3 class="card-title" style="margin:0;">
-                        <?php echo $followUpFilter ? 'Leads Needing Follow-up' : 'Recent Interactions'; ?>
+                        <?php echo $followUpFilter ? __('Leads Needing Follow-up') : __('Recent Interactions'); ?>
                     </h3>
                     <?php if ($filterType): ?>
                         <span class="badge bg-blue-100 text-blue-800" style="font-size:12px;"><?php echo $countResult; ?> <?php echo htmlspecialchars($filterType); ?></span>
                     <?php else: ?>
-                        <span class="badge bg-blue-100 text-blue-800" style="font-size:12px;"><?php echo $countResult; ?> total</span>
+                        <span class="badge bg-blue-100 text-blue-800" style="font-size:12px;"><?php echo $countResult; ?> <?php echo __('total'); ?></span>
                     <?php endif; ?>
                 </div>
                 <?php if ($filterType || $followUpFilter): ?>
-                    <a href="<?php echo $allUrl; ?>" class="btn btn-sm btn-outline" style="font-size:12px;">Clear filter</a>
+                    <a href="<?php echo $allUrl; ?>" class="btn btn-sm btn-outline" style="font-size:12px;"><?php echo __('Clear filter'); ?></a>
                 <?php endif; ?>
             </div>
             <div class="card-body" style="padding:0;">
                 <?php if (empty($interactions)): ?>
                     <div class="empty-state" style="padding:48px 20px;">
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <h3>No Interactions Found</h3>
+                        <h3><?php echo __('No Interactions Found'); ?></h3>
                         <p><?php echo $filterType ? 'No ' . htmlspecialchars($filterType) . ' interactions found.' : ($followUpFilter ? 'No leads need follow-up right now.' : 'Start logging communication with leads.'); ?></p>
                         <?php if ($filterType || $followUpFilter): ?>
-                            <a href="<?php echo $allUrl; ?>" class="btn btn-outline" style="margin-top:12px;">Clear Filter</a>
+                            <a href="<?php echo $allUrl; ?>" class="btn btn-outline" style="margin-top:12px;"><?php echo __('Clear Filter'); ?></a>
                         <?php endif; ?>
                     </div>
                 <?php else: ?>
@@ -315,7 +315,7 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
                                                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                                                 <input type="hidden" name="action" value="delete_interaction">
                                                 <input type="hidden" name="interaction_id" value="<?php echo $interaction['interaction_id']; ?>">
-                                                <button type="submit" class="btn-icon-delete" title="Delete interaction">
+                                                <button type="submit" class="btn-icon-delete" title="<?php echo __('Delete interaction'); ?>">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                                 </button>
                                             </form>
@@ -332,7 +332,7 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
                                         <span class="ix-notes-short"><?php echo nl2br(htmlspecialchars($shortNotes)); ?></span>
                                         <?php if ($isLong): ?>
                                             <span class="ix-notes-full" style="display:none;"><?php echo nl2br(htmlspecialchars($fullNotes)); ?></span>
-                                            <button type="button" class="ix-expand-btn" onclick="toggleNotes(this)">Show more</button>
+                                            <button type="button" class="ix-expand-btn" onclick="toggleNotes(this)"><?php echo __('Show more'); ?></button>
                                         <?php endif; ?>
                                     </div>
                                     <?php if ($interaction['next_action']): ?>
@@ -386,7 +386,7 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
             <div class="card-header" style="background:linear-gradient(135deg,#f0f5ff,#e8f0fe);border-bottom:2px solid var(--color-accent);">
                 <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Log New Interaction
+                    <?php echo __('Log New Interaction'); ?>
                 </h3>
             </div>
             <div class="card-body">
@@ -394,9 +394,9 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                     
                     <div class="form-group">
-                        <label class="form-label">Select Lead</label>
+                        <label class="form-label"><?php echo __('Select Lead'); ?></label>
                         <select name="lead_id" class="form-control" required>
-                            <option value="">Choose a lead...</option>
+                            <option value=""><?php echo __('Choose a lead...'); ?></option>
                             <?php foreach ($leads as $lead): ?>
                                 <option value="<?php echo $lead['lead_id']; ?>" <?php echo ($leadId == $lead['lead_id']) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($lead['company_name'] ?: $lead['contact_person'] ?: 'Lead #' . $lead['lead_id']); ?>
@@ -406,46 +406,46 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Interaction Type</label>
+                        <label class="form-label"><?php echo __('Interaction Type'); ?></label>
                         <select name="interaction_type" class="form-control" required>
-                            <option value="">Select type...</option>
-                            <option value="Call" <?php echo $interactionType === 'call' ? 'selected' : ''; ?>>Phone Call</option>
-                            <option value="Email" <?php echo $interactionType === 'email' ? 'selected' : ''; ?>>Email</option>
-                            <option value="Meeting" <?php echo $interactionType === 'meeting' ? 'selected' : ''; ?>>Meeting</option>
-                            <option value="Demo">Demo/Presentation</option>
-                            <option value="Follow-up">Follow-up</option>
-                            <option value="Note">Note</option>
+                            <option value=""><?php echo __('Select type...'); ?></option>
+                            <option value="Call" <?php echo $interactionType === 'call' ? 'selected' : ''; ?>><?php echo __('Phone Call'); ?></option>
+                            <option value="Email" <?php echo $interactionType === 'email' ? 'selected' : ''; ?>><?php echo __('Email'); ?></option>
+                            <option value="Meeting" <?php echo $interactionType === 'meeting' ? 'selected' : ''; ?>><?php echo __('Meeting'); ?></option>
+                            <option value="Demo"><?php echo __('Demo/Presentation'); ?></option>
+                            <option value="Follow-up"><?php echo __('Follow-up'); ?></option>
+                            <option value="Note"><?php echo __('Note'); ?></option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Date &amp; Time</label>
+                        <label class="form-label"><?php echo __('Date & Time'); ?></label>
                         <input type="datetime-local" name="interaction_date" class="form-control" value="<?php echo date('Y-m-d\TH:i'); ?>" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Subject</label>
-                        <input type="text" name="subject" class="form-control" placeholder="Brief description" required>
+                        <label class="form-label"><?php echo __('Subject'); ?></label>
+                        <input type="text" name="subject" class="form-control" placeholder="<?php echo __('Brief description'); ?>" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Notes</label>
-                        <textarea name="notes" class="form-control" rows="3" placeholder="Detailed notes..."></textarea>
+                        <label class="form-label"><?php echo __('Notes'); ?></label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="<?php echo __('Detailed notes...'); ?>"></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Next Action</label>
-                        <input type="text" name="next_action" class="form-control" placeholder="What's the next step?">
+                        <label class="form-label"><?php echo __('Next Action'); ?></label>
+                        <input type="text" name="next_action" class="form-control" placeholder="<?php echo __('What\'s the next step?'); ?>">
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Next Action Date</label>
+                        <label class="form-label"><?php echo __('Next Action Date'); ?></label>
                         <input type="date" name="next_action_date" class="form-control">
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-block">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Log Interaction
+                        <?php echo __('Log Interaction'); ?>
                     </button>
                 </form>
             </div>
@@ -484,11 +484,11 @@ function toggleNotes(btn) {
     if (fullEl.style.display === 'none') {
         shortEl.style.display = 'none';
         fullEl.style.display = 'inline';
-        btn.textContent = 'Show less';
+        btn.textContent = window.__('Show less');
     } else {
         shortEl.style.display = 'inline';
         fullEl.style.display = 'none';
-        btn.textContent = 'Show more';
+        btn.textContent = window.__('Show more');
     }
 }
 </script>

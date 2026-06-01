@@ -207,14 +207,14 @@ include '../includes/header.php';
 ?>
 
 <div class="page-header">
-    <h1 class="page-title">Database Migration Results</h1>
+    <h1 class="page-title"><?php echo __('Database Migration Results'); ?></h1>
 </div>
 
 <div class="card">
     <div class="card-body">
         <table class="table">
             <thead>
-                <tr><th>Item</th><th>Result</th><th>Status</th></tr>
+                <tr><th><?php echo __('Item'); ?></th><th><?php echo __('Result'); ?></th><th><?php echo __('Status'); ?></th></tr>
             </thead>
             <tbody>
                 <?php foreach ($results as $r): ?>
@@ -236,8 +236,8 @@ include '../includes/header.php';
         </table>
         
         <div style="margin-top:20px;">
-            <a href="voip-dashboard.php" class="btn btn-primary">Go to VoIP Dashboard</a>
-            <a href="settings.php" class="btn btn-outline" style="margin-left:8px;">Go to Settings</a>
+            <a href="voip-dashboard.php" class="btn btn-primary"><?php echo __('Go to VoIP Dashboard'); ?></a>
+            <a href="settings.php" class="btn btn-outline" style="margin-left:8px;"><?php echo __('Go to Settings'); ?></a>
         </div>
     </div>
 </div>

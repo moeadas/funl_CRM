@@ -204,12 +204,12 @@ include '../includes/header.php';
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Platform Administration</h1>
-        <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;">Manage all tenants, subscriptions, and users.</p>
+        <h1 class="page-title"><?php echo __('Platform Administration'); ?></h1>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;"><?php echo __('Manage all tenants, subscriptions, and users.'); ?></p>
     </div>
     <button type="button" class="btn btn-primary" onclick="openCreateCompanyModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New Company
+        <?php echo __('New Company'); ?>
     </button>
 </div>
 
@@ -217,44 +217,44 @@ include '../includes/header.php';
 <div class="grid grid-3" style="gap:16px;margin-bottom:24px;">
     <div class="card" style="text-align:center;padding:24px;">
         <div style="font-size:32px;font-weight:700;color:var(--color-primary);"><?php echo $stats['total_companies']; ?></div>
-        <div style="font-size:13px;color:var(--color-text-muted);">Total Companies</div>
+        <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('Total Companies'); ?></div>
     </div>
     <div class="card" style="text-align:center;padding:24px;">
         <div style="font-size:32px;font-weight:700;color:var(--color-success);"><?php echo $stats['active_companies']; ?></div>
-        <div style="font-size:13px;color:var(--color-text-muted);">Active</div>
+        <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('Active'); ?></div>
     </div>
     <div class="card" style="text-align:center;padding:24px;">
         <div style="font-size:32px;font-weight:700;color:var(--color-warning);"><?php echo $stats['trial_companies']; ?></div>
-        <div style="font-size:13px;color:var(--color-text-muted);">In Trial</div>
+        <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('In Trial'); ?></div>
     </div>
     <div class="card" style="text-align:center;padding:24px;">
         <div style="font-size:32px;font-weight:700;color:var(--color-danger);"><?php echo $stats['past_due_companies']; ?></div>
-        <div style="font-size:13px;color:var(--color-text-muted);">Past Due</div>
+        <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('Past Due'); ?></div>
     </div>
     <div class="card" style="text-align:center;padding:24px;">
         <div style="font-size:32px;font-weight:700;"><?php echo $stats['total_users']; ?></div>
-        <div style="font-size:13px;color:var(--color-text-muted);">Total Users</div>
+        <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('Total Users'); ?></div>
     </div>
     <div class="card" style="text-align:center;padding:24px;">
         <div style="font-size:32px;font-weight:700;"><?php echo $stats['total_leads']; ?></div>
-        <div style="font-size:13px;color:var(--color-text-muted);">Total Leads</div>
+        <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('Total Leads'); ?></div>
     </div>
 </div>
 
 <!-- Companies Table -->
 <div class="card">
-    <div class="card-header"><h3 class="card-title">All Companies</h3></div>
+    <div class="card-header"><h3 class="card-title"><?php echo __('All Companies'); ?></h3></div>
     <div class="card-body" style="padding:0;">
         <table class="table">
             <thead>
                 <tr>
-                    <th>Company</th>
-                    <th>Plan</th>
-                    <th>Status</th>
-                    <th>Users</th>
-                    <th>Leads</th>
-                    <th>Created</th>
-                    <th style="text-align:right;">Actions</th>
+                    <th><?php echo __('Company'); ?></th>
+                    <th><?php echo __('Plan'); ?></th>
+                    <th><?php echo __('Status'); ?></th>
+                    <th><?php echo __('Users'); ?></th>
+                    <th><?php echo __('Leads'); ?></th>
+                    <th><?php echo __('Created'); ?></th>
+                    <th style="text-align:right;"><?php echo __('Actions'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -296,20 +296,20 @@ include '../includes/header.php';
                     <td><?php echo date('M j, Y', strtotime($company['created_at'])); ?></td>
                     <td style="text-align:right;">
                         <button type="button" class="btn btn-sm btn-outline" onclick="openAddUserModal(<?php echo $company['company_id']; ?>, '<?php echo htmlspecialchars($company['company_name']); ?>')">
-                            Add User
+                            <?php echo __('Add User'); ?>
                         </button>
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Suspend this company? Users will lose access.');">
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <input type="hidden" name="action" value="update_company_status">
                             <input type="hidden" name="company_id" value="<?php echo $company['company_id']; ?>">
                             <input type="hidden" name="status" value="suspended">
-                            <button type="submit" class="btn btn-sm btn-warning" title="Suspend">Suspend</button>
+                            <button type="submit" class="btn btn-sm btn-warning" title="<?php echo __('Suspend'); ?>"><?php echo __('Suspend'); ?></button>
                         </form>
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this company and ALL its data? This cannot be undone.');">
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <input type="hidden" name="action" value="delete_company">
                             <input type="hidden" name="company_id" value="<?php echo $company['company_id']; ?>">
-                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">&times;</button>
+                            <button type="submit" class="btn btn-sm btn-danger" title="<?php echo __('Delete'); ?>">&times;</button>
                         </form>
                     </td>
                 </tr>
@@ -324,29 +324,29 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="closeCreateCompanyModal()"></div>
     <div class="modal-content" style="max-width:600px;">
         <div class="modal-header">
-            <h3 class="modal-title">Create New Company</h3>
+            <h3 class="modal-title"><?php echo __('Create New Company'); ?></h3>
             <button type="button" class="btn-close" onclick="closeCreateCompanyModal()">&times;</button>
         </div>
         <form method="POST" class="modal-body">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
             <input type="hidden" name="action" value="create_company">
             
-            <h4 style="margin-bottom:16px;">Company Info</h4>
+            <h4 style="margin-bottom:16px;"><?php echo __('Company Info'); ?></h4>
             <div class="grid grid-2" style="gap:16px;">
                 <div class="form-group">
-                    <label class="form-label">Company Name *</label>
+                    <label class="form-label"><?php echo __('Company Name'); ?> *</label>
                     <input type="text" name="company_name" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Company Email *</label>
+                    <label class="form-label"><?php echo __('Company Email'); ?> *</label>
                     <input type="email" name="email" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Phone</label>
+                    <label class="form-label"><?php echo __('Phone'); ?></label>
                     <input type="tel" name="phone" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Plan *</label>
+                    <label class="form-label"><?php echo __('Plan'); ?> *</label>
                     <select name="plan" class="form-control">
                         <?php foreach ($plans as $plan): ?>
                             <option value="<?php echo $plan['plan_key']; ?>">
@@ -357,25 +357,25 @@ include '../includes/header.php';
                 </div>
             </div>
             
-            <h4 style="margin:24px 0 16px;">Admin User</h4>
+            <h4 style="margin:24px 0 16px;"><?php echo __('Admin User'); ?></h4>
             <div class="grid grid-2" style="gap:16px;">
                 <div class="form-group">
-                    <label class="form-label">Admin Name *</label>
+                    <label class="form-label"><?php echo __('Admin Name'); ?> *</label>
                     <input type="text" name="admin_name" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Admin Email *</label>
+                    <label class="form-label"><?php echo __('Admin Email'); ?> *</label>
                     <input type="email" name="admin_email" class="form-control" required>
                 </div>
                 <div class="form-group" style="grid-column:1/-1;">
-                    <label class="form-label">Password *</label>
+                    <label class="form-label"><?php echo __('Password'); ?> *</label>
                     <input type="password" name="admin_password" class="form-control" required>
                 </div>
             </div>
             
             <div class="form-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;">
-                <button type="button" class="btn btn-outline" onclick="closeCreateCompanyModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create Company</button>
+                <button type="button" class="btn btn-outline" onclick="closeCreateCompanyModal()"><?php echo __('Cancel'); ?></button>
+                <button type="submit" class="btn btn-primary"><?php echo __('Create Company'); ?></button>
             </div>
         </form>
     </div>
@@ -386,7 +386,7 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="closeAddUserModal()"></div>
     <div class="modal-content" style="max-width:500px;">
         <div class="modal-header">
-            <h3 class="modal-title">Add User to <span id="modalCompanyName"></span></h3>
+            <h3 class="modal-title"><?php echo __('Add User to'); ?> <span id="modalCompanyName"></span></h3>
             <button type="button" class="btn-close" onclick="closeAddUserModal()">&times;</button>
         </div>
         <form method="POST" class="modal-body">
@@ -396,35 +396,35 @@ include '../includes/header.php';
             
             <div class="grid grid-2" style="gap:16px;">
                 <div class="form-group">
-                    <label class="form-label">Username *</label>
+                    <label class="form-label"><?php echo __('Username'); ?> *</label>
                     <input type="text" name="username" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Email *</label>
+                    <label class="form-label"><?php echo __('Email'); ?> *</label>
                     <input type="email" name="email" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Full Name *</label>
+                    <label class="form-label"><?php echo __('Full Name'); ?> *</label>
                     <input type="text" name="full_name" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Role *</label>
+                    <label class="form-label"><?php echo __('Role'); ?> *</label>
                     <select name="role" class="form-control">
-                        <option value="Admin">Admin</option>
-                        <option value="Sales Manager">Sales Manager</option>
-                        <option value="Sales Rep" selected>Sales Rep</option>
-                        <option value="Viewer">Viewer</option>
+                        <option value="Admin"><?php echo __('Admin'); ?></option>
+                        <option value="Sales Manager"><?php echo __('Sales Manager'); ?></option>
+                        <option value="Sales Rep" selected><?php echo __('Sales Rep'); ?></option>
+                        <option value="Viewer"><?php echo __('Viewer'); ?></option>
                     </select>
                 </div>
                 <div class="form-group" style="grid-column:1/-1;">
-                    <label class="form-label">Password *</label>
+                    <label class="form-label"><?php echo __('Password'); ?> *</label>
                     <input type="password" name="password" class="form-control" required>
                 </div>
             </div>
             
             <div class="form-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;">
-                <button type="button" class="btn btn-outline" onclick="closeAddUserModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Add User</button>
+                <button type="button" class="btn btn-outline" onclick="closeAddUserModal()"><?php echo __('Cancel'); ?></button>
+                <button type="submit" class="btn btn-primary"><?php echo __('Add User'); ?></button>
             </div>
         </form>
     </div>

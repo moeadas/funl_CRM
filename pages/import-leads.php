@@ -193,9 +193,9 @@ $csrf_token = generateCSRFToken();
             <a href="settings.php" class="text-muted back-link">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </a>
-            Import Leads
+            <?php echo __('Import Leads'); ?>
         </h1>
-        <p class="page-subtitle">Import leads from CSV file with custom field mapping</p>
+        <p class="page-subtitle"><?php echo __('Import leads from CSV file with custom field mapping'); ?></p>
     </div>
 </div>
 
@@ -205,23 +205,23 @@ $csrf_token = generateCSRFToken();
 
 <div class="import-wizard">
     <ul class="wizard-steps">
-        <li class="wizard-step <?php echo $step == 1 ? 'active' : ($step > 1 ? 'completed' : ''); ?>"><div class="wizard-step-number">1</div><div class="wizard-step-title">Upload</div></li>
-        <li class="wizard-step <?php echo $step == 2 ? 'active' : ($step > 2 ? 'completed' : ''); ?>"><div class="wizard-step-number">2</div><div class="wizard-step-title">Map Fields</div></li>
-        <li class="wizard-step <?php echo $step == 3 ? 'active' : ($step > 3 ? 'completed' : ''); ?>"><div class="wizard-step-number">3</div><div class="wizard-step-title">Preview</div></li>
-        <li class="wizard-step <?php echo $step == 4 ? 'active' : ''; ?>"><div class="wizard-step-number">4</div><div class="wizard-step-title">Complete</div></li>
+        <li class="wizard-step <?php echo $step == 1 ? 'active' : ($step > 1 ? 'completed' : ''); ?>"><div class="wizard-step-number">1</div><div class="wizard-step-title"><?php echo __('Upload'); ?></div></li>
+        <li class="wizard-step <?php echo $step == 2 ? 'active' : ($step > 2 ? 'completed' : ''); ?>"><div class="wizard-step-number">2</div><div class="wizard-step-title"><?php echo __('Map Fields'); ?></div></li>
+        <li class="wizard-step <?php echo $step == 3 ? 'active' : ($step > 3 ? 'completed' : ''); ?>"><div class="wizard-step-number">3</div><div class="wizard-step-title"><?php echo __('Preview'); ?></div></li>
+        <li class="wizard-step <?php echo $step == 4 ? 'active' : ''; ?>"><div class="wizard-step-number">4</div><div class="wizard-step-title"><?php echo __('Complete'); ?></div></li>
     </ul>
 
     <?php if ($step == 1): ?>
     <div class="card">
-        <div class="card-header"><h3 class="card-title">Upload CSV File</h3></div>
+        <div class="card-header"><h3 class="card-title"><?php echo __('Upload CSV File'); ?></h3></div>
         <div class="card-body">
             <form method="POST" enctype="multipart/form-data" id="uploadForm">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 <input type="hidden" name="action" value="upload">
                 <div class="upload-zone" onclick="document.getElementById('csv_file').click()">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <h3>Drop your CSV file here or click to browse</h3>
-                    <p class="text-muted">Supports CSV exports from Zoho, Salesforce, HubSpot, or any CRM. Max 5MB.</p>
+                    <h3><?php echo __('Drop your CSV file here or click to browse'); ?></h3>
+                    <p class="text-muted"><?php echo __('Supports CSV exports from Zoho, Salesforce, HubSpot, or any CRM. Max 5MB.'); ?></p>
                     <input type="file" name="csv_file" id="csv_file" accept=".csv,.txt" style="display:none;" onchange="document.getElementById('uploadForm').submit()">
                 </div>
             </form>
@@ -232,17 +232,17 @@ $csrf_token = generateCSRFToken();
     <?php if ($step == 2 && isset($_SESSION['import_headers'])): ?>
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Map CSV Columns</h3>
-            <span class="badge bg-blue-100 text-blue-800"><?php echo $_SESSION['import_total']; ?> rows</span>
+            <h3 class="card-title"><?php echo __('Map CSV Columns'); ?></h3>
+            <span class="badge bg-blue-100 text-blue-800"><?php echo $_SESSION['import_total']; ?> <?php echo __('rows'); ?></span>
         </div>
         <div class="card-body">
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 <input type="hidden" name="action" value="map">
-                <p class="text-muted" style="margin-bottom:1rem;">Match CSV columns to CRM fields. Only <strong>Company Name</strong> is required.</p>
+                <p class="text-muted" style="margin-bottom:1rem;"><?php echo __('Match CSV columns to CRM fields. Only'); ?> <strong><?php echo __('Company Name'); ?></strong> <?php echo __('is required.'); ?></p>
                 <div class="table-container">
                     <table class="table">
-                        <thead><tr><th>CSV Column</th><th>Map to CRM Field</th><th>Sample</th></tr></thead>
+                        <thead><tr><th><?php echo __('CSV Column'); ?></th><th><?php echo __('Map to CRM Field'); ?></th><th><?php echo __('Sample'); ?></th></tr></thead>
                         <tbody>
                             <?php foreach ($_SESSION['import_headers'] as $index => $header):
                                 $headerLower = strtolower(trim($header));
@@ -263,8 +263,8 @@ $csrf_token = generateCSRFToken();
                     </table>
                 </div>
                 <div class="form-actions" style="margin-top:1.5rem;">
-                    <a href="import-leads.php?reset=1" class="btn btn-outline">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Preview Import</button>
+                    <a href="import-leads.php?reset=1" class="btn btn-outline"><?php echo __('Cancel'); ?></a>
+                    <button type="submit" class="btn btn-primary"><?php echo __('Preview Import'); ?></button>
                 </div>
             </form>
         </div>
@@ -274,8 +274,8 @@ $csrf_token = generateCSRFToken();
     <?php if ($step == 3 && isset($_SESSION['import_mappings'])): ?>
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Preview Import Data</h3>
-            <span class="badge bg-blue-100 text-blue-800"><?php echo $_SESSION['import_total']; ?> rows</span>
+            <h3 class="card-title"><?php echo __('Preview Import Data'); ?></h3>
+            <span class="badge bg-blue-100 text-blue-800"><?php echo $_SESSION['import_total']; ?> <?php echo __('rows'); ?></span>
         </div>
         <div class="card-body">
             <div class="table-container">
@@ -301,15 +301,15 @@ $csrf_token = generateCSRFToken();
             </div>
             
             <div class="alert alert-warning" style="margin-top:1rem;">
-                <strong>Ready to import <?php echo $_SESSION['import_total']; ?> leads.</strong> Rows missing Company Name will be skipped.
+                <strong><?php echo __('Ready to import'); ?> <?php echo $_SESSION['import_total']; ?> <?php echo __('leads.'); ?></strong> <?php echo __('Rows missing Company Name will be skipped.'); ?>
             </div>
             
             <form method="POST" style="margin-top:1.5rem;">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 <input type="hidden" name="action" value="import">
                 <div class="form-actions">
-                    <a href="import-leads.php?step=2" class="btn btn-outline">Back</a>
-                    <button type="submit" class="btn btn-success btn-lg">Import Now</button>
+                    <a href="import-leads.php?step=2" class="btn btn-outline"><?php echo __('Back'); ?></a>
+                    <button type="submit" class="btn btn-success btn-lg"><?php echo __('Import Now'); ?></button>
                 </div>
             </form>
         </div>
@@ -321,23 +321,23 @@ $csrf_token = generateCSRFToken();
         <div class="card-body">
             <div class="import-summary">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <h2>Import Complete!</h2>
-                <p class="text-muted">Your leads have been imported into the CRM.</p>
+                <h2><?php echo __('Import Complete!'); ?></h2>
+                <p class="text-muted"><?php echo __('Your leads have been imported into the CRM.'); ?></p>
                 <div class="import-stats">
                     <div class="import-stat">
                         <div class="import-stat-value"><?php echo $_SESSION['import_success'] ?? 0; ?></div>
-                        <div class="import-stat-label">Imported</div>
+                        <div class="import-stat-label"><?php echo __('Imported'); ?></div>
                     </div>
                     <?php if (($_SESSION['import_skipped'] ?? 0) > 0): ?>
                     <div class="import-stat">
                         <div class="import-stat-value" style="color:var(--color-warning);"><?php echo $_SESSION['import_skipped']; ?></div>
-                        <div class="import-stat-label">Skipped</div>
+                        <div class="import-stat-label"><?php echo __('Skipped'); ?></div>
                     </div>
                     <?php endif; ?>
                 </div>
                 <div class="form-actions" style="justify-content:center;">
-                    <a href="leads.php" class="btn btn-primary btn-lg">View All Leads</a>
-                    <a href="import-leads.php" class="btn btn-outline">Import More</a>
+                    <a href="leads.php" class="btn btn-primary btn-lg"><?php echo __('View All Leads'); ?></a>
+                    <a href="import-leads.php" class="btn btn-outline"><?php echo __('Import More'); ?></a>
                 </div>
             </div>
         </div>

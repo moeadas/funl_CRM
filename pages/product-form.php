@@ -36,48 +36,48 @@ textarea.form-control { min-height:80px; resize:vertical; }
     </div>
     <div style="display:flex; gap:10px;">
         <?php if ($productId): ?>
-            <button type="button" class="btn btn-danger" onclick="deleteProduct()">Delete Product</button>
+            <button type="button" class="btn btn-danger" onclick="deleteProduct()"><?php echo __('Delete Product'); ?></button>
         <?php endif; ?>
-        <button type="button" class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+        <button type="button" class="btn btn-primary" onclick="saveProduct()"><?php echo __('Save Product'); ?></button>
     </div>
 </div>
 
 <div style="max-width:900px;">
     <div class="card">
-        <h3 class="card-title">Product Details</h3>
+        <h3 class="card-title"><?php echo __('Product Details'); ?></h3>
         <div class="form-group">
             <label class="form-label">Product Name *</label>
             <input type="text" id="productName" class="form-control" placeholder="e.g., Premium Plan" required>
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label">SKU</label>
+                <label class="form-label"><?php echo __('SKU'); ?></label>
                 <input type="text" id="sku" class="form-control" placeholder="e.g., SKU-001">
             </div>
             <div class="form-group">
-                <label class="form-label">Category</label>
+                <label class="form-label"><?php echo __('Category'); ?></label>
                 <input type="text" id="category" class="form-control" placeholder="e.g., Software, Services">
             </div>
         </div>
         <div style="margin-top:16px;">
-            <label class="form-label">Description</label>
-            <textarea id="description" class="form-control" placeholder="Describe the product..."></textarea>
+            <label class="form-label"><?php echo __('Description'); ?></label>
+            <textarea id="description" class="form-control" placeholder="<?php echo __('Describe the product...'); ?>"></textarea>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title">Pricing & Inventory</h3>
+        <h3 class="card-title"><?php echo __('Pricing & Inventory'); ?></h3>
         <div class="row-3">
             <div class="form-group">
                 <label class="form-label">Unit Price *</label>
                 <input type="number" id="price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Cost Price</label>
+                <label class="form-label"><?php echo __('Cost Price'); ?></label>
                 <input type="number" id="cost" class="form-control" placeholder="0.00" step="0.01" min="0">
             </div>
             <div class="form-group">
-                <label class="form-label">Currency</label>
+                <label class="form-label"><?php echo __('Currency'); ?></label>
                 <select id="currency" class="form-control">
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
@@ -89,7 +89,7 @@ textarea.form-control { min-height:80px; resize:vertical; }
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label">Stock Quantity</label>
+                <label class="form-label"><?php echo __('Stock Quantity'); ?></label>
                 <input type="number" id="stock" class="form-control" placeholder="e.g., 100" min="0">
             </div>
         </div>

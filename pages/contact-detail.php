@@ -244,16 +244,16 @@ require_once __DIR__ . '/../includes/header.php';
                 <h3 class="card-title"><?php echo htmlspecialchars(__('Social Media')); ?></h3>
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <?php if ($contact['facebook_url']): ?>
-                        <a href="<?php echo htmlspecialchars($contact['facebook_url']); ?>" target="_blank" class="btn btn-outline">Facebook</a>
+                        <a href="<?php echo htmlspecialchars($contact['facebook_url']); ?>" target="_blank" class="btn btn-outline"><?php echo __('Facebook'); ?></a>
                     <?php endif; ?>
                     <?php if ($contact['linkedin_url']): ?>
-                        <a href="<?php echo htmlspecialchars($contact['linkedin_url']); ?>" target="_blank" class="btn btn-outline">LinkedIn</a>
+                        <a href="<?php echo htmlspecialchars($contact['linkedin_url']); ?>" target="_blank" class="btn btn-outline"><?php echo __('LinkedIn'); ?></a>
                     <?php endif; ?>
                     <?php if ($contact['twitter_url']): ?>
-                        <a href="<?php echo htmlspecialchars($contact['twitter_url']); ?>" target="_blank" class="btn btn-outline">Twitter</a>
+                        <a href="<?php echo htmlspecialchars($contact['twitter_url']); ?>" target="_blank" class="btn btn-outline"><?php echo __('Twitter'); ?></a>
                     <?php endif; ?>
                     <?php if ($contact['instagram_url']): ?>
-                        <a href="<?php echo htmlspecialchars($contact['instagram_url']); ?>" target="_blank" class="btn btn-outline">Instagram</a>
+                        <a href="<?php echo htmlspecialchars($contact['instagram_url']); ?>" target="_blank" class="btn btn-outline"><?php echo __('Instagram'); ?></a>
                     <?php endif; ?>
                 </div>
             </div>

@@ -168,8 +168,8 @@ include __DIR__ . '/../includes/header.php';
 
 <div class="profile-container">
     <div class="page-header">
-        <h1 class="page-title">My Profile</h1>
-        <p class="page-subtitle">Manage your personal account settings, security passwords, and email integrations</p>
+        <h1 class="page-title"><?php echo __('my_profile'); ?></h1>
+        <p class="page-subtitle"><?php echo __('profile_subtitle'); ?></p>
     </div>
 
     <?php if ($success): ?>
@@ -238,11 +238,11 @@ include __DIR__ . '/../includes/header.php';
                         <div class="form-grid-2">
                             <div class="form-group">
                                 <label class="form-label"><?php echo __('new_password'); ?> *</label>
-                                <input type="password" name="new_password" class="form-control" placeholder="Min 8 characters" required>
+                                <input type="password" name="new_password" class="form-control" placeholder="<?php echo __('min_8_characters'); ?>" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label"><?php echo __('confirm_new_password'); ?> *</label>
-                                <input type="password" name="confirm_password" class="form-control" placeholder="Repeat new password" required>
+                                <input type="password" name="confirm_password" class="form-control" placeholder="<?php echo __('repeat_new_password'); ?>" required>
                             </div>
                         </div>
 
@@ -277,7 +277,7 @@ include __DIR__ . '/../includes/header.php';
                             ?>
                             <span class="badge-role <?php echo $roleClass; ?>"><?php echo htmlspecialchars($user['role']); ?></span>
                         </div>
-                        <div style="font-size:12px;color:#9ca3af;">Joined <?php echo date('M j, Y', strtotime($user['created_at'])); ?></div>
+                        <div style="font-size:12px;color:#9ca3af;"><?php echo __('joined'); ?> <?php echo date('M j, Y', strtotime($user['created_at'])); ?></div>
                     </div>
                 </div>
             </div>
@@ -286,7 +286,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="card">
                 <div class="card-header"><h3 class="card-title"><?php echo __('email_integration'); ?></h3></div>
                 <div class="card-body">
-                    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">Connect your Microsoft Office 365 account to send email campaigns and client updates from your personal work email.</p>
+                    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;"><?php echo __('connect_microsoft_desc'); ?></p>
                     
                     <?php if ($msConnected): ?>
                         <div class="microsoft-box">
@@ -309,7 +309,7 @@ include __DIR__ . '/../includes/header.php';
                                 <span class="microsoft-icon" style="opacity:0.5;">🌐</span>
                                 <div class="microsoft-status">
                                     <h4><?php echo __('not_connected'); ?></h4>
-                                    <p>Connect to get started</p>
+                                    <p><?php echo __('connect_to_get_started'); ?></p>
                                 </div>
                             </div>
                         </div>
@@ -317,7 +317,7 @@ include __DIR__ . '/../includes/header.php';
                             <a href="<?php echo $msAuthUrl; ?>" class="btn btn-primary btn-block"><?php echo __('connect_office_365'); ?></a>
                         <?php else: ?>
                             <button class="btn btn-primary btn-block" disabled style="opacity:0.6;cursor:not-allowed;"><?php echo __('connect_office_365'); ?></button>
-                            <div style="font-size:11px;color:#ef4444;margin-top:8px;text-align:center;">Client ID is not configured in settings.</div>
+                            <div style="font-size:11px;color:#ef4444;margin-top:8px;text-align:center;"><?php echo __('client_id_not_configured'); ?></div>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>

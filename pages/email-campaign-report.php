@@ -56,7 +56,7 @@ $delStatus = $db->prepare("SELECT delivery_status, COUNT(*) as cnt FROM email_ca
 $delStatus->execute([$campaignId]);
 $deliveryBreakdown = $delStatus->fetchAll(PDO::FETCH_KEY_PAIR);
 
-$pageTitle = 'Campaign Report';
+$pageTitle = __('Campaign Report');
 include '../includes/header.php';
 ?>
 
@@ -96,67 +96,67 @@ include '../includes/header.php';
     <div>
         <a href="email-campaigns.php" class="btn btn-outline btn-sm back-btn-margin">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-            Back to Campaigns
+            <?php echo __('Back to Campaigns'); ?>
         </a>
         <h1><?php echo htmlspecialchars($campaign['name']); ?></h1>
-        <p class="text-muted">Subject: <?php echo htmlspecialchars($campaign['subject']); ?> · List: <?php echo htmlspecialchars($campaign['list_name'] ?? '—'); ?></p>
+        <p class="text-muted"><?php echo __('Subject'); ?>: <?php echo htmlspecialchars($campaign['subject']); ?> &middot; <?php echo __('List'); ?>: <?php echo htmlspecialchars($campaign['list_name'] ?? '—'); ?></p>
     </div>
-    <span class="badge badge-<?php echo strtolower($campaign['status']); ?>"><?php echo $campaign['status']; ?></span>
+    <span class="badge badge-<?php echo strtolower($campaign['status']); ?>"><?php echo __($campaign['status']); ?></span>
 </div>
 
 <!-- Top Stats Row -->
 <div class="stats-grid-6">
     <div class="stat-card">
         <div class="stat-icon icon-accent"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
-        <div><div class="stat-label">Delivered</div><div class="stat-value"><?php echo $totalSent; ?> <small class="text-muted">(<?php echo $deliveryRate; ?>%)</small></div></div>
+        <div><div class="stat-label"><?php echo __('Delivered'); ?></div><div class="stat-value"><?php echo $totalSent; ?> <small class="text-muted">(<?php echo $deliveryRate; ?>%)</small></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon icon-success"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <div><div class="stat-label">Opened</div><div class="stat-value"><?php echo $totalOpened; ?> <small class="text-muted">(<?php echo $openRate; ?>%)</small></div></div>
+        <div><div class="stat-label"><?php echo __('Opened'); ?></div><div class="stat-value"><?php echo $totalOpened; ?> <small class="text-muted">(<?php echo $openRate; ?>%)</small></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon icon-info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
-        <div><div class="stat-label">Clicked</div><div class="stat-value"><?php echo $totalClicked; ?> <small class="text-muted">(<?php echo $clickRate; ?>%)</small></div></div>
+        <div><div class="stat-label"><?php echo __('Clicked'); ?></div><div class="stat-value"><?php echo $totalClicked; ?> <small class="text-muted">(<?php echo $clickRate; ?>%)</small></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon icon-danger"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-        <div><div class="stat-label">Failed</div><div class="stat-value"><?php echo $totalFailed; ?></div></div>
+        <div><div class="stat-label"><?php echo __('Failed'); ?></div><div class="stat-value"><?php echo $totalFailed; ?></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon icon-warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-        <div><div class="stat-label">Bounced</div><div class="stat-value"><?php echo $totalBounced; ?> <small class="text-muted">(<?php echo $bounceRate; ?>%)</small></div></div>
+        <div><div class="stat-label"><?php echo __('Bounced'); ?></div><div class="stat-value"><?php echo $totalBounced; ?> <small class="text-muted">(<?php echo $bounceRate; ?>%)</small></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon icon-purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-        <div><div class="stat-label">Complained</div><div class="stat-value"><?php echo $totalComplained; ?> <small class="text-muted">(<?php echo $complaintRate; ?>%)</small></div></div>
+        <div><div class="stat-label"><?php echo __('Complained'); ?></div><div class="stat-value"><?php echo $totalComplained; ?> <small class="text-muted">(<?php echo $complaintRate; ?>%)</small></div></div>
     </div>
 </div>
 
 <!-- Delivery Status Breakdown (from webhooks) -->
 <div class="card mt-2">
-    <div class="card-header"><h2 class="card-title">📬 Delivery Status Breakdown</h2></div>
+    <div class="card-header"><h2 class="card-title">📬 <?php echo __('Delivery Status Breakdown'); ?></h2></div>
     <div class="card-body">
         <div class="delivery-stats">
             <div class="delivery-stat delivered">
                 <div class="num"><?php echo $totalDelivered; ?></div>
-                <div class="lbl">Delivered to Inbox</div>
+                <div class="lbl"><?php echo __('Delivered to Inbox'); ?></div>
             </div>
             <div class="delivery-stat junk">
                 <div class="num"><?php echo $totalJunk; ?></div>
-                <div class="lbl">Junk Folder</div>
+                <div class="lbl"><?php echo __('Junk Folder'); ?></div>
             </div>
             <div class="delivery-stat spam">
                 <div class="num"><?php echo $totalSpam; ?></div>
-                <div class="lbl">Spam Folder</div>
+                <div class="lbl"><?php echo __('Spam Folder'); ?></div>
             </div>
             <div class="delivery-stat rejected">
                 <div class="num"><?php echo $totalRejected; ?></div>
-                <div class="lbl">Rejected / Returned</div>
+                <div class="lbl"><?php echo __('Rejected / Returned'); ?></div>
             </div>
         </div>
         <p style="color:#7a7a8a;font-size:13px;margin-top:12px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            These stats come from delivery webhooks. To enable: go to <a href="https://resend.com/domains" target="_blank" style="color:var(--color-primary);">Resend Dashboard → Webhooks</a> and add:
+            <?php echo __('These stats come from delivery webhooks. To enable: go to'); ?> <a href="https://resend.com/domains" target="_blank" style="color:var(--color-primary);">Resend Dashboard → Webhooks</a> <?php echo __('and add:'); ?>
             <code style="background:#f0f0f5;padding:2px 6px;border-radius:4px;font-size:12px;"><?php echo htmlspecialchars(APP_URL); ?>/api/resend-webhook.php</code>
         </p>
     </div>
@@ -167,28 +167,28 @@ include '../includes/header.php';
     <div class="card-body">
         <div class="report-bar-group">
             <div class="report-bar-label">
-                <span>Open Rate</span>
+                <span><?php echo __('Open Rate'); ?></span>
                 <strong><?php echo $openRate; ?>%</strong>
             </div>
             <div class="progress-bar"><div class="progress-fill bg-success" style="width:<?php echo $openRate; ?>%"></div></div>
         </div>
         <div class="report-bar-group mt-1">
             <div class="report-bar-label">
-                <span>Click Rate</span>
+                <span><?php echo __('Click Rate'); ?></span>
                 <strong><?php echo $clickRate; ?>%</strong>
             </div>
             <div class="progress-bar"><div class="progress-fill bg-info" style="width:<?php echo $clickRate; ?>%"></div></div>
         </div>
         <div class="report-bar-group mt-1">
             <div class="report-bar-label">
-                <span>Delivery Rate</span>
+                <span><?php echo __('Delivery Rate'); ?></span>
                 <strong><?php echo $deliveryRate; ?>%</strong>
             </div>
             <div class="progress-bar"><div class="progress-fill" style="width:<?php echo $deliveryRate; ?>%"></div></div>
         </div>
         <div class="report-bar-group mt-1">
             <div class="report-bar-label">
-                <span>Bounce Rate</span>
+                <span><?php echo __('Bounce Rate'); ?></span>
                 <strong><?php echo $bounceRate; ?>%</strong>
             </div>
             <div class="progress-bar"><div class="progress-fill bg-danger" style="width:<?php echo $bounceRate; ?>%"></div></div>
@@ -199,19 +199,19 @@ include '../includes/header.php';
 <!-- Recipient Log -->
 <div class="card mt-2">
     <div class="card-header">
-        <h2 class="card-title">Recipient Details</h2>
+        <h2 class="card-title"><?php echo __('Recipient Details'); ?></h2>
     </div>
     <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr>
-                    <th>Email</th>
-                    <th>Company</th>
-                    <th>Status</th>
-                    <th>Delivery</th>
-                    <th>Sent</th>
-                    <th>Opened</th>
-                    <th>Clicked</th>
+                    <th><?php echo __('Email'); ?></th>
+                    <th><?php echo __('Company'); ?></th>
+                    <th><?php echo __('Status'); ?></th>
+                    <th><?php echo __('Delivery'); ?></th>
+                    <th><?php echo __('Sent'); ?></th>
+                    <th><?php echo __('Opened'); ?></th>
+                    <th><?php echo __('Clicked'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -219,15 +219,15 @@ include '../includes/header.php';
                     <tr>
                         <td><?php echo htmlspecialchars($log['email']); ?></td>
                         <td><?php echo htmlspecialchars($log['company_name'] ?? '—'); ?></td>
-                        <td><span class="badge badge-<?php echo strtolower($log['status']); ?>"><?php echo $log['status']; ?></span></td>
+                        <td><span class="badge badge-<?php echo strtolower($log['status']); ?>"><?php echo __($log['status']); ?></span></td>
                         <td><?php echo $log['delivery_status'] ? htmlspecialchars($log['delivery_status']) : '—'; ?></td>
                         <td><?php echo $log['sent_at'] ? formatDateTime($log['sent_at']) : '—'; ?></td>
                         <td><?php echo $log['opened_at'] ? formatDateTime($log['opened_at']) : '—'; ?></td>
                         <td><?php echo $log['clicked_at'] ? formatDateTime($log['clicked_at']) : '—'; ?></td>
                     </tr>
                 <?php endforeach; ?>
-                <?php if (empty($allLogs)): ?
-                    <tr><td colspan="7" class="text-center text-muted">No send log entries yet</td></tr>
+                <?php if (empty($allLogs)): ?>
+                    <tr><td colspan="7" class="text-center text-muted"><?php echo __('No send log entries yet'); ?></td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

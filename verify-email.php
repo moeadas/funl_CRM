@@ -17,7 +17,7 @@ if ($token) {
     $success = $result['success'];
     $message = $result['message'];
 } else {
-    $message = 'Invalid verification link.';
+    $message = __('Invalid verification link.');
 }
 
 ?>
@@ -26,7 +26,7 @@ if ($token) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification &mdash; White Label CRM</title>
+    <title><?php echo __('Email Verification'); ?> &mdash; <?php echo htmlspecialchars(getAppName()); ?></title>
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         .verify-container { max-width: 400px; margin: 100px auto; text-align: center; padding: 0 20px; }
@@ -52,10 +52,10 @@ if ($token) {
         <?php endif; ?>
     </div>
     
-    <h1 style="margin-bottom: 12px;"><?php echo $success ? 'Email Verified!' : 'Verification Failed'; ?></h1>
+    <h1 style="margin-bottom: 12px;"><?php echo $success ? __('Email Verified!') : __('Verification Failed'); ?></h1>
     <p style="color: var(--color-text-muted); margin-bottom: 24px;"><?php echo htmlspecialchars($message); ?></p>
     
-    <a href="/login.php" class="btn btn-primary">Go to Login</a>
+    <a href="/login.php" class="btn btn-primary"><?php echo __('Go to Login'); ?></a>
 </div>
 
 </body>

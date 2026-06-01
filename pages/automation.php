@@ -11,7 +11,7 @@ $userId = getCurrentUserId();
 $companyId = $_SESSION["company_id"] ?? null;
 $userRole = $_SESSION["role"] ?? "";
 
-$pageTitle = 'Automation';
+$pageTitle = __('Automation');
 $js = ['automation'];
 
 require_once __DIR__ . '/../includes/header.php';
@@ -274,22 +274,22 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 
 <div class="automation-page">
     <div class="page-header">
-        <h1>Automation</h1>
-        <button class="btn btn-primary" onclick="openRuleModal()">+ New Rule</button>
+        <h1><?php echo __('Automation'); ?></h1>
+        <button class="btn btn-primary" onclick="openRuleModal()">+ <?php echo __('New Rule'); ?></button>
     </div>
 
     <div class="rules-list" id="rules-list">
         <div class="empty-state">
-            <h3>No automation rules yet</h3>
-            Create rules to automate repetitive tasks.
+            <h3><?php echo __('No automation rules yet'); ?></h3>
+            <?php echo __('Create rules to automate repetitive tasks.'); ?>
         </div>
     </div>
 
     <!-- Execution Logs -->
     <div class="logs-section">
-        <div class="logs-title">Recent Activity</div>
+        <div class="logs-title"><?php echo __('Recent Activity'); ?></div>
         <div id="logs-list">
-            <div class="empty-state" style="padding:20px 0;">No recent activity.</div>
+            <div class="empty-state" style="padding:20px 0;"><?php echo __('No recent activity.'); ?></div>
         </div>
     </div>
 </div>
@@ -298,7 +298,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 <div class="modal-overlay" id="rule-modal">
     <div class="modal">
         <div class="modal-header">
-            <h2 id="rule-modal-title">New Automation Rule</h2>
+            <h2 id="rule-modal-title"><?php echo __('New Automation Rule'); ?></h2>
             <button class="modal-close" onclick="closeRuleModal()">&times;</button>
         </div>
         <form id="rule-form" onsubmit="saveRule(event)">
@@ -306,20 +306,20 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
                 <input type="hidden" id="rule-id" value="">
                 
                 <div class="form-group">
-                    <label class="form-label">Rule Name *</label>
-                    <input type="text" id="rule-name" class="form-control" required placeholder="e.g. Auto-assign Dubai leads">
+                    <label class="form-label"><?php echo __('Rule Name'); ?> *</label>
+                    <input type="text" id="rule-name" class="form-control" required placeholder="<?php echo __('e.g. Auto-assign Dubai leads'); ?>">
                 </div>
 
                 <!-- WHEN -->
                 <div class="rule-builder-step">
-                    <div class="step-label when">When this happens...</div>
+                    <div class="step-label when"><?php echo __('When this happens...'); ?></div>
                     <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label">Trigger</label>
+                        <label class="form-label"><?php echo __('Trigger'); ?></label>
                         <select id="rule-trigger" class="form-control">
-                            <option value="lead_created">New lead is created</option>
-                            <option value="lead_status_changed">Lead status changes</option>
-                            <option value="deal_stage_changed">Deal moves to stage</option>
-                            <option value="task_overdue">Task becomes overdue</option>
+                            <option value="lead_created"><?php echo __('New lead is created'); ?></option>
+                            <option value="lead_status_changed"><?php echo __('Lead status changes'); ?></option>
+                            <option value="deal_stage_changed"><?php echo __('Deal moves to stage'); ?></option>
+                            <option value="task_overdue"><?php echo __('Task becomes overdue'); ?></option>
                         </select>
                     </div>
                 </div>
@@ -328,15 +328,15 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 
                 <!-- THEN -->
                 <div class="rule-builder-step">
-                    <div class="step-label then">Then do this...</div>
+                    <div class="step-label then"><?php echo __('Then do this...'); ?></div>
                     <div class="form-group">
-                        <label class="form-label">Action</label>
+                        <label class="form-label"><?php echo __('Action'); ?></label>
                         <select id="rule-action" class="form-control" onchange="updateActionOptions()">
-                            <option value="assign_user">Assign to user</option>
-                            <option value="create_task">Create a task</option>
-                            <option value="send_email">Send email</option>
-                            <option value="move_deal">Move deal to stage</option>
-                            <option value="notify_user">Send notification</option>
+                            <option value="assign_user"><?php echo __('Assign to user'); ?></option>
+                            <option value="create_task"><?php echo __('Create a task'); ?></option>
+                            <option value="send_email"><?php echo __('Send email'); ?></option>
+                            <option value="move_deal"><?php echo __('Move deal to stage'); ?></option>
+                            <option value="notify_user"><?php echo __('Send notification'); ?></option>
                         </select>
                     </div>
                     <div id="action-options">
@@ -345,8 +345,8 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
                 </div>
             </div>
             <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeRuleModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="rule-save-btn">Create Rule</button>
+                <button type="button" class="btn btn-outline" onclick="closeRuleModal()"><?php echo __('Cancel'); ?></button>
+                <button type="submit" class="btn btn-primary" id="rule-save-btn"><?php echo __('Create Rule'); ?></button>
             </div>
         </form>
     </div>
@@ -381,37 +381,37 @@ function renderRules() {
     if (!rules.length) {
         container.innerHTML = `
             <div class="empty-state">
-                <h3>No automation rules yet</h3>
-                Create rules to automate repetitive tasks like assigning leads or creating follow-up tasks.
+                <h3>${window.__('No automation rules yet')}</h3>
+                ${window.__('Create rules to automate repetitive tasks like assigning leads or creating follow-up tasks.')}
             </div>`;
         return;
     }
     
     container.innerHTML = rules.map(r => {
         const triggerLabels = {
-            'lead_created': 'New lead created',
-            'lead_status_changed': 'Lead status changes',
-            'deal_stage_changed': 'Deal moves to stage',
-            'task_overdue': 'Task becomes overdue',
+            'lead_created': window.__('New lead created'),
+            'lead_status_changed': window.__('Lead status changes'),
+            'deal_stage_changed': window.__('Deal moves to stage'),
+            'task_overdue': window.__('Task becomes overdue'),
         };
         const actionLabels = {
-            'assign_user': 'Assign to user',
-            'create_task': 'Create task',
-            'send_email': 'Send email',
-            'move_deal': 'Move deal',
-            'notify_user': 'Send notification',
+            'assign_user': window.__('Assign to user'),
+            'create_task': window.__('Create task'),
+            'send_email': window.__('Send email'),
+            'move_deal': window.__('Move deal'),
+            'notify_user': window.__('Send notification'),
         };
         return `
         <div class="rule-card ${r.is_active ? '' : 'inactive'}">
             <div class="rule-info">
                 <div class="rule-name">${escapeHtml(r.rule_name)}</div>
-                <div class="rule-desc">When <strong>${triggerLabels[r.trigger_type] || r.trigger_type}</strong> → Then <strong>${actionLabels[r.action_type] || r.action_type}</strong></div>
-                <div class="rule-meta">Run ${r.run_count || 0} times · Created by ${escapeHtml(r.creator_name || 'System')}</div>
+                <div class="rule-desc">${window.__('When')} <strong>${triggerLabels[r.trigger_type] || r.trigger_type}</strong> → ${window.__('Then')} <strong>${actionLabels[r.action_type] || r.action_type}</strong></div>
+                <div class="rule-meta">${window.__('Run')} ${r.run_count || 0} ${window.__('times')} · ${window.__('Created by')} ${escapeHtml(r.creator_name || window.__('System'))}</div>
             </div>
             <div class="toggle-switch ${r.is_active ? 'active' : ''}" onclick="toggleRule(${r.rule_id}, this)"></div>
             <div class="rule-actions">
-                <button onclick="editRule(${r.rule_id})" title="Edit">✏️</button>
-                <button onclick="deleteRule(${r.rule_id})" title="Delete">🗑️</button>
+                <button onclick="editRule(${r.rule_id})" title="${window.__('Edit')}">✏️</button>
+                <button onclick="deleteRule(${r.rule_id})" title="${window.__('Delete')}">🗑️</button>
             </div>
         </div>`;
     }).join('');
@@ -425,7 +425,7 @@ function loadLogs() {
             const logs = resp.data || [];
             const container = document.getElementById('logs-list');
             if (!logs.length) {
-                container.innerHTML = '<div class="empty-state" style="padding:20px 0;">No recent activity.</div>';
+                container.innerHTML = '<div class="empty-state" style="padding:20px 0;">' + window.__('No recent activity.') + '</div>';
                 return;
             }
             container.innerHTML = logs.map(l => `
@@ -444,7 +444,7 @@ function formatTime(ts) {
     const d = new Date(ts + 'Z');
     const now = new Date();
     const diff = (now - d) / 1000;
-    if (diff < 60) return 'Just now';
+    if (diff < 60) return window.__('Just now');
     if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -454,8 +454,8 @@ function formatTime(ts) {
 function openRuleModal() {
     document.getElementById('rule-form').reset();
     document.getElementById('rule-id').value = '';
-    document.getElementById('rule-modal-title').textContent = 'New Automation Rule';
-    document.getElementById('rule-save-btn').textContent = 'Create Rule';
+    document.getElementById('rule-modal-title').textContent = window.__('New Automation Rule');
+    document.getElementById('rule-save-btn').textContent = window.__('Create Rule');
     updateActionOptions();
     document.getElementById('rule-modal').classList.add('active');
 }
@@ -472,8 +472,8 @@ function editRule(ruleId) {
     document.getElementById('rule-name').value = rule.rule_name || '';
     document.getElementById('rule-trigger').value = rule.trigger_type || 'lead_created';
     document.getElementById('rule-action').value = rule.action_type || 'assign_user';
-    document.getElementById('rule-modal-title').textContent = 'Edit Rule';
-    document.getElementById('rule-save-btn').textContent = 'Save Changes';
+    document.getElementById('rule-modal-title').textContent = window.__('Edit Rule');
+    document.getElementById('rule-save-btn').textContent = window.__('Save Changes');
     
     updateActionOptions();
     document.getElementById('rule-modal').classList.add('active');
@@ -489,27 +489,27 @@ function updateActionOptions() {
         case 'assign_user':
             container.innerHTML = `
                 <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Assign to</label>
+                    <label class="form-label">${window.__('Assign to')}</label>
                     <select id="action-user-id" class="form-control">${userOptions}</select>
                 </div>`;
             break;
         case 'create_task':
             container.innerHTML = `
                 <div class="form-group">
-                    <label class="form-label">Task Title</label>
+                    <label class="form-label">${window.__('Task Title')}</label>
                     <input type="text" id="action-task-title" class="form-control" value="Follow up">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Due in (days)</label>
+                        <label class="form-label">${window.__('Due in (days)')}</label>
                         <input type="number" id="action-due-days" class="form-control" value="2" min="1">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Priority</label>
+                        <label class="form-label">${window.__('Priority')}</label>
                         <select id="action-priority" class="form-control">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
+                            <option value="low">${window.__('Low')}</option>
+                            <option value="medium" selected>${window.__('Medium')}</option>
+                            <option value="high">${window.__('High')}</option>
                         </select>
                     </div>
                 </div>`;
@@ -517,32 +517,32 @@ function updateActionOptions() {
         case 'send_email':
             container.innerHTML = `
                 <div class="form-group">
-                    <label class="form-label">To</label>
+                    <label class="form-label">${window.__('To')}</label>
                     <input type="email" id="action-email-to" class="form-control" placeholder="admin@company.com">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Subject</label>
+                    <label class="form-label">${window.__('Subject')}</label>
                     <input type="text" id="action-email-subject" class="form-control" value="New lead notification">
                 </div>`;
             break;
         case 'move_deal':
             container.innerHTML = `
                 <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Move to stage</label>
+                    <label class="form-label">${window.__('Move to stage')}</label>
                     <select id="action-target-stage" class="form-control">
-                        <option value="prospecting">Prospecting</option>
-                        <option value="qualification">Qualification</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="negotiation">Negotiation</option>
-                        <option value="closed_won">Closed Won</option>
-                        <option value="closed_lost">Closed Lost</option>
+                        <option value="prospecting">${window.__('Prospecting')}</option>
+                        <option value="qualification">${window.__('Qualification')}</option>
+                        <option value="proposal">${window.__('Proposal')}</option>
+                        <option value="negotiation">${window.__('Negotiation')}</option>
+                        <option value="closed_won">${window.__('Closed Won')}</option>
+                        <option value="closed_lost">${window.__('Closed Lost')}</option>
                     </select>
                 </div>`;
             break;
         case 'notify_user':
             container.innerHTML = `
                 <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Message</label>
+                    <label class="form-label">${window.__('Message')}</label>
                     <input type="text" id="action-message" class="form-control" value="Action required!">
                 </div>`;
             break;
@@ -600,9 +600,9 @@ function saveRule(e) {
         if (resp.success) {
             closeRuleModal();
             loadRules();
-            showNotification(ruleId ? 'Rule updated' : 'Rule created', 'success');
+            showNotification(ruleId ? window.__('Rule updated') : window.__('Rule created'), 'success');
         } else {
-            showNotification(resp.message || 'Failed to save', 'error');
+            showNotification(resp.message || window.__('Failed to save'), 'error');
         }
     });
 }
@@ -618,13 +618,13 @@ function toggleRule(ruleId, el) {
             el.classList.toggle('active');
             const card = el.closest('.rule-card');
             card.classList.toggle('inactive');
-            showNotification(el.classList.contains('active') ? 'Rule enabled' : 'Rule disabled', 'success');
+            showNotification(el.classList.contains('active') ? window.__('Rule enabled') : window.__('Rule disabled'), 'success');
         }
     });
 }
 
 function deleteRule(ruleId) {
-    showConfirm('Delete this automation rule?', function() {
+    showConfirm(window.__('Delete this automation rule?'), function() {
         fetch(`${API}?action=delete`, {
             method: 'POST',
             credentials: 'same-origin',
@@ -633,9 +633,9 @@ function deleteRule(ruleId) {
         }).then(r => r.json()).then(resp => {
             if (resp.success) {
                 loadRules();
-                showNotification('Rule deleted', 'success');
+                showNotification(window.__('Rule deleted'), 'success');
             } else {
-                showNotification(resp.message || 'Failed to delete', 'error');
+                showNotification(resp.message || window.__('Failed to delete'), 'error');
             }
         });
     });

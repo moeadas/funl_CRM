@@ -118,12 +118,12 @@ $csrf_token = generateCSRFToken();
 
 <div class="page-header">
     <div>
-        <h1 class="page-title"><?php echo $isEdit ? 'Edit User' : 'Add New User'; ?></h1>
-        <p class="page-subtitle"><?php echo $isEdit ? 'Update user information and permissions' : 'Create a new system user'; ?></p>
+        <h1 class="page-title"><?php echo $isEdit ? __('Edit User') : __('Add New User'); ?></h1>
+        <p class="page-subtitle"><?php echo $isEdit ? __('Update user information and permissions') : __('Create a new system user'); ?></p>
     </div>
     <a href="users.php" class="btn btn-outline">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Back to Users
+        <?php echo __('Back to Users'); ?>
     </a>
 </div>
 
@@ -136,30 +136,30 @@ $csrf_token = generateCSRFToken();
     
     <div class="grid grid-2">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Basic Information</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo __('Basic Information'); ?></h3></div>
             <div class="card-body">
                 <div class="form-group">
-                    <label class="form-label">Username <span class="required">*</span></label>
+                    <label class="form-label"><?php echo __('Username'); ?> <span class="required">*</span></label>
                     <input type="text" name="username" class="form-control" required value="<?php echo htmlspecialchars($userData['username'] ?? ''); ?>" <?php echo $isEdit ? 'readonly' : ''; ?>>
-                    <small class="form-hint">Username cannot be changed after creation</small>
+                    <small class="form-hint"><?php echo __('Username cannot be changed after creation'); ?></small>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Full Name <span class="required">*</span></label>
+                    <label class="form-label"><?php echo __('Full Name'); ?> <span class="required">*</span></label>
                     <input type="text" name="full_name" class="form-control" required value="<?php echo htmlspecialchars($userData['full_name'] ?? ''); ?>">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Email <span class="required">*</span></label>
+                    <label class="form-label"><?php echo __('Email'); ?> <span class="required">*</span></label>
                     <input type="email" name="email" class="form-control" required value="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">WhatsApp Number</label>
+                    <label class="form-label"><?php echo __('WhatsApp Number'); ?></label>
                     <input type="tel" name="whatsapp_number" class="form-control" placeholder="+34678281853" value="<?php echo htmlspecialchars($userData['whatsapp_number'] ?? ''); ?>">
                     <small class="form-hint">International format (e.g. +34678281853). Required to receive lead assignment notifications.</small>
                 </div>
                 <div class="form-group" style="margin-top:12px;">
                     <label class="form-check">
                         <input type="checkbox" name="wa_notify_enabled" value="1" <?php echo (intval($userData['wa_notify_enabled'] ?? 0)) === 1 ? 'checked' : ''; ?>>
-                        <span class="form-check-label">Receive WhatsApp lead assignment notifications</span>
+                        <span class="form-check-label"><?php echo __('Receive WhatsApp lead assignment notifications'); ?></span>
                     </label>
                     <small class="form-hint" style="margin-left:24px;">When a lead is assigned to this user, they will receive a WhatsApp notification.</small>
                 </div>
@@ -167,28 +167,28 @@ $csrf_token = generateCSRFToken();
         </div>
         
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Security &amp; Access</h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo __('Security & Access'); ?></h3></div>
             <div class="card-body">
                 <div class="form-group">
-                    <label class="form-label"><?php echo $isEdit ? '' : '<span class="required">*</span> '; ?>Password</label>
+                    <label class="form-label"><?php echo $isEdit ? '' : '<span class="required">*</span> '; ?><?php echo __('Password'); ?></label>
                     <input type="password" name="password" class="form-control" <?php echo $isEdit ? '' : 'required'; ?>>
-                    <small class="form-hint"><?php echo $isEdit ? 'Leave blank to keep current password' : 'Min ' . PASSWORD_MIN_LENGTH . ' chars with uppercase, lowercase, and number'; ?></small>
+                    <small class="form-hint"><?php echo $isEdit ? __('Leave blank to keep current password') : __('Min') . ' ' . PASSWORD_MIN_LENGTH . ' ' . __('chars with uppercase, lowercase, and number'); ?></small>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Role <span class="required">*</span></label>
+                    <label class="form-label"><?php echo __('Role'); ?> <span class="required">*</span></label>
                     <select name="role" class="form-control" required>
-                        <option value="">Select Role</option>
-                        <option value="Admin" <?php echo ($userData['role'] ?? '') === 'Admin' ? 'selected' : ''; ?>>Admin - Full system access</option>
-                        <option value="Sales Manager" <?php echo ($userData['role'] ?? '') === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager - Manage team &amp; leads</option>
-                        <option value="Sales Rep" <?php echo ($userData['role'] ?? '') === 'Sales Rep' ? 'selected' : ''; ?>>Sales Rep - Manage assigned leads</option>
-                        <option value="Viewer" <?php echo ($userData['role'] ?? '') === 'Viewer' ? 'selected' : ''; ?>>Viewer - Read-only access</option>
+                        <option value=""><?php echo __('Select Role'); ?></option>
+                        <option value="Admin" <?php echo ($userData['role'] ?? '') === 'Admin' ? 'selected' : ''; ?>><?php echo __('Admin - Full system access'); ?></option>
+                        <option value="Sales Manager" <?php echo ($userData['role'] ?? '') === 'Sales Manager' ? 'selected' : ''; ?>><?php echo __('Sales Manager - Manage team & leads'); ?></option>
+                        <option value="Sales Rep" <?php echo ($userData['role'] ?? '') === 'Sales Rep' ? 'selected' : ''; ?>><?php echo __('Sales Rep - Manage assigned leads'); ?></option>
+                        <option value="Viewer" <?php echo ($userData['role'] ?? '') === 'Viewer' ? 'selected' : ''; ?>><?php echo __('Viewer - Read-only access'); ?></option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Status <span class="required">*</span></label>
+                    <label class="form-label"><?php echo __('Status'); ?> <span class="required">*</span></label>
                     <select name="status" class="form-control" required>
-                        <option value="Active" <?php echo ($userData['status'] ?? 'Active') === 'Active' ? 'selected' : ''; ?>>Active</option>
-                        <option value="Inactive" <?php echo ($userData['status'] ?? '') === 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
+                        <option value="Active" <?php echo ($userData['status'] ?? 'Active') === 'Active' ? 'selected' : ''; ?>><?php echo __('Active'); ?></option>
+                        <option value="Inactive" <?php echo ($userData['status'] ?? '') === 'Inactive' ? 'selected' : ''; ?>><?php echo __('Inactive'); ?></option>
                     </select>
                 </div>
             </div>
@@ -196,8 +196,8 @@ $csrf_token = generateCSRFToken();
     </div>
     
     <div class="form-actions">
-        <button type="submit" class="btn btn-primary"><?php echo $isEdit ? 'Update User' : 'Create User'; ?></button>
-        <a href="users.php" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary"><?php echo $isEdit ? __('Update User') : __('Create User'); ?></button>
+        <a href="users.php" class="btn btn-outline"><?php echo __('Cancel'); ?></a>
     </div>
 </form>
 

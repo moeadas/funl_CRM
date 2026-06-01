@@ -74,7 +74,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 
 <div class="quotes-page">
     <div class="page-header">
-        <h1>Quotes & Proposals</h1>
+        <h1><?php echo __('Quotes & Proposals'); ?></h1>
         <button class="btn btn-primary" onclick="openQuoteModal()">+ New Quote</button>
     </div>
 
@@ -83,16 +83,16 @@ textarea.form-control { min-height: 70px; resize: vertical; }
             <thead>
                 <tr>
                     <th>Quote #</th>
-                    <th>Title</th>
-                    <th>Client</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
+                    <th><?php echo __('Title'); ?></th>
+                    <th><?php echo __('Client'); ?></th>
+                    <th><?php echo __('Total'); ?></th>
+                    <th><?php echo __('Status'); ?></th>
+                    <th><?php echo __('Date'); ?></th>
                     <th></th>
                 </tr>
             </thead>
             <tbody id="quotes-tbody">
-                <tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">Loading...</td></tr>
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af"><?php echo __('Loading...'); ?></td></tr>
             </tbody>
         </table>
     </div>
@@ -102,7 +102,7 @@ textarea.form-control { min-height: 70px; resize: vertical; }
 <div class="modal-overlay" id="quote-modal">
     <div class="modal">
         <div class="modal-header">
-            <h2 id="quote-modal-title">New Quote</h2>
+            <h2 id="quote-modal-title"><?php echo __('New Quote'); ?></h2>
             <button class="modal-close" onclick="closeQuoteModal()">&times;</button>
         </div>
         <form id="quote-form" onsubmit="saveQuote(event)">
@@ -111,23 +111,23 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                 
                 <div class="form-group">
                     <label class="form-label">Quote Title *</label>
-                    <input type="text" id="quote-title" class="form-control" required placeholder="e.g. Website Development Project">
+                    <input type="text" id="quote-title" class="form-control" required placeholder="<?php echo __('e.g. Website Development Project'); ?>">
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Deal</label>
+                        <label class="form-label"><?php echo __('Deal'); ?></label>
                         <select id="quote-deal" class="form-control">
-                            <option value="">None</option>
+                            <option value=""><?php echo __('None'); ?></option>
                             <?php foreach ($deals as $d): ?>
                                 <option value="<?= $d['deal_id'] ?>"><?= htmlspecialchars($d['deal_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Account</label>
+                        <label class="form-label"><?php echo __('Account'); ?></label>
                         <select id="quote-account" class="form-control">
-                            <option value="">None</option>
+                            <option value=""><?php echo __('None'); ?></option>
                             <?php foreach ($accounts as $a): ?>
                                 <option value="<?= $a['account_id'] ?>"><?= htmlspecialchars($a['account_name']) ?></option>
                             <?php endforeach; ?>
@@ -137,18 +137,18 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Issue Date</label>
+                        <label class="form-label"><?php echo __('Issue Date'); ?></label>
                         <input type="date" id="quote-issue-date" class="form-control" value="<?= date('Y-m-d') ?>">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Expiry Date</label>
+                        <label class="form-label"><?php echo __('Expiry Date'); ?></label>
                         <input type="date" id="quote-expiry-date" class="form-control">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Currency</label>
+                        <label class="form-label"><?php echo __('Currency'); ?></label>
                         <select id="quote-currency" class="form-control">
                             <option value="USD">USD ($)</option>
                             <option value="EUR">EUR (€)</option>
@@ -164,13 +164,13 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                 
                 <!-- Line Items -->
                 <div style="margin:20px 0 12px">
-                    <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Line Items</div>
+                    <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px"><?php echo __('Line Items'); ?></div>
                     <table class="items-table" id="items-table">
                         <thead>
                             <tr>
-                                <th style="width:40%">Description</th>
-                                <th style="width:15%">Qty</th>
-                                <th style="width:20%">Unit Price</th>
+                                <th style="width:40%"><?php echo __('Description'); ?></th>
+                                <th style="width:15%"><?php echo __('Qty'); ?></th>
+                                <th style="width:20%"><?php echo __('Unit Price'); ?></th>
                                 <th style="width:15%">Discount%</th>
                                 <th style="width:10%"></th>
                             </tr>
@@ -198,18 +198,18 @@ textarea.form-control { min-height: 70px; resize: vertical; }
                 </div>
                 
                 <div class="form-group" style="margin-top:20px">
-                    <label class="form-label">Notes</label>
-                    <textarea id="quote-notes" class="form-control" placeholder="Additional notes for the client..."></textarea>
+                    <label class="form-label"><?php echo __('Notes'); ?></label>
+                    <textarea id="quote-notes" class="form-control" placeholder="<?php echo __('Additional notes for the client...'); ?>"></textarea>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Terms & Conditions</label>
+                    <label class="form-label"><?php echo __('Terms & Conditions'); ?></label>
                     <textarea id="quote-terms" class="form-control" placeholder="Payment terms, delivery terms, etc."></textarea>
                 </div>
             </div>
             <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeQuoteModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="quote-save-btn">Create Quote</button>
+                <button type="button" class="btn btn-outline" onclick="closeQuoteModal()"><?php echo __('Cancel'); ?></button>
+                <button type="submit" class="btn btn-primary" id="quote-save-btn"><?php echo __('Create Quote'); ?></button>
             </div>
         </form>
     </div>
@@ -271,7 +271,7 @@ function addItemRow() {
     const row = document.createElement('tr');
     row.dataset.itemId = itemCount;
     row.innerHTML = `
-        <td><input type="text" class="item-desc" placeholder="Item description" onchange="calculateTotals()"></td>
+        <td><input type="text" class="item-desc" placeholder="${window.__('Item description')}" onchange="calculateTotals()"></td>
         <td><input type="number" class="num-input item-qty" value="1" min="0.01" step="0.01" onchange="calculateTotals()"></td>
         <td><input type="number" class="num-input item-price" value="0" min="0" step="0.01" onchange="calculateTotals()"></td>
         <td><input type="number" class="num-input item-discount" value="0" min="0" max="100" step="0.01" onchange="calculateTotals()"></td>

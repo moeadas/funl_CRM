@@ -95,20 +95,20 @@ table.table tr:hover { background: var(--bg-secondary, #f9fafb); }
 <div class="webforms-page">
     <div class="page-header">
         <div>
-            <h1>Web Forms</h1>
-            <p class="text-muted">Create embedded forms that feed directly into your CRM leads pipeline</p>
+            <h1><?php echo __('Web Forms'); ?></h1>
+            <p class="text-muted"><?php echo __('Create embedded forms that feed directly into your CRM leads pipeline'); ?></p>
         </div>
         <div class="header-actions">
             <a href="/pages/webform-form.php" class="btn btn-primary" style="text-decoration:none;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                New Form
+                <?php echo __('New Form'); ?>
             </a>
         </div>
     </div>
 
     <div class="card">
         <div id="formsList" style="padding:0;">
-            <div class="text-center" style="padding:40px; color:var(--text-secondary, #6b7280);">Loading...</div>
+            <div class="text-center" style="padding:40px; color:var(--text-secondary, #6b7280);"><?php echo __('Loading...'); ?></div>
         </div>
     </div>
 </div>
@@ -129,7 +129,7 @@ function loadForms() {
             renderForms(data.forms || []);
         })
         .catch(() => {
-            document.getElementById('formsList').innerHTML = '<div style="padding:40px; text-align:center; color:#6b7280;">Error loading forms</div>';
+            document.getElementById('formsList').innerHTML = '<div style="padding:40px; text-align:center; color:#6b7280;">' + window.__('Error loading forms') + '</div>';
         });
 }
 
@@ -143,9 +143,9 @@ function renderForms(forms) {
                     <line x1="8" y1="12" x2="16" y2="12"></line>
                     <line x1="12" y1="8" x2="12" y2="16"></line>
                 </svg>
-                <h3 style="margin:0 0 8px; font-size:18px; color:#1f2937;">No web forms yet</h3>
-                <p style="margin-bottom:20px;">Create your first web form to capture leads directly from your website.</p>
-                <a href="/pages/webform-form.php" class="btn btn-primary" style="text-decoration:none;">Create Form</a>
+                <h3 style="margin:0 0 8px; font-size:18px; color:#1f2937;">${window.__('No web forms yet')}</h3>
+                <p style="margin-bottom:20px;">${window.__('Create your first web form to capture leads directly from your website.')}</p>
+                <a href="/pages/webform-form.php" class="btn btn-primary" style="text-decoration:none;">${window.__('Create Form')}</a>
             </div>`;
         return;
     }
@@ -154,11 +154,11 @@ function renderForms(forms) {
         <table class="table">
             <thead>
                 <tr>
-                    <th>Form Name</th>
-                    <th>Fields</th>
-                    <th>Submissions</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>${window.__('Form Name')}</th>
+                    <th>${window.__('Fields')}</th>
+                    <th>${window.__('Submissions')}</th>
+                    <th>${window.__('Status')}</th>
+                    <th>${window.__('Actions')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -175,7 +175,7 @@ function renderForms(forms) {
                         <td><span class="badge ${statusClass}">${(f.status || 'active').toUpperCase()}</span></td>
                         <td>
                             <div style="display:flex; gap:8px;">
-                                <button class="btn btn-sm btn-outline" onclick="copyEmbedCode(${f.form_id})" title="Copy Iframe HTML Embed Code">🔗 Embed Code</button>
+                                <button class="btn btn-sm btn-outline" onclick="copyEmbedCode(${f.form_id})" title="${window.__('Copy Iframe HTML Embed Code')}">🔗 ${window.__('Embed Code')}</button>
                                 <a href="/pages/webform-form.php?id=${f.form_id}" class="btn btn-sm btn-outline" style="text-decoration:none;">✏️ Edit</a>
                                 <button class="btn btn-sm btn-danger-outline" onclick="deleteForm(${f.form_id})">🗑️ Delete</button>
                             </div>

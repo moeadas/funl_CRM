@@ -15,8 +15,8 @@ include '../includes/header.php';
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Quick Guides</h1>
-        <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;">Training materials, sales playbooks, and reference guides for the team.</p>
+        <h1 class="page-title"><?php echo __('Quick Guides'); ?></h1>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;"><?php echo __('Training materials, sales playbooks, and reference guides for the team.'); ?></p>
     </div>
 </div>
 
@@ -33,12 +33,12 @@ include '../includes/header.php';
             </svg>
         </div>
         <div class="guide-card-body">
-            <h3 class="guide-card-title">How to Sell</h3>
-            <p class="guide-card-desc">Complete sales routing guide — match the customer to the right product. Covers WGS Premium, VG Enthusiast, Specialist tests, pricing, upselling modules, and cheat sheet.</p>
+            <h3 class="guide-card-title"><?php echo __('How to Sell'); ?></h3>
+            <p class="guide-card-desc"><?php echo __('Complete sales routing guide — match the customer to the right product. Covers WGS Premium, VG Enthusiast, Specialist tests, pricing, upselling modules, and cheat sheet.'); ?></p>
             <div class="guide-card-meta">
-                <span class="guide-tag" style="background:#e0f7fa;color:#00838f;">Sales</span>
-                <span class="guide-tag" style="background:#e8f5e9;color:#2e7d32;">Products</span>
-                <span class="guide-tag" style="background:#fff3e0;color:#e65100;">Pricing</span>
+                <span class="guide-tag" style="background:#e0f7fa;color:#00838f;"><?php echo __('Sales'); ?></span>
+                <span class="guide-tag" style="background:#e8f5e9;color:#2e7d32;"><?php echo __('Products'); ?></span>
+                <span class="guide-tag" style="background:#fff3e0;color:#e65100;"><?php echo __('Pricing'); ?></span>
             </div>
         </div>
         <div class="guide-card-arrow">
@@ -54,8 +54,8 @@ include '../includes/header.php';
             </svg>
         </div>
         <div class="guide-card-body">
-            <h3 class="guide-card-title" style="color:var(--color-text-muted);">More guides coming soon</h3>
-            <p class="guide-card-desc" style="color:var(--color-text-muted);">Additional training materials and quick reference cards will be added here.</p>
+            <h3 class="guide-card-title" style="color:var(--color-text-muted);"><?php echo __('More guides coming soon'); ?></h3>
+            <p class="guide-card-desc" style="color:var(--color-text-muted);"><?php echo __('Additional training materials and quick reference cards will be added here.'); ?></p>
         </div>
     </div>
 
@@ -66,11 +66,11 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="closeGuide()"></div>
     <div class="guide-viewer-content">
         <div class="guide-viewer-header">
-            <h3 id="guideViewerTitle">Guide</h3>
+            <h3 id="guideViewerTitle"><?php echo __('Guide'); ?></h3>
             <div style="display:flex;gap:8px;align-items:center;">
-                <button class="btn btn-sm btn-outline" onclick="openGuideNewTab()" title="Open in new tab" style="font-size:12px;">
+                <button class="btn btn-sm btn-outline" onclick="openGuideNewTab()" title="<?php echo __('Open in new tab'); ?>" style="font-size:12px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                    New Tab
+                    <?php echo __('New Tab'); ?>
                 </button>
                 <button type="button" class="btn-close" onclick="closeGuide()" style="font-size:20px;background:none;border:none;cursor:pointer;color:var(--color-text-secondary);padding:4px 8px;">&times;</button>
             </div>
@@ -214,7 +214,7 @@ include '../includes/header.php';
 // Guide definitions — add new guides here
 var guides = {
     'how-to-sell': {
-        title: 'How to Sell',
+        title: <?php echo json_encode(__('How to Sell')); ?>,
         url: '/pages/knowledge-hub/how-to-sell.html'
     }
 };

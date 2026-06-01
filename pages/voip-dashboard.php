@@ -139,7 +139,7 @@ include '../includes/header.php';
         </p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-        <span id="voip-ready-badge" class="voip-status-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;background:#86868b;color:#fff;">Initializing...</span>
+        <span id="voip-ready-badge" class="voip-status-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;background:#86868b;color:#fff;"><?php echo __('Initializing...'); ?></span>
         <?php if ($isManager): ?>
         <button class="btn btn-outline" onclick="checkVoIPSetup()" title="Diagnose Twilio webhook configuration" style="font-size:12px;padding:6px 12px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -159,20 +159,20 @@ include '../includes/header.php';
         <div class="stat-icon bg-gradient-primary">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Total Calls</div><div class="stat-value"><?php echo $stats['total']; ?></div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("total_calls"); ?></div><div class="stat-value"><?php echo $stats['total']; ?></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon bg-gradient-info">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Today</div><div class="stat-value"><?php echo $stats['today']; ?></div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("due_today"); ?></div><div class="stat-value"><?php echo $stats['today']; ?></div></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon bg-gradient-warning">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Total Duration</div>
+            <div class="stat-label"><?php echo __("total_duration"); ?></div>
             <div class="stat-value"><?php
                 $dur = $stats['duration'];
                 if ($dur >= 3600) echo floor($dur/3600) . 'h ' . floor(($dur%3600)/60) . 'm';
@@ -185,7 +185,7 @@ include '../includes/header.php';
         <div class="stat-icon bg-gradient-success">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Completed</div><div class="stat-value"><?php echo $stats['completed']; ?></div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("completed"); ?></div><div class="stat-value"><?php echo $stats['completed']; ?></div></div>
     </div>
 </div>
 
@@ -196,7 +196,7 @@ include '../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Avg Duration</div>
+            <div class="stat-label"><?php echo __("avg_duration"); ?></div>
             <div class="stat-value"><?php
                 $avg = round($stats['avg_dur']);
                 echo $avg >= 60 ? floor($avg/60) . ':' . str_pad($avg%60, 2, '0', STR_PAD_LEFT) : $avg . 's';
@@ -207,7 +207,7 @@ include '../includes/header.php';
         <div class="stat-icon" style="background:linear-gradient(135deg,#34c759,#28a745);color:#fff;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
         </div>
-        <div class="stat-content"><div class="stat-label">Positive Outcomes</div><div class="stat-value"><?php echo $stats['positive']; ?></div></div>
+        <div class="stat-content"><div class="stat-label"><?php echo __("positive_outcomes"); ?></div><div class="stat-value"><?php echo $stats['positive']; ?></div></div>
     </div>
     <?php if ($stats['total'] > 0): ?>
     <div class="stat-card">
@@ -215,7 +215,7 @@ include '../includes/header.php';
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <div class="stat-content">
-            <div class="stat-label">Completion Rate</div>
+            <div class="stat-label"><?php echo __("completion_rate"); ?></div>
             <div class="stat-value"><?php echo round(($stats['completed'] / max(1, $stats['total'])) * 100); ?>%</div>
         </div>
     </div>
@@ -236,13 +236,13 @@ include '../includes/header.php';
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Sales Rep</th>
-                        <th>Total Calls</th>
-                        <th>Today</th>
-                        <th>Total Duration</th>
-                        <th>Avg Duration</th>
-                        <th>Positive</th>
-                        <th>Performance</th>
+                        <th><?php echo __("sales_rep"); ?></th>
+                        <th><?php echo __("total_calls"); ?></th>
+                        <th><?php echo __("due_today"); ?></th>
+                        <th><?php echo __("total_duration"); ?></th>
+                        <th><?php echo __("avg_duration"); ?></th>
+                        <th><?php echo __("positive"); ?></th>
+                        <th><?php echo __("performance"); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -294,24 +294,24 @@ include '../includes/header.php';
 <!-- ═══ Call History ═══ -->
 <div class="card">
     <div class="card-header">
-        <h2 class="card-title">Call History</h2>
+        <h2 class="card-title"><?php echo __("call_history"); ?></h2>
         <div style="display:flex;align-items:center;gap:8px;">
             <!-- Search -->
-            <input type="text" id="callSearch" class="form-control" placeholder="Search calls..." style="width:180px;font-size:12px;padding:6px 10px;" oninput="filterCalls()">
+            <input type="text" id="callSearch" class="form-control" placeholder="<?php echo __("search_contacts"); ?>" style="width:180px;font-size:12px;padding:6px 10px;" oninput="filterCalls()">
             <!-- Status filter -->
             <select id="filterStatus" onchange="filterCalls()" class="form-control" style="width:auto;font-size:12px;padding:6px 8px;">
-                <option value="">All Statuses</option>
-                <option value="Completed">Completed</option>
-                <option value="In-Progress">In-Progress</option>
-                <option value="Ringing">Ringing</option>
-                <option value="No-Answer">No-Answer</option>
-                <option value="Busy">Busy</option>
-                <option value="Failed">Failed</option>
-                <option value="Canceled">Canceled</option>
+                <option value=""><?php echo __("all_statuses"); ?></option>
+                <option value="Completed"><?php echo __("completed"); ?></option>
+                <option value="In-Progress"><?php echo __("in_progress"); ?></option>
+                <option value="Ringing"><?php echo __("ringing"); ?></option>
+                <option value="No-Answer"><?php echo __("no_answer"); ?></option>
+                <option value="Busy"><?php echo __("busy"); ?></option>
+                <option value="Failed"><?php echo __("failed"); ?></option>
+                <option value="Canceled"><?php echo __("canceled"); ?></option>
             </select>
             <?php if ($isManager && !empty($allUsers)): ?>
                 <select id="filterUser" onchange="filterCalls()" class="form-control" style="width:auto;font-size:12px;padding:6px 8px;">
-                    <option value="">All Users</option>
+                    <option value=""><?php echo __("all_users"); ?></option>
                     <?php foreach ($allUsers as $u): ?>
                         <option value="<?php echo $u['user_id']; ?>"><?php echo htmlspecialchars($u['full_name']); ?></option>
                     <?php endforeach; ?>
@@ -325,22 +325,22 @@ include '../includes/header.php';
                 <thead>
                     <tr>
                         <th>Lead / Contact</th>
-                        <?php if ($isManager): ?><th>User</th><?php endif; ?>
-                        <th>Number</th>
-                        <th>Direction</th>
-                        <th>Status</th>
-                        <th>Duration</th>
-                        <th>Outcome</th>
-                        <th>Notes</th>
-                        <th>Date</th>
-                        <th>Actions</th>
+                        <?php if ($isManager): ?><th><?php echo __("user"); ?></th><?php endif; ?>
+                        <th><?php echo __("number"); ?></th>
+                        <th><?php echo __("direction"); ?></th>
+                        <th><?php echo __("status"); ?></th>
+                        <th><?php echo __("duration"); ?></th>
+                        <th><?php echo __("outcome"); ?></th>
+                        <th><?php echo __("notes"); ?></th>
+                        <th><?php echo __("date"); ?></th>
+                        <th><?php echo __("actions"); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($calls)): ?>
                         <tr id="empty-row"><td colspan="<?php echo $isManager ? 10 : 9; ?>" class="text-center text-muted" style="padding:40px 20px;">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" style="margin-bottom:8px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                            <br>No calls yet. Use the <strong>Quick Dial</strong> button or call leads from their detail page.
+                            <br><?php echo __("no_calls_yet_desc"); ?>
                         </td></tr>
                     <?php else: ?>
                         <?php foreach ($calls as $call): ?>
@@ -364,7 +364,7 @@ include '../includes/header.php';
                                             <br><small class="text-muted"><?php echo htmlspecialchars($call['company_name']); ?></small>
                                         <?php endif; ?>
                                     <?php else: ?>
-                                        <span class="text-muted">No lead linked</span>
+                                        <span class="text-muted"><?php echo __("no_lead_linked"); ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <?php if ($isManager): ?>
@@ -372,7 +372,7 @@ include '../includes/header.php';
                                         <?php if ($call['user_name']): ?>
                                             <span class="badge" style="background:#e8f0fe;color:#1a56db;font-size:10px;"><?php echo htmlspecialchars($call['user_name']); ?></span>
                                         <?php else: ?>
-                                            <span class="text-muted" style="font-size:11px;">System</span>
+                                            <span class="text-muted" style="font-size:11px;"><?php echo __("system"); ?></span>
                                         <?php endif; ?>
                                     </td>
                                 <?php endif; ?>
@@ -445,17 +445,17 @@ include '../includes/header.php';
                                 </td>
                                 <td>
                                     <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                                        <button class="comm-btn comm-btn-call" style="font-size:11px;padding:4px 8px;" onclick="VoIPPhone.call('<?php echo htmlspecialchars($call['direction']==='Inbound' ? $call['from_number'] : $call['to_number']); ?>', <?php echo $call['lead_id'] ?: 0; ?>)" title="Redial">
+                                        <button class="comm-btn comm-btn-call" style="font-size:11px;padding:4px 8px;" onclick="VoIPPhone.call('<?php echo htmlspecialchars($call['direction']==='Inbound' ? $call['from_number'] : $call['to_number']); ?>', <?php echo $call['lead_id'] ?: 0; ?>)" title="<?php echo __("redial"); ?>">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3"/></svg>
                                             Redial
                                         </button>
                                         <?php if ($call['recording_url']): ?>
-                                            <button class="comm-btn" style="font-size:11px;padding:4px 8px;background:#e8f0fe;color:#1a56db;" onclick="playRecording('<?php echo htmlspecialchars($call['recording_url']); ?>')" title="Play Recording">
+                                            <button class="comm-btn" style="font-size:11px;padding:4px 8px;background:#e8f0fe;color:#1a56db;" onclick="playRecording('<?php echo htmlspecialchars($call['recording_url']); ?>')" title="<?php echo __("play_recording"); ?>">
                                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                 Play
                                             </button>
                                         <?php endif; ?>
-                                        <button class="comm-btn" style="font-size:11px;padding:4px 8px;background:#f5f5f7;color:#636366;" onclick="showCallDetail(<?php echo htmlspecialchars(json_encode($call)); ?>)" title="View Details">
+                                        <button class="comm-btn" style="font-size:11px;padding:4px 8px;background:#f5f5f7;color:#636366;" onclick="showCallDetail(<?php echo htmlspecialchars(json_encode($call)); ?>)" title="<?php echo __("view_details"); ?>">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                                         </button>
                                     </div>
@@ -487,7 +487,7 @@ include '../includes/header.php';
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label class="form-label">Phone Number</label>
+                <label class="form-label"><?php echo __("phone_number"); ?></label>
                 <input type="tel" id="dialNumber" class="form-control" placeholder="+1 858 358 5260" autofocus
                     style="font-size:16px;letter-spacing:0.5px;"
                     onkeydown="if(event.key==='Enter'){event.preventDefault();dialNumber();}">
@@ -495,7 +495,7 @@ include '../includes/header.php';
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideDialer()">Cancel</button>
+            <button class="btn btn-outline" onclick="hideDialer()"><?php echo __("cancel"); ?></button>
             <button class="btn btn-primary" onclick="dialNumber()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 Call
@@ -509,14 +509,14 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="hideCallDetail()"></div>
     <div class="modal-content" style="max-width:540px;">
         <div class="modal-header">
-            <h3>Call Details</h3>
+            <h3><?php echo __("call_details"); ?></h3>
             <button type="button" class="btn-close" onclick="hideCallDetail()">&times;</button>
         </div>
         <div class="modal-body" id="callDetailBody">
             <!-- Filled by JS -->
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideCallDetail()">Close</button>
+            <button class="btn btn-outline" onclick="hideCallDetail()"><?php echo __("close"); ?></button>
         </div>
     </div>
 </div>
@@ -524,7 +524,7 @@ include '../includes/header.php';
 <!-- ═══ Recording Player ═══ -->
 <div id="recordingPlayer" style="display:none;position:fixed;bottom:80px;right:24px;background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-xl);border:1px solid var(--color-border);padding:16px;z-index:9999;width:320px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <strong style="font-size:13px;">Call Recording</strong>
+        <strong style="font-size:13px;"><?php echo __("call_recording"); ?></strong>
         <button onclick="closeRecordingPlayer()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;">&times;</button>
     </div>
     <audio id="recordingAudio" controls style="width:100%;" preload="none"></audio>
@@ -583,28 +583,28 @@ function showCallDetail(call) {
         : Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0');
     
     var html = '<div style="display:grid;grid-template-columns:140px 1fr;gap:8px 16px;font-size:13px;">';
-    html += '<div class="text-muted">Direction</div><div><span class="badge ' + (call.direction === 'Inbound' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800') + '">' + escapeHtml(call.direction) + '</span></div>';
-    html += '<div class="text-muted">From</div><div style="font-family:monospace;">' + escapeHtml(call.from_number || '-') + '</div>';
-    html += '<div class="text-muted">To</div><div style="font-family:monospace;">' + escapeHtml(call.to_number || '-') + '</div>';
-    html += '<div class="text-muted">Status</div><div>' + escapeHtml(call.status || '-') + '</div>';
-    html += '<div class="text-muted">Duration</div><div><strong>' + durStr + '</strong></div>';
-    html += '<div class="text-muted">Outcome</div><div>' + escapeHtml(call.outcome || '-') + '</div>';
-    html += '<div class="text-muted">Notes</div><div>' + escapeHtml(call.notes || 'No notes') + '</div>';
+    html += '<div class=\"text-muted\">' + __('direction') + '</div><div><span class="badge ' + (call.direction === 'Inbound' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800') + '">' + escapeHtml(call.direction) + '</span></div>';
+    html += '<div class=\"text-muted\">' + __('from') + '</div><div style="font-family:monospace;">' + escapeHtml(call.from_number || '-') + '</div>';
+    html += '<div class=\"text-muted\">' + __('to') + '</div><div style="font-family:monospace;">' + escapeHtml(call.to_number || '-') + '</div>';
+    html += '<div class=\"text-muted\">' + __('status') + '</div><div>' + escapeHtml(call.status || '-') + '</div>';
+    html += '<div class=\"text-muted\">' + __('duration') + '</div><div><strong>' + durStr + '</strong></div>';
+    html += '<div class=\"text-muted\">' + __('outcome') + '</div><div>' + escapeHtml(call.outcome || '-') + '</div>';
+    html += '<div class=\"text-muted\">' + __('notes') + '</div><div>' + escapeHtml(call.notes || 'No notes') + '</div>';
     if (call.twilio_call_sid) {
         html += '<div class="text-muted">Twilio SID</div><div style="font-family:monospace;font-size:11px;word-break:break-all;">' + escapeHtml(call.twilio_call_sid) + '</div>';
     }
-    html += '<div class="text-muted">Started</div><div>' + escapeHtml(call.started_at || call.created_at || '-') + '</div>';
+    html += '<div class=\"text-muted\">' + __('started') + '</div><div>' + escapeHtml(call.started_at || call.created_at || '-') + '</div>';
     if (call.ended_at) {
-        html += '<div class="text-muted">Ended</div><div>' + escapeHtml(call.ended_at) + '</div>';
+        html += '<div class=\"text-muted\">' + __('ended') + '</div><div>' + escapeHtml(call.ended_at) + '</div>';
     }
     if (call.contact_person || call.company_name) {
-        html += '<div class="text-muted">Lead</div><div>' + escapeHtml(call.contact_person || '') + (call.company_name ? ' (' + escapeHtml(call.company_name) + ')' : '') + '</div>';
+        html += '<div class=\"text-muted\">' + __('lead') + '</div><div>' + escapeHtml(call.contact_person || '') + (call.company_name ? ' (' + escapeHtml(call.company_name) + ')' : '') + '</div>';
     }
     if (call.user_name) {
-        html += '<div class="text-muted">Agent</div><div>' + escapeHtml(call.user_name) + '</div>';
+        html += '<div class=\"text-muted\">' + __('agent') + '</div><div>' + escapeHtml(call.user_name) + '</div>';
     }
     if (call.recording_url) {
-        html += '<div class="text-muted">Recording</div><div><button class="btn btn-sm btn-info" onclick="playRecording(\'' + escapeHtml(call.recording_url) + '\')">Play Recording</button></div>';
+        html += '<div class=\"text-muted\">' + __('recording') + '</div><div><button class="btn btn-sm btn-info" onclick="playRecording(\'' + escapeHtml(call.recording_url) + '\')">' + __('play_recording') + '</button></div>';
     }
     html += '</div>';
     
@@ -677,17 +677,17 @@ function checkVoIPSetup() {
             if (data.phone_config) {
                 html += '<div style="margin-bottom:8px;"><strong>Phone Number Webhooks:</strong></div>';
                 html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
-                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">Voice URL</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.phone_config.voice_url || 'Not set') + '</td></tr>';
-                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">Status Callback</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.phone_config.status_callback || 'Not set') + '</td></tr>';
-                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">SMS URL</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.phone_config.sms_url || 'Not set') + '</td></tr>';
+                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">' + __('Voice URL') + '</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.phone_config.voice_url || 'Not set') + '</td></tr>';
+                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">' + __('Status Callback') + '</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.phone_config.status_callback || 'Not set') + '</td></tr>';
+                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">' + __('SMS URL') + '</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.phone_config.sms_url || 'Not set') + '</td></tr>';
                 html += '</table>';
             }
             
             if (data.twiml_app) {
                 html += '<div style="margin:12px 0 8px;"><strong>TwiML App:</strong> ' + escapeHtml(data.twiml_app.friendly_name || '-') + '</div>';
                 html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
-                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">Voice URL</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.twiml_app.voice_url || 'Not set') + '</td></tr>';
-                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">Status Callback</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.twiml_app.status_callback || 'Not set') + '</td></tr>';
+                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">' + __('Voice URL') + '</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.twiml_app.voice_url || 'Not set') + '</td></tr>';
+                html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;color:#636366;">' + __('Status Callback') + '</td><td style="padding:4px 8px;border-bottom:1px solid #eee;word-break:break-all;">' + escapeHtml(data.twiml_app.status_callback || 'Not set') + '</td></tr>';
                 html += '</table>';
             }
 
@@ -698,7 +698,7 @@ function checkVoIPSetup() {
                     html += '<li style="color:#856404;font-size:12px;margin-bottom:4px;">' + escapeHtml(issue) + '</li>';
                 });
                 html += '</ul>';
-                html += '<div style="margin-top:10px;"><button class="btn btn-primary" onclick="fixWebhooks()" style="font-size:12px;padding:6px 16px;">Auto-Fix Webhooks</button></div>';
+                html += '<div style="margin-top:10px;"><button class="btn btn-primary" onclick="fixWebhooks()" style="font-size:12px;padding:6px 16px;">' + __('Auto-Fix Webhooks') + '</button></div>';
                 html += '</div>';
             } else {
                 html += '<div style="margin-top:12px;padding:10px;background:#d4edda;border-radius:8px;border:1px solid #28a745;">';
@@ -715,7 +715,7 @@ function checkVoIPSetup() {
 }
 
 function fixWebhooks() {
-    showSetupResult('<div style="text-align:center;padding:20px;"><div class="spinner-border" style="width:24px;height:24px;border:3px solid #e8e8ed;border-top-color:#007aff;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;"></div><br><small>Configuring webhooks...</small></div>');
+    showSetupResult('<div style="text-align:center;padding:20px;"><div class="spinner-border" style="width:24px;height:24px;border:3px solid #e8e8ed;border-top-color:#007aff;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;"></div><br><small>' + __('Configuring webhooks...') + '</small></div>');
     fetch('/api/voip.php?action=configure_webhooks')
         .then(function(r){ return r.json(); })
         .then(function(data){
@@ -747,9 +747,9 @@ function showSetupModal(loadingText) {
         modal.className = 'modal';
         modal.innerHTML = '<div class="modal-backdrop" onclick="hideSetupModal()"></div>' +
             '<div class="modal-content" style="max-width:560px;">' +
-            '<div class="modal-header"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09"/></svg> VoIP Setup</h3><button type="button" class="btn-close" onclick="hideSetupModal()">&times;</button></div>' +
+            '<div class="modal-header"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09"/></svg> ' + __('VoIP Setup') + '</h3><button type="button" class="btn-close" onclick="hideSetupModal()">&times;</button></div>' +
             '<div class="modal-body" id="setupBody"></div>' +
-            '<div class="modal-footer"><button class="btn btn-outline" onclick="hideSetupModal()">Close</button></div>' +
+            '<div class="modal-footer"><button class="btn btn-outline" onclick="hideSetupModal()"><?php echo __("close"); ?></button></div>' +
             '</div>';
         document.body.appendChild(modal);
     }

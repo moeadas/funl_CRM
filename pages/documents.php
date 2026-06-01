@@ -105,8 +105,8 @@ include '../includes/header.php';
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Document Library</h1>
-        <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;">Company documents, sales materials, and training resources.</p>
+        <h1 class="page-title"><?php echo __('Document Library'); ?></h1>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;"><?php echo __('Company documents, sales materials, and training resources.'); ?></p>
     </div>
     <?php if ($isAdmin): ?>
     <button type="button" class="btn btn-primary" onclick="openUploadModal()">
@@ -114,7 +114,7 @@ include '../includes/header.php';
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Upload Document
+        <?php echo __('Upload Document'); ?>
     </button>
     <?php endif; ?>
 </div>
@@ -122,7 +122,7 @@ include '../includes/header.php';
 <!-- Category Filters -->
 <div class="card" style="margin-bottom:16px;">
     <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="?category=all" class="btn btn-sm <?php echo $category === 'all' ? 'btn-primary' : 'btn-outline'; ?>">All</a>
+        <a href="?category=all" class="btn btn-sm <?php echo $category === 'all' ? 'btn-primary' : 'btn-outline'; ?>"><?php echo __('All'); ?></a>
         <?php foreach ($categories as $key => $label): ?>
             <a href="?category=<?php echo $key; ?>" class="btn btn-sm <?php echo $category === $key ? 'btn-primary' : 'btn-outline'; ?>">
                 <?php echo htmlspecialchars($label); ?>
@@ -142,12 +142,12 @@ include '../includes/header.php';
                 <line x1="16" y1="17" x2="8" y2="17"/>
                 <polyline points="10 9 9 9 8 9"/>
             </svg>
-            <h3 style="color:var(--color-text-secondary);margin-bottom:8px;">No documents yet</h3>
+            <h3 style="color:var(--color-text-secondary);margin-bottom:8px;"><?php echo __('No documents yet'); ?></h3>
             <p style="color:var(--color-text-muted);max-width:400px;margin:0 auto;">
                 <?php if ($isAdmin): ?>
-                    Upload company documents, sales materials, or training resources for your team.
+                    <?php echo __('Upload company documents, sales materials, or training resources for your team.'); ?>
                 <?php else: ?>
-                    No documents have been uploaded yet. Contact your admin to add company resources.
+                    <?php echo __('No documents have been uploaded yet. Contact your admin to add company resources.'); ?>
                 <?php endif; ?>
             </p>
         </div>
@@ -179,12 +179,12 @@ include '../includes/header.php';
                     <?php endif; ?>
                     
                     <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-text-muted);">
-                        <span>Uploaded by <?php echo htmlspecialchars($doc['uploaded_by_name'] ?? 'Admin'); ?></span>
+                        <span><?php echo __('Uploaded by'); ?> <?php echo htmlspecialchars($doc['uploaded_by_name'] ?? 'Admin'); ?></span>
                         <span>&middot;</span>
                         <span><?php echo date('M j, Y', strtotime($doc['created_at'])); ?></span>
                         <?php if ($doc['download_count'] > 0): ?>
                             <span>&middot;</span>
-                            <span><?php echo $doc['download_count']; ?> downloads</span>
+                            <span><?php echo $doc['download_count']; ?> <?php echo __('downloads'); ?></span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -196,7 +196,7 @@ include '../includes/header.php';
                             <polyline points="7 10 12 15 17 10"/>
                             <line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
-                        Download
+                        <?php echo __('Download'); ?>
                     </a>
                     
                     <?php if ($isAdmin): ?>
@@ -204,7 +204,7 @@ include '../includes/header.php';
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <input type="hidden" name="action" value="delete_document">
                             <input type="hidden" name="document_id" value="<?php echo $doc['document_id']; ?>">
-                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                            <button type="submit" class="btn btn-sm btn-danger" title="<?php echo __('Delete'); ?>">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="3 6 5 6 21 6"/>
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -224,7 +224,7 @@ include '../includes/header.php';
     <div class="modal-backdrop" onclick="closeUploadModal()"></div>
     <div class="modal-content" style="max-width:500px;">
         <div class="modal-header">
-            <h3 class="modal-title">Upload Document</h3>
+            <h3 class="modal-title"><?php echo __('Upload Document'); ?></h3>
             <button type="button" class="btn-close" onclick="closeUploadModal()">&times;</button>
         </div>
         
@@ -233,23 +233,23 @@ include '../includes/header.php';
             <input type="hidden" name="action" value="upload_document">
             
             <div class="form-group">
-                <label class="form-label">Document File *</label>
+                <label class="form-label"><?php echo __('Document File'); ?> *</label>
                 <input type="file" name="document_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" required>
-                <div class="form-hint">Max file size: 10MB. Allowed: PDF, DOC, XLS, PPT, TXT, Images</div>
+                <div class="form-hint"><?php echo __('Max file size: 10MB. Allowed: PDF, DOC, XLS, PPT, TXT, Images'); ?></div>
             </div>
             
             <div class="form-group">
-                <label class="form-label">Title *</label>
+                <label class="form-label"><?php echo __('Title'); ?> *</label>
                 <input type="text" name="title" class="form-control" placeholder="e.g., Company Profile 2026" required>
             </div>
             
             <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="2" placeholder="Brief description..."></textarea>
+                <label class="form-label"><?php echo __('Description'); ?></label>
+                <textarea name="description" class="form-control" rows="2" placeholder="<?php echo __('Brief description...'); ?>"></textarea>
             </div>
             
             <div class="form-group">
-                <label class="form-label">Category</label>
+                <label class="form-label"><?php echo __('Category'); ?></label>
                 <select name="category" class="form-control">
                     <?php foreach ($categories as $key => $label): ?>
                         <option value="<?php echo $key; ?>"><?php echo htmlspecialchars($label); ?></option>
@@ -258,8 +258,8 @@ include '../includes/header.php';
             </div>
             
             <div class="form-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
-                <button type="button" class="btn btn-outline" onclick="closeUploadModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Upload</button>
+                <button type="button" class="btn btn-outline" onclick="closeUploadModal()"><?php echo __('Cancel'); ?></button>
+                <button type="submit" class="btn btn-primary"><?php echo __('Upload'); ?></button>
             </div>
         </form>
     </div>
