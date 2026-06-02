@@ -21,55 +21,7 @@ $crmFields = [
     ['name' => 'website', 'label' => 'Website URL'],
     ['name' => 'notes', 'label' => 'Notes / Messages'],
 ];
-?>
-
-<style>
-.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; color: var(--color-text); }
-.card { background: var(--color-surface); border:1px solid var(--color-border); border-radius: var(--radius-md); padding:24px; margin-bottom:16px; box-shadow: var(--shadow-xs); }
-.card-title { font-size:15px; font-weight:600; color: var(--color-text); margin:0 0 20px; }
-.form-label { display:block; font-size:13px; font-weight:500; color: var(--color-text); margin-bottom:6px; }
-.form-control { width:100%; padding:10px 12px; border:1px solid var(--color-border); border-radius: var(--radius-sm); font-size:14px; color: var(--color-text); background: var(--color-surface); box-sizing:border-box; transition: border-color var(--transition); }
-.form-control:focus { outline:none; border-color: var(--color-accent); box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
-textarea.form-control { min-height:80px; resize:vertical; }
-.row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.btn { padding:10px 18px; border-radius: var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--transition); border:none; text-decoration:none; display:inline-block; }
-.btn-primary { background: var(--color-accent); color:#fff; }
-.btn-primary:hover { background: var(--color-accent-hover); }
-.btn-outline { background: var(--color-surface); color: var(--color-accent); border:1px solid var(--color-border); }
-.btn-outline:hover { background: var(--color-bg); }
-.btn-danger { background: var(--color-surface); color: #dc2626; border:1px solid #fca5a5; }
-.btn-danger:hover { background: #fef2f2; }
-
-/* Fields row styles */
-.field-row {
-    display: grid;
-    grid-template-columns: 2fr 2fr 1.5fr 1fr auto;
-    gap: 12px;
-    align-items: center;
-    padding: 16px;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 12px;
-}
-.field-row .form-group { margin: 0; }
-.remove-field-btn {
-    background: none;
-    border: none;
-    color: #9ca3af;
-    cursor: pointer;
-    font-size: 20px;
-    line-height: 1;
-    padding: 4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-.remove-field-btn:hover { color: #dc2626; }
-</style>
-
-<div class="page-header">
+?><div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
         <a href="/pages/webforms.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo __('Back to Web Forms'); ?></a>
         <h1><?php echo $formId ? __('Edit Web Form') : __('New Web Form'); ?></h1>

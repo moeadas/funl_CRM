@@ -27,6 +27,10 @@ if (file_exists($envFile)) {
     }
 }
 
+// Preloader toggle — set to false to disable the preloader.
+// Can also be toggled at runtime via Settings → App Branding → Enable Preloader
+if (!defined('PRELOADER_ENABLED')) define('PRELOADER_ENABLED', false);
+
 // Database Configuration - reads from .env, falls back to defaults
 if (!defined('DB_HOST'))    define('DB_HOST',    (getenv('DB_HOST') !== false) ? getenv('DB_HOST') : 'localhost');
 if (!defined('DB_NAME'))    define('DB_NAME',    (getenv('DB_NAME') !== false) ? getenv('DB_NAME') : 'your_database_name');

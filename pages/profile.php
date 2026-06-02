@@ -152,7 +152,7 @@ include __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-.profile-container { max-width: 1000px; margin: 0 auto; padding: 0 20px 40px; }
+.profile-container { max-width: 1000px; margin: 0 auto; padding: 0 32px 48px; }
 .profile-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
 @media (max-width: 800px) { .profile-grid { grid-template-columns: 1fr; } }
 .badge-role { display: inline-block; padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }

@@ -14,65 +14,7 @@ require_once __DIR__ . '/../includes/header.php';
 $db = Database::getInstance();
 $deals = $db->query("SELECT deal_id, deal_name FROM deals WHERE company_id = ? ORDER BY deal_name", [$companyId])->fetchAll();
 $accounts = $db->query("SELECT account_id, account_name FROM accounts WHERE company_id = ? ORDER BY account_name", [$companyId])->fetchAll();
-?>
-
-<style>
-.quotes-page { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }
-.page-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 0 20px; }
-.page-header h1 { font-size: 22px; font-weight: 600; margin: 0; }
-.btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
-.btn-primary { background: #2563eb; color: white; }
-.btn-outline { background: white; border: 1px solid #d1d5db; color: #374151; }
-
-/* Table */
-.data-table-wrap { background: white; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
-table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.data-table th { background: #f9fafb; padding: 12px 16px; text-align: left; font-weight: 600; color: #6b7280; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
-table.data-table td { padding: 14px 16px; border-bottom: 1px solid #e5e7eb; color: #1f2937; }
-table.data-table tr:last-child td { border-bottom: none; }
-table.data-table tr:hover { background: #f9fafb; }
-
-.status-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
-.status-draft { background: #f3f4f6; color: #6b7280; }
-.status-sent { background: #dbeafe; color: #2563eb; }
-.status-accepted { background: #dcfce7; color: #15803d; }
-.status-rejected { background: #fee2e2; color: #dc2626; }
-.status-expired { background: #fef3c7; color: #d97706; }
-
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; }
-.modal-overlay.active { display: flex; }
-.modal { background: white; border-radius: 12px; width: 640px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
-.modal-header { padding: 20px 24px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-.modal-header h2 { font-size: 17px; font-weight: 600; margin: 0; }
-.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #9ca3af; }
-.modal-body { padding: 20px 24px; }
-.form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; color: #374151; }
-.form-control { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-.form-control:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-textarea.form-control { min-height: 70px; resize: vertical; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form-actions { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; }
-
-/* Items Table */
-.items-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
-.items-table th { text-align: left; padding: 8px; font-size: 11px; color: #6b7280; border-bottom: 1px solid #e5e7eb; }
-.items-table td { padding: 8px; border-bottom: 1px solid #f3f4f6; }
-.items-table input { width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; }
-.items-table .num-input { width: 80px; text-align: right; }
-.items-table .action-btn { background: none; border: none; cursor: pointer; color: #dc2626; font-size: 16px; }
-.add-item-btn { background: #f3f4f6; border: 1px dashed #d1d5db; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #374151; width: 100%; }
-.add-item-btn:hover { background: #e5e7eb; }
-
-.totals { text-align: right; padding: 12px 0; font-size: 14px; }
-.totals .total-row { display: flex; justify-content: flex-end; gap: 16px; margin-bottom: 6px; }
-.totals .total-label { color: #6b7280; }
-.totals .total-value { font-weight: 600; min-width: 100px; }
-.totals .grand-total { font-size: 18px; font-weight: 700; color: #1f2937; border-top: 2px solid #e5e7eb; padding-top: 8px; margin-top: 8px; }
-</style>
-
-<div class="quotes-page">
+?><div class="quotes-page">
     <div class="page-header">
         <h1><?php echo __('Quotes & Proposals'); ?></h1>
         <button class="btn btn-primary" onclick="openQuoteModal()">+ New Quote</button>

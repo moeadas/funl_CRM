@@ -15,23 +15,7 @@ $companyId = $_SESSION["company_id"] ?? null;
 $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId])->fetchAll();
 ?>
 
-<style>
-.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-.page-header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.3px; color: var(--color-text); }
-.card { background: var(--color-surface); border:1px solid var(--color-border); border-radius: var(--radius-md); padding:24px; margin-bottom:16px; box-shadow: var(--shadow-xs); }
-.card-title { font-size:15px; font-weight:600; color: var(--color-text); margin:0 0 20px; }
-.form-label { display:block; font-size:13px; font-weight:500; color: var(--color-text); margin-bottom:6px; }
-.form-control { width:100%; padding:10px 12px; border:1px solid var(--color-border); border-radius: var(--radius-sm); font-size:14px; color: var(--color-text); background: var(--color-surface); box-sizing:border-box; transition: border-color var(--transition); }
-.form-control:focus { outline:none; border-color: var(--color-accent); box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
-textarea.form-control { min-height:80px; resize:vertical; }
-.row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
-.btn { padding:10px 18px; border-radius: var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--transition); border:none; text-decoration:none; display:inline-block; }
-.btn-primary { background: var(--color-accent); color:#fff; }
-.btn-primary:hover { background: var(--color-accent-hover); }
-.btn-outline { background: var(--color-surface); color: var(--color-accent); border:1px solid var(--color-border); }
-.btn-outline:hover { background: var(--color-bg); }
-</style>
+
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">

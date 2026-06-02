@@ -2,11 +2,19 @@
 /**
  * White Label CRM - Full-Screen Brand Preloader (funl.)
  * Supports custom configuration from Settings -> App Branding -> Preloader Code.
- * 
+ *
+ * Toggle: PRELOADER_ENABLED constant in config/database.php
+ * Or set 'preloader_enabled' => '0' in the settings table to disable at runtime.
+ *
  * If a custom preloader code is defined, it is loaded and outputted.
  * Otherwise, the default "funl." preloader is executed.
  */
 require_once __DIR__ . '/functions.php';
+
+// Check if preloader is disabled
+if (!PRELOADER_ENABLED) return;
+$dbPreloaderEnabled = getSetting('preloader_enabled');
+if ($dbPreloaderEnabled === '0' || $dbPreloaderEnabled === 'false') return;
 
 $customPreloader = getSetting('preloader_code');
 

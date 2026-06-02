@@ -132,3 +132,14 @@ html[dir="rtl"] #impersonationBanner svg {
     margin-right: 0;
     margin-left: 6px;
 }
+
+/* Page wrapper - ensure consistent RTL padding */
+html[dir="rtl"] .page-wrapper {
+    padding-left: 32px;
+    padding-right: 32px;
+}
+
+/* Tasks page header RTL fix */
+html[dir="rtl"] .tasks-header {
+    text-align: right;
+}

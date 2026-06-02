@@ -5,24 +5,7 @@ requireLogin();
 $pageTitle = 'Products';
 $js = ['products'];
 require_once __DIR__ . '/../includes/header.php';
-?>
-<style>
-.products-page { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }
-.page-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 0 20px; }
-.page-header h1 { font-size: 22px; font-weight: 600; margin: 0; }
-.btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
-.btn-primary { background: #2563eb; color: white; }
-.btn-outline { background: white; border: 1px solid #d1d5db; color: #374151; }
-.data-table-wrap { background: white; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
-table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.data-table th { background: #f9fafb; padding: 12px 16px; text-align: left; font-weight: 600; color: #6b7280; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
-table.data-table td { padding: 14px 16px; border-bottom: 1px solid #e5e7eb; color: #1f2937; }
-table.data-table tr:last-child td { border-bottom: none; }
-table.data-table tr:hover { background: #f9fafb; }
-.price { font-weight: 600; color: #2563eb; }
-</style>
-
-<div class="products-page">
+?><div class="products-page">
     <div class="page-header">
         <h1><?php echo __('Products'); ?></h1>
         <a href="/pages/product-form.php" class="btn btn-primary" style="text-decoration:none;">+ <?php echo __('New Product'); ?></a>
