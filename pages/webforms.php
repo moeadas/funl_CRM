@@ -20,7 +20,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="webforms-page">
     <div class="page-header">
         <div>
-            <h1><?php echo __('Web Forms'); ?></h1>
+            <h1 class="page-title"><?php echo __('Web Forms'); ?></h1>
             <p class="text-muted"><?php echo __('Create embedded forms that feed directly into your CRM leads pipeline'); ?></p>
         </div>
         <div class="header-actions">

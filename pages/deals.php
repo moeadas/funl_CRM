@@ -22,7 +22,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 $stages = $db->query("SELECT stage_name, stage_label, probability, color FROM deal_stages WHERE company_id = 0 OR company_id = ? ORDER BY position", [$companyId])->fetchAll();
 ?><div class="deals-page">
     <div class="page-header">
-        <h1><?php echo htmlspecialchars(__('Pipeline')); ?></h1>
+        <h1 class="page-title"><?php echo htmlspecialchars(__('Pipeline')); ?></h1>
         <div class="header-actions">
             <a href="/pages/deal-form.php" class="btn btn-primary" style="text-decoration:none;">+ <?php echo htmlspecialchars(__('New Deal')); ?></a>
         </div>

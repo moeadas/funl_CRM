@@ -26,7 +26,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 ?><div class="tasks-page">
     <div class="tasks-header">
-        <h1><?php echo htmlspecialchars(__('Tasks')); ?></h1>
+        <h1 class="page-title"><?php echo htmlspecialchars(__('Tasks')); ?></h1>
         <div class="tasks-filters">
             <input type="text" id="task-search" placeholder="<?php echo htmlspecialchars(__('Search tasks...')); ?>" oninput="loadTasks()">
             <select id="task-assignee-filter" onchange="loadTasks()">

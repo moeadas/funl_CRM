@@ -11,7 +11,7 @@ $contacts = $db->query("SELECT contact_id, first_name, last_name FROM contacts W
 $accounts = $db->query("SELECT account_id, account_name FROM accounts WHERE company_id = ? ORDER BY account_name", [$_SESSION["company_id"] ?? null])->fetchAll();
 ?><div class="tickets-page">
     <div class="page-header">
-        <h1><?php echo htmlspecialchars(__('Support Tickets')); ?></h1>
+        <h1 class="page-title"><?php echo htmlspecialchars(__('Support Tickets')); ?></h1>
         <a href="/pages/ticket-form.php" class="btn btn-primary" style="text-decoration:none;">+ <?php echo htmlspecialchars(__('New Ticket')); ?></a>
     </div>
     

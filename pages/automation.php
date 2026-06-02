@@ -24,7 +24,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 
 <div class="automation-page">
     <div class="page-header">
-        <h1><?php echo __('Automation'); ?></h1>
+        <h1 class="page-title"><?php echo __('Automation'); ?></h1>
         <button class="btn btn-primary" onclick="openRuleModal()">+ <?php echo __('New Rule'); ?></button>
     </div>
 

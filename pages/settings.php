@@ -164,27 +164,13 @@ $csrfToken = generateCSRFToken();
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<style>
-.settings-container { max-width: 1100px; margin: 0 auto; padding: 0 20px 40px; }
-.tabs-nav { display: flex; border-bottom: 1.5px solid #e5e7eb; gap: 24px; margin-bottom: 24px; }
-.tab-link { padding: 12px 4px; font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
-.tab-link:hover { color: #1f2937; }
-.tab-link.active { color: #dd2d4a; border-bottom-color: #dd2d4a; font-weight: 600; }
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
-.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 768px) { .form-grid-2 { grid-template-columns: 1fr; } }
-.branding-preview { display: flex; align-items: center; gap: 16px; margin-top: 12px; }
-.branding-preview img { max-height: 48px; border: 1.5px dashed #d1d5db; border-radius: 8px; padding: 6px; background: #f9fafb; }
-.switch-container { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 16px; }
-.switch-info h4 { margin: 0 0 2px; font-size: 14px; font-weight: 600; color: #1f2937; }
-.switch-info p { margin: 0; font-size: 12px; color: #6b7280; }
-</style>
+
 
 <div class="settings-container">
     <div class="page-header">
         <h1 class="page-title"><?php echo htmlspecialchars(__('Settings')); ?></h1>
-        <p class="page-subtitle"><?php echo htmlspecialchars(__('Configure application settings, custom fields, VoIP integrations, and SMTP credentials')); ?></p>
+    </div>
+    <p class="settings-subtitle"><?php echo htmlspecialchars(__('Configure application settings, custom fields, VoIP integrations, and SMTP credentials')); ?></p>
     </div>
 
     <?php if ($success): ?>

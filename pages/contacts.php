@@ -21,7 +21,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 $tags = $db->query("SELECT * FROM contact_tags WHERE company_id = ? ORDER BY tag_name", [$companyId])->fetchAll();
 ?><div class="contacts-page">
     <div class="page-header">
-        <h1><?php echo htmlspecialchars(__('Contacts & Accounts')); ?></h1>
+        <h1 class="page-title"><?php echo htmlspecialchars(__('Contacts & Accounts')); ?></h1>
         <div class="header-actions">
             <a href="/pages/account-form.php" class="btn btn-outline">+ <?php echo htmlspecialchars(__('New Account')); ?></a>
             <a href="/pages/contact-form.php" class="btn btn-primary">+ <?php echo htmlspecialchars(__('New Contact')); ?></a>
@@ -152,7 +152,7 @@ function renderContacts() {
         const statusClass = 'status-' + (c.contact_status || 'active').toLowerCase().replace(' ', '-');
         return `<tr onclick="window.location.href='/pages/contact-form.php?id=${c.contact_id}'" style="cursor:pointer">
             <td>
-                <div class="contact-name">${escapeHtml(c.first_name)} ${escapeHtml(c.last_name)}</div>
+                <div class="contact-name-cell">${escapeHtml(c.first_name)} ${escapeHtml(c.last_name)}</div>
                 ${c.title ? `<div style="font-size:12px;color:#9ca3af">${escapeHtml(c.title)}</div>` : ''}
             </td>
             <td>${c.account_name ? `<span class="account-badge">${escapeHtml(c.account_name)}</span>` : '-'}</td>

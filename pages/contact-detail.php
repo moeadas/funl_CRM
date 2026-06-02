@@ -75,10 +75,10 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-.contact-detail { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.contact-detail { max-width: 1200px; margin: 0 auto; padding: 24px 32px 48px; }
 .contact-header { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
 .contact-header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-.contact-name { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
+
 .contact-title { color: #6b7280; font-size: 14px; }
 .contact-actions { display: flex; gap: 8px; }
 .contact-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
@@ -107,7 +107,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="contact-header">
         <div class="contact-header-top">
             <div>
-                <h1 class="contact-name"><?php echo htmlspecialchars($contact['first_name'] . ' ' . $contact['last_name']); ?></h1>
+                <h1 class="contact-detail-name"><?php echo htmlspecialchars($contact['first_name'] . ' ' . $contact['last_name']); ?></h1>
                 <?php if ($contact['title']): ?>
                     <div class="contact-title"><?php echo htmlspecialchars($contact['title']); ?></div>
                 <?php endif; ?>

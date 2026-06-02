@@ -151,20 +151,7 @@ $csrfToken = generateCSRFToken();
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<style>
-.profile-container { max-width: 1000px; margin: 0 auto; padding: 0 32px 48px; }
-.profile-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-@media (max-width: 800px) { .profile-grid { grid-template-columns: 1fr; } }
-.badge-role { display: inline-block; padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-role.admin { background: #fee2e2; color: #dc2626; }
-.badge-role.manager { background: #f3e8ff; color: #7c3aed; }
-.badge-role.rep { background: #dbeafe; color: #2563eb; }
-.microsoft-box { display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1.5px solid #e5e7eb; border-radius: 12px; background: #fafafa; margin-bottom: 24px; }
-.microsoft-icon { font-size: 24px; margin-right: 12px; }
-.microsoft-status { display: flex; flex-direction: column; }
-.microsoft-status h4 { margin: 0; font-size: 14px; font-weight: 700; color: #1f2937; }
-.microsoft-status p { margin: 2px 0 0; font-size: 12px; color: #6b7280; }
-</style>
+
 
 <div class="profile-container">
     <div class="page-header">

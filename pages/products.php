@@ -7,7 +7,7 @@ $js = ['products'];
 require_once __DIR__ . '/../includes/header.php';
 ?><div class="products-page">
     <div class="page-header">
-        <h1><?php echo __('Products'); ?></h1>
+        <h1 class="page-title"><?php echo __('Products'); ?></h1>
         <a href="/pages/product-form.php" class="btn btn-primary" style="text-decoration:none;">+ <?php echo __('New Product'); ?></a>
     </div>
     <div class="data-table-wrap">
