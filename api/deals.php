@@ -116,11 +116,12 @@ if ($action === 'update' && $method === 'POST') {
         // Log stage change
         if (isset($updates['stage']) && $updates['stage'] !== $oldStage) {
             $db->insert('deal_activities', [
-                'deal_id'       => $dealId,
-                'user_id'       => $userId,
-                'activity_type' => 'stage_change',
-                'old_value'     => $oldStage,
-                'new_value'     => $updates['stage'],
+                'deal_id'    => $dealId,
+                'user_id'    => $userId,
+                'type'       => 'stage_change',
+                'from_stage' => $oldStage,
+                'to_stage'   => $updates['stage'],
+                'company_id' => getCurrentCompanyId(),
             ]);
             
             if ($updates['stage'] === 'closed_won') {
@@ -141,8 +142,8 @@ if ($action === 'delete' && $method === 'POST') {
     $deal = $db->query("SELECT * FROM deals WHERE deal_id = ? AND company_id = ?", [$dealId, $companyId])->fetch();
     if (!$deal) jsonError('Deal not found');
     
-    $db->query("DELETE FROM deal_activities WHERE deal_id = ?", [$dealId]);
-    $db->query("DELETE FROM deals WHERE deal_id = ?", [$dealId]);
+    $db->query("DELETE FROM deal_activities WHERE deal_id = ? AND company_id = ?", [$dealId, $companyId]);
+    $db->query("DELETE FROM deals WHERE deal_id = ? AND company_id = ?", [$dealId, $companyId]);
     
     logActivity($userId, 'Delete Deal', 'Deal', $dealId, "Deleted deal: {$deal['deal_name']}");
     jsonSuccess('Deal deleted');

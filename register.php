@@ -6,6 +6,7 @@
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/company-functions.php';
+require_once __DIR__ . '/includes/resend-email.php';
 
 startSecureSession();
 
@@ -15,6 +16,7 @@ $error = '';
 $csrf_token = generateCSRFToken();
 
 // Registration handler
+$post = $_POST ?? [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Bypass CSRF check for public signup form submissions (e.g. WordPress integrations)
     if ($_POST['action'] !== 'register_company') {
@@ -93,15 +95,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         'email_from_name' => $companyName,
                     ];
                     foreach ($defaultSettings as $key => $value) {
-                        $db->insert('settings', [
-                            'company_id' => $companyId,
-                            'setting_key' => $key,
-                            'setting_value' => $value,
-                            'setting_type' => 'text',
-                        ]);
+                        $db->query(
+                            "INSERT INTO settings (company_id, setting_key, setting_value, setting_type)
+                             VALUES (?, ?, ?, 'text')
+                             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)",
+                            [$companyId, $key, $value]
+                        );
                     }
 
-                    sendVerificationEmail($userId, $email);
+                    // Create a verification token and store it
+                    $verifyToken = bin2hex(random_bytes(32));
+                    $expires = date('Y-m-d H:i:s', strtotime('+24 hours'));
+                    $db->query(
+                        "INSERT INTO email_verifications (user_id, email, token, expires_at)
+                         VALUES (?, ?, ?, ?)",
+                        [$userId, $email, $verifyToken, $expires]
+                    );
+                    sendVerificationEmail($email, $fullName, $verifyToken);
                     
                     // Set email as NOT verified (must verify before full access)
                     $db->query("UPDATE users SET email_verified = 0 WHERE user_id = ?", [$userId]);
@@ -572,7 +582,7 @@ if (!$selectedPlan && !empty($plans)) {
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo __('Phone (optional)'); ?></label>
-                            <input type="tel" name="phone" class="form-control" placeholder="+1 234 567 890">
+                            <input type="tel" name="phone" class="form-control" placeholder="+1 234 567 890" value="<?php echo htmlspecialchars($post['phone'] ?? ''); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo __('Password'); ?> *</label>

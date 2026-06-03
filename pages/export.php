@@ -16,14 +16,19 @@ if (!hasRole('Admin') && !hasRole('Sales Manager')) {
 }
 
 $db = Database::getInstance();
+$companyId = getCurrentCompanyId();
 
-// Get counts for display
+// Get counts for display — scoped by tenant
 $counts = [
-    'leads'        => $db->query("SELECT COUNT(*) FROM leads")->fetchColumn(),
-    'interactions'  => $db->query("SELECT COUNT(*) FROM interactions")->fetchColumn(),
-    'whatsapp'      => $db->query("SELECT COUNT(*) FROM whatsapp_messages")->fetchColumn(),
-    'voip'          => $db->query("SELECT COUNT(*) FROM voip_calls")->fetchColumn(),
+    'leads'        => $db->prepare("SELECT COUNT(*) FROM leads WHERE company_id = ?"),
+    'interactions'  => $db->prepare("SELECT COUNT(*) FROM interactions i JOIN leads l ON i.lead_id = l.lead_id WHERE l.company_id = ?"),
+    'whatsapp'      => $db->prepare("SELECT COUNT(*) FROM whatsapp_messages wm JOIN leads l ON wm.lead_id = l.lead_id WHERE l.company_id = ?"),
+    'voip'          => $db->prepare("SELECT COUNT(*) FROM voip_calls vc JOIN leads l ON vc.lead_id = l.lead_id WHERE l.company_id = ?"),
 ];
+foreach ($counts as $key => $stmt) {
+    $stmt->execute([$companyId]);
+    $counts[$key] = $stmt->fetchColumn();
+}
 
 $pageTitle = 'Data Export';
 require_once __DIR__ . '/../includes/header.php';

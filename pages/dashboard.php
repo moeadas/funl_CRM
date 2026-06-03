@@ -13,7 +13,11 @@ requireLogin();
 $currentUser = getCurrentUser();
 $db = Database::getInstance()->getConnection();
 $isSalesRep = !hasRole('Sales Manager');
+$isSuperAdmin = isSuperAdmin();
 $companyId = $currentUser['company_id'] ?? null;
+
+// Defensive: if non-super-admin lacks company_id, requireCompanyContext() will exit with 403.
+// This guarantees the unfiltered fallbacks below are only reached for super admins.
 
 // ─── Statistics ──────────────────────────────────────────
 $stats = [];
@@ -231,7 +235,7 @@ if ($isSalesRep) {
             SELECT al.*, u.full_name as user_name
             FROM activity_log al
             LEFT JOIN users u ON al.user_id = u.user_id
-            WHERE u.company_id = ? OR u.company_id IS NULL
+            WHERE al.company_id = ?
             ORDER BY al.created_at DESC
             LIMIT 15
         ");

@@ -181,12 +181,12 @@ include __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 
     <div class="tabs-nav">
-        <div class="tab-link active" onclick="switchTab('general')"><?php echo htmlspecialchars(__('Company Profile')); ?></div>
-        <div class="tab-link" onclick="switchTab('branding')"><?php echo htmlspecialchars(__('App Branding')); ?></div>
-        <div class="tab-link" onclick="switchTab('voip')"><?php echo htmlspecialchars(__('VoIP & WhatsApp')); ?></div>
-        <div class="tab-link" onclick="switchTab('smtp')"><?php echo htmlspecialchars(__('SMTP & Email')); ?></div>
-        <div class="tab-link" onclick="switchTab('tracking')"><?php echo htmlspecialchars(__('Pixels & Tracking')); ?></div>
-        <div class="tab-link" onclick="switchTab('custom_fields')"><?php echo htmlspecialchars(__('Custom Lead Fields')); ?></div>
+        <div class="tab-link active" data-tab="general" onclick="switchTab('general')"><?php echo htmlspecialchars(__('Company Profile')); ?></div>
+        <div class="tab-link" data-tab="branding" onclick="switchTab('branding')"><?php echo htmlspecialchars(__('App Branding')); ?></div>
+        <div class="tab-link" data-tab="voip" onclick="switchTab('voip')"><?php echo htmlspecialchars(__('VoIP & WhatsApp')); ?></div>
+        <div class="tab-link" data-tab="smtp" onclick="switchTab('smtp')"><?php echo htmlspecialchars(__('SMTP & Email')); ?></div>
+        <div class="tab-link" data-tab="tracking" onclick="switchTab('tracking')"><?php echo htmlspecialchars(__('Pixels & Tracking')); ?></div>
+        <div class="tab-link" data-tab="custom_fields" onclick="switchTab('custom_fields')"><?php echo htmlspecialchars(__('Custom Lead Fields')); ?></div>
     </div>
 
     <form method="POST" enctype="multipart/form-data" id="settingsForm">
@@ -506,19 +506,21 @@ include __DIR__ . '/../includes/header.php';
 
 <script>
 function switchTab(tabId) {
-    // Update tab header links
+    // Update tab header links by data-tab attribute
     document.querySelectorAll('.tab-link').forEach(link => {
-        link.classList.remove('active');
-        if (link.textContent.toLowerCase().includes(tabId.replace('_', ' ')) || (tabId === 'general' && (link.textContent === 'Company Profile' || link.textContent === __('Company Profile')))) {
+        if (link.getAttribute('data-tab') === tabId) {
             link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
     });
 
-    // Switch panels
+    // Switch panels by id
     document.querySelectorAll('.tab-pane').forEach(pane => {
         pane.classList.remove('active');
     });
-    document.getElementById('pane-' + tabId).classList.add('active');
+    const target = document.getElementById('pane-' + tabId);
+    if (target) target.classList.add('active');
 
     // Hide or show bottom submit button based on Custom Fields tab
     const submitBtn = document.getElementById('settingsSubmitBtn');

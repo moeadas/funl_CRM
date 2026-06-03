@@ -12,7 +12,14 @@ $_isAdminOrImpersonating = hasRole('Admin') || isImpersonating();
 if ($_isAdminOrImpersonating) {
     try {
         $_suDb = Database::getInstance()->getConnection();
-        $_switchableUsers = $_suDb->query("SELECT user_id, full_name, role FROM users WHERE status = 'Active' ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
+        $_myCompanyId = $_SESSION['company_id'] ?? null;
+        if ($_myCompanyId) {
+            $stmt = $_suDb->prepare("SELECT user_id, full_name, role FROM users WHERE status = 'Active' AND company_id = ? ORDER BY full_name");
+            $stmt->execute([$_myCompanyId]);
+            $_switchableUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $_switchableUsers = [];
+        }
     } catch (Exception $e) { /* ignore */ }
 }
 ?>
@@ -103,8 +110,58 @@ $_userDir = ($_userLocale === 'ar') ? 'rtl' : 'ltr';
             }
             return parts.join(' ');
         }
-        
+
         return key;
+    }
+
+    // ─── Switch User (admin impersonation) ───
+    function handleSwitchUser(userId) {
+        if (!userId) return;
+        if (!confirm('Switch to this user? You can switch back anytime.')) {
+            // Reset the dropdown to its placeholder
+            var sel = document.getElementById('switchUserSelect');
+            if (sel) sel.value = '';
+            return;
+        }
+        var csrfToken = document.getElementById('globalCsrfToken') ? document.getElementById('globalCsrfToken').value : '';
+        fetch('/api/switch-user.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'switch', user_id: parseInt(userId, 10), csrf_token: csrfToken })
+        }).then(function (r) { return r.json(); })
+          .then(function (j) {
+              if (j && j.success) {
+                  window.location.reload();
+              } else {
+                  alert((j && j.message) || 'Could not switch user.');
+                  var sel = document.getElementById('switchUserSelect');
+                  if (sel) sel.value = '';
+              }
+          }).catch(function () {
+              alert('Network error. Please try again.');
+              var sel = document.getElementById('switchUserSelect');
+              if (sel) sel.value = '';
+          });
+    }
+
+    function handleSwitchBack() {
+        var csrfToken = document.getElementById('globalCsrfToken') ? document.getElementById('globalCsrfToken').value : '';
+        fetch('/api/switch-user.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'switch_back', csrf_token: csrfToken })
+        }).then(function (r) { return r.json(); })
+          .then(function (j) {
+              if (j && j.success) {
+                  window.location.reload();
+              } else {
+                  alert((j && j.message) || 'Could not switch back.');
+              }
+          }).catch(function () {
+              alert('Network error. Please try again.');
+          });
     }
     </script>
     <?php echo getSetting('tracking_head_code'); ?>

@@ -8,10 +8,14 @@ startSecureSession();
 requireLogin();
 requireRole('Sales Manager');
 
+$companyId = $_SESSION['company_id'] ?? null;
+
 $csrfToken = generateCSRFToken();
 $db = Database::getInstance()->getConnection();
 
-$templates = $db->query("SELECT t.*, u.full_name as creator FROM email_templates t LEFT JOIN users u ON t.created_by = u.user_id ORDER BY t.updated_at DESC")->fetchAll();
+$templates = $db->prepare("SELECT t.*, u.full_name as creator FROM email_templates t LEFT JOIN users u ON t.created_by = u.user_id WHERE t.company_id = ? ORDER BY t.updated_at DESC");
+$templates->execute([$companyId]);
+$templates = $templates->fetchAll();
 
 $pageTitle = __('email_templates');
 include '../includes/header.php';

@@ -17,7 +17,10 @@ $userData = null;
 if ($isEdit) {
     try {
         $db = Database::getInstance();
-        $userData = $db->findOne('users', ['user_id' => $userId]);
+        $userData = $db->query(
+            "SELECT * FROM users WHERE user_id = ? AND company_id = ?",
+            [$userId, $_SESSION['company_id']]
+        )->fetch();
         if (!$userData) {
             $_SESSION['error'] = "User not found";
             header('Location: users.php');
@@ -50,11 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Invalid email address");
         }
         
-        // Check username uniqueness
+        // Check username uniqueness within this company
+        $companyId = $_SESSION['company_id'] ?? null;
         if ($isEdit) {
-            $existing = $db->query("SELECT user_id FROM users WHERE username = ? AND user_id != ?", [$username, $userId])->fetch();
+            $existing = $db->query("SELECT user_id FROM users WHERE company_id = ? AND username = ? AND user_id != ?", [$companyId, $username, $userId])->fetch();
         } else {
-            $existing = $db->findOne('users', ['username' => $username]);
+            $existing = $db->query("SELECT user_id FROM users WHERE company_id = ? AND username = ?", [$companyId, $username])->fetch();
         }
         if ($existing) {
             throw new Exception("Username already exists");
@@ -99,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['success'] = "User updated successfully";
         } else {
             $data['created_at'] = date('Y-m-d H:i:s');
+            $data['company_id'] = $_SESSION['company_id']; // Assign to current tenant
             $newUserId = $db->insert('users', $data);
             logActivity(getCurrentUserId(), 'Create User', 'User', $newUserId, "Created user: $username");
             $_SESSION['success'] = "User created successfully";
@@ -109,6 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
     } catch (Exception $e) {
         $_SESSION['error'] = $e->getMessage();
+        // On error, repopulate the form from $_POST so the user doesn't lose their input
+        $userData = array_merge(
+            $userData ?? [],
+            [
+                'username'         => $_POST['username']         ?? $userData['username']         ?? '',
+                'full_name'        => $_POST['full_name']        ?? $userData['full_name']        ?? '',
+                'email'            => $_POST['email']            ?? $userData['email']            ?? '',
+                'role'             => $_POST['role']             ?? $userData['role']             ?? '',
+                'status'           => $_POST['status']           ?? $userData['status']           ?? 'Active',
+                'whatsapp_number'  => $_POST['whatsapp_number']  ?? $userData['whatsapp_number']  ?? '',
+                'wa_notify_enabled'=> isset($_POST['wa_notify_enabled']) ? 1 : ($userData['wa_notify_enabled'] ?? 0),
+            ]
+        );
     }
 }
 

@@ -22,11 +22,13 @@ $scope  = $_GET['scope'] ?? 'all'; // all, leads, interactions, whatsapp, voip
 
 try {
     $db = Database::getInstance();
+    $companyId = getCurrentCompanyId();
+    requireCompanyContext();
 
     if ($format === 'json') {
-        exportJSON($db, $scope);
+        exportJSON($db, $scope, $companyId);
     } else {
-        exportCSV($db, $scope);
+        exportCSV($db, $scope, $companyId);
     }
 
 } catch (Exception $e) {
@@ -37,47 +39,59 @@ try {
 // ─────────────────────────────────────
 // JSON EXPORT
 // ─────────────────────────────────────
-function exportJSON($db, $scope) {
+function exportJSON($db, $scope, $companyId) {
     $data = [];
 
     if ($scope === 'all' || $scope === 'leads') {
-        $data['leads'] = $db->query("
+        $stmt = $db->prepare("
             SELECT l.*, u1.full_name as assigned_to_name, u2.full_name as created_by_name
             FROM leads l
             LEFT JOIN users u1 ON l.assigned_to = u1.user_id
             LEFT JOIN users u2 ON l.created_by = u2.user_id
+            WHERE l.company_id = ?
             ORDER BY l.lead_id
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        ");
+        $stmt->execute([$companyId]);
+        $data['leads'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     if ($scope === 'all' || $scope === 'interactions') {
-        $data['interactions'] = $db->query("
+        $stmt = $db->prepare("
             SELECT i.*, l.company_name, l.contact_person, u.full_name as user_name
             FROM interactions i
-            LEFT JOIN leads l ON i.lead_id = l.lead_id
+            JOIN leads l ON i.lead_id = l.lead_id
             LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE l.company_id = ?
             ORDER BY i.interaction_date DESC
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        ");
+        $stmt->execute([$companyId]);
+        $data['interactions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     if ($scope === 'all' || $scope === 'whatsapp') {
-        $data['whatsapp_messages'] = $db->query("
+        $stmt = $db->prepare("
             SELECT wm.*, l.company_name, l.contact_person, u.full_name as user_name
             FROM whatsapp_messages wm
-            LEFT JOIN leads l ON wm.lead_id = l.lead_id
+            JOIN leads l ON wm.lead_id = l.lead_id
             LEFT JOIN users u ON wm.user_id = u.user_id
+            WHERE l.company_id = ?
             ORDER BY wm.created_at ASC
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        ");
+        $stmt->execute([$companyId]);
+        $data['whatsapp_messages'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     if ($scope === 'all' || $scope === 'voip') {
-        $data['voip_calls'] = $db->query("
+        $stmt = $db->prepare("
             SELECT vc.*, l.company_name, l.contact_person, u.full_name as user_name
             FROM voip_calls vc
-            LEFT JOIN leads l ON vc.lead_id = l.lead_id
+            JOIN leads l ON vc.lead_id = l.lead_id
             LEFT JOIN users u ON vc.user_id = u.user_id
+            WHERE l.company_id = ?
             ORDER BY vc.created_at DESC
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        ");
+        $stmt->execute([$companyId]);
+        $data['voip_calls'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     $filename = 'wl_crm_export_' . date('Y-m-d_His') . '.json';
@@ -90,7 +104,7 @@ function exportJSON($db, $scope) {
 // ─────────────────────────────────────
 // CSV EXPORT (multi-sheet via ZIP)
 // ─────────────────────────────────────
-function exportCSV($db, $scope) {
+function exportCSV($db, $scope, $companyId) {
     // If exporting all, create a ZIP with multiple CSV files
     if ($scope === 'all') {
         $tmpDir = sys_get_temp_dir() . '/wl_export_' . uniqid();
@@ -106,18 +120,20 @@ function exportCSV($db, $scope) {
             FROM leads l
             LEFT JOIN users u1 ON l.assigned_to = u1.user_id
             LEFT JOIN users u2 ON l.created_by = u2.user_id
+            WHERE l.company_id = ?
             ORDER BY l.lead_id
-        ");
+        ", [$companyId]);
 
         // Interactions
         exportTableToCSV($db, $tmpDir . '/interactions.csv', "
             SELECT i.interaction_id, l.company_name, l.contact_person, i.interaction_type, i.interaction_date,
                    i.subject, i.notes, i.outcome, u.full_name as user_name, i.created_at
             FROM interactions i
-            LEFT JOIN leads l ON i.lead_id = l.lead_id
+            JOIN leads l ON i.lead_id = l.lead_id
             LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE l.company_id = ?
             ORDER BY i.interaction_date DESC
-        ");
+        ", [$companyId]);
 
         // WhatsApp Messages
         exportTableToCSV($db, $tmpDir . '/whatsapp_messages.csv', "
@@ -125,10 +141,11 @@ function exportCSV($db, $scope) {
                    wm.message_body, wm.status, wm.media_url, u.full_name as sent_by, wm.sent_at,
                    wm.delivered_at, wm.read_at, wm.created_at
             FROM whatsapp_messages wm
-            LEFT JOIN leads l ON wm.lead_id = l.lead_id
+            JOIN leads l ON wm.lead_id = l.lead_id
             LEFT JOIN users u ON wm.user_id = u.user_id
+            WHERE l.company_id = ?
             ORDER BY wm.created_at ASC
-        ");
+        ", [$companyId]);
 
         // VoIP Calls
         exportTableToCSV($db, $tmpDir . '/voip_calls.csv', "
@@ -136,10 +153,11 @@ function exportCSV($db, $scope) {
                    vc.status, vc.duration_seconds, vc.outcome, vc.notes, u.full_name as agent,
                    vc.started_at, vc.ended_at, vc.created_at
             FROM voip_calls vc
-            LEFT JOIN leads l ON vc.lead_id = l.lead_id
+            JOIN leads l ON vc.lead_id = l.lead_id
             LEFT JOIN users u ON vc.user_id = u.user_id
+            WHERE l.company_id = ?
             ORDER BY vc.created_at DESC
-        ");
+        ", [$companyId]);
 
         // Create tar.gz archive
         $tarFile = sys_get_temp_dir() . '/wl_crm_export_' . date('Y-m-d_His') . '.tar';
@@ -178,28 +196,32 @@ function exportCSV($db, $scope) {
                 FROM leads l
                 LEFT JOIN users u1 ON l.assigned_to = u1.user_id
                 LEFT JOIN users u2 ON l.created_by = u2.user_id
+                WHERE l.company_id = ?
                 ORDER BY l.lead_id",
             'interactions' => "
                 SELECT i.interaction_id, l.company_name, l.contact_person, i.interaction_type, i.interaction_date,
                        i.subject, i.notes, i.outcome, u.full_name as user_name, i.created_at
                 FROM interactions i
-                LEFT JOIN leads l ON i.lead_id = l.lead_id
+                JOIN leads l ON i.lead_id = l.lead_id
                 LEFT JOIN users u ON i.user_id = u.user_id
+                WHERE l.company_id = ?
                 ORDER BY i.interaction_date DESC",
             'whatsapp' => "
                 SELECT wm.message_id, l.company_name, l.contact_person, wm.direction, wm.from_number, wm.to_number,
                        wm.message_body, wm.status, u.full_name as sent_by, wm.sent_at, wm.created_at
                 FROM whatsapp_messages wm
-                LEFT JOIN leads l ON wm.lead_id = l.lead_id
+                JOIN leads l ON wm.lead_id = l.lead_id
                 LEFT JOIN users u ON wm.user_id = u.user_id
+                WHERE l.company_id = ?
                 ORDER BY wm.created_at ASC",
             'voip' => "
                 SELECT vc.call_id, l.company_name, l.contact_person, vc.direction, vc.from_number, vc.to_number,
                        vc.status, vc.duration_seconds, vc.outcome, vc.notes, u.full_name as agent,
                        vc.started_at, vc.ended_at, vc.created_at
                 FROM voip_calls vc
-                LEFT JOIN leads l ON vc.lead_id = l.lead_id
+                JOIN leads l ON vc.lead_id = l.lead_id
                 LEFT JOIN users u ON vc.user_id = u.user_id
+                WHERE l.company_id = ?
                 ORDER BY vc.created_at DESC",
         ];
 
@@ -232,8 +254,10 @@ function exportCSV($db, $scope) {
 /**
  * Helper: export a SQL query to a CSV file
  */
-function exportTableToCSV($db, $filePath, $sql) {
-    $rows = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+function exportTableToCSV($db, $filePath, $sql, $params = []) {
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $fp = fopen($filePath, 'w');
     // BOM for Excel
     fprintf($fp, chr(0xEF) . chr(0xBB) . chr(0xBF));

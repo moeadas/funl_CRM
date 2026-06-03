@@ -41,28 +41,28 @@ try {
         SELECT t.*, u.full_name as assigned_name
         FROM tasks t
         LEFT JOIN users u ON t.assigned_to = u.user_id
-        WHERE t.contact_id = ?
+        WHERE t.contact_id = ? AND t.company_id = ?
         ORDER BY t.created_at DESC
         LIMIT 10
-    ", [$contactId])->fetchAll();
+    ", [$contactId, $companyId])->fetchAll();
     
     // Get deals for this contact
     $deals = $db->query("
         SELECT d.*, s.stage_label, s.color as stage_color
         FROM deals d
         LEFT JOIN deal_stages s ON d.stage = s.stage_name AND (s.company_id = d.company_id OR s.company_id = 0)
-        WHERE d.contact_id = ?
+        WHERE d.contact_id = ? AND d.company_id = ?
         ORDER BY d.created_at DESC
         LIMIT 10
-    ", [$contactId])->fetchAll();
+    ", [$contactId, $companyId])->fetchAll();
     
     // Get quotes for this contact
     $quotes = $db->query("
         SELECT q.* FROM quotes q
-        WHERE q.contact_id = ?
+        WHERE q.contact_id = ? AND q.company_id = ?
         ORDER BY q.created_at DESC
         LIMIT 10
-    ", [$contactId])->fetchAll();
+    ", [$contactId, $companyId])->fetchAll();
     
 } catch (Exception $e) {
     $_SESSION['error'] = "Database error: " . $e->getMessage();

@@ -9,6 +9,7 @@ require_once '../includes/functions.php';
 startSecureSession();
 requireLogin();
 
+$companyId   = $_SESSION['company_id'] ?? null;
 $currentUser = getCurrentUser();
 $isManager = hasRole('Sales Manager');
 $csrf_token = generateCSRFToken();
@@ -39,7 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         try {
             $db = Database::getInstance();
             $deleteId = intval($_POST['interaction_id']);
-            $db->query("DELETE FROM interactions WHERE interaction_id = ?", [$deleteId]);
+            $companyIdDel = $_SESSION['company_id'] ?? null;
+            $db->query("DELETE FROM interactions WHERE interaction_id = ? AND company_id = ?", [$deleteId, $companyIdDel]);
             logActivity(getCurrentUserId(), 'Delete Interaction', 'Interaction', $deleteId, "Deleted interaction ID $deleteId");
             $_SESSION['success'] = "Interaction deleted successfully.";
         } catch (Exception $e) {
@@ -106,30 +108,60 @@ try {
     }
     
     // Count total (unfiltered for stats)
-    $countAll = $db->query("SELECT COUNT(*) FROM interactions i WHERE 1=1" . ($leadId ? " AND i.lead_id = $leadId" : ""))->fetchColumn();
+    if ($leadId) {
+        $countAll = $db->query("SELECT COUNT(*) FROM interactions i WHERE i.lead_id = ?", [$leadId])->fetchColumn();
+    } else {
+        $countAll = $db->query(
+            "SELECT COUNT(*) FROM interactions i JOIN leads l ON i.lead_id = l.lead_id WHERE l.company_id = ?",
+            [$companyId]
+        )->fetchColumn();
+    }
     
     // Count filtered
     $countResult = $db->query("SELECT COUNT(*) FROM interactions i WHERE $whereClause", $params)->fetchColumn();
     $totalPages = max(1, ceil($countResult / $perPage));
     $offset = ($page - 1) * $perPage;
     
-    $interactions = $db->query("
-        SELECT i.*, l.company_name, l.contact_person, u.full_name as user_name
-        FROM interactions i
-        LEFT JOIN leads l ON i.lead_id = l.lead_id
-        LEFT JOIN users u ON i.user_id = u.user_id
-        WHERE $whereClause
-        ORDER BY i.interaction_date DESC, i.created_at DESC
-        LIMIT $perPage OFFSET $offset
-    ", $params)->fetchAll();
+    if ($leadId) {
+        $interactions = $db->query("
+            SELECT i.*, l.company_name, l.contact_person, u.full_name as user_name
+            FROM interactions i
+            LEFT JOIN leads l ON i.lead_id = l.lead_id
+            LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE $whereClause
+            ORDER BY i.interaction_date DESC, i.created_at DESC
+            LIMIT $perPage OFFSET $offset
+        ", $params)->fetchAll();
+    } else {
+        $interactions = $db->query("
+            SELECT i.*, l.company_name, l.contact_person, u.full_name as user_name
+            FROM interactions i
+            LEFT JOIN leads l ON i.lead_id = l.lead_id
+            LEFT JOIN users u ON i.user_id = u.user_id
+            WHERE $whereClause AND l.company_id = ?
+            ORDER BY i.interaction_date DESC, i.created_at DESC
+            LIMIT $perPage OFFSET $offset
+        ", array_merge($params, [$companyId]))->fetchAll();
+    }
     
     // Quick stats for the type filter chips
-    $typeCounts = $db->query("
-        SELECT interaction_type, COUNT(*) as cnt
-        FROM interactions i
-        WHERE 1=1" . ($leadId ? " AND i.lead_id = $leadId" : "") . "
-        GROUP BY interaction_type
-    ")->fetchAll();
+    if ($leadId) {
+        $typeCounts = $db->query("
+            SELECT interaction_type, COUNT(*) as cnt
+            FROM interactions i
+            WHERE i.lead_id = ?
+            GROUP BY interaction_type
+        ", [$leadId])->fetchAll();
+    } else {
+        $typeCounts = $db->query("
+            SELECT interaction_type, COUNT(*) as cnt
+            FROM interactions i
+            JOIN leads l ON i.lead_id = l.lead_id
+            WHERE l.company_id = ?
+            GROUP BY interaction_type
+        ", [$companyId])->fetchAll();
+    }
+
     $typeCountMap = [];
     foreach ($typeCounts as $tc) {
         $typeCountMap[$tc['interaction_type']] = $tc['cnt'];

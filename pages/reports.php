@@ -9,6 +9,14 @@ require_once '../includes/functions.php';
 startSecureSession();
 requireLogin();
 
+$companyId = $_SESSION['company_id'] ?? null;
+$isSuperAdmin = isSuperAdmin();
+
+// Defensive: non-super-admin must have a company context
+if (!$isSuperAdmin && !$companyId) {
+    requireCompanyContext();
+}
+
 // Only admins and sales managers can access reports
 if (!hasRole('Sales Manager')) {
     $_SESSION['error'] = 'You do not have permission to view reports.';
@@ -122,19 +130,22 @@ try {
     ", $intParams)->fetch();
     
     // User Performance (always show all users, not filtered)
-    $userPerformance = $db->query("
+    $userPerformance = $db->prepare("
         SELECT u.full_name, u.role,
             COUNT(DISTINCT l.lead_id) as assigned_leads,
             COUNT(DISTINCT i.interaction_id) as interactions,
             COUNT(CASE WHEN l.lead_status = 'Won' THEN 1 END) as deals_won
         FROM users u
-        LEFT JOIN leads l ON u.user_id = l.assigned_to
+        LEFT JOIN leads l ON u.user_id = l.assigned_to AND l.company_id = ?
         LEFT JOIN interactions i ON u.user_id = i.user_id
-        WHERE u.status = 'Active'
+            AND EXISTS (SELECT 1 FROM leads l2 WHERE l2.lead_id = i.lead_id AND l2.company_id = ?)
+        WHERE u.company_id = ? AND u.status = 'Active'
         GROUP BY u.user_id
         ORDER BY deals_won DESC, interactions DESC
         LIMIT 10
-    ")->fetchAll();
+    ");
+    $userPerformance->execute([$companyId, $companyId, $companyId]);
+    $userPerformance = $userPerformance->fetchAll();
     
     // Monthly Trend (filtered)
     $trendWhere = str_replace('l.', 'lt.', $leadWhere);

@@ -117,6 +117,23 @@ function getCurrentUserId() {
 }
 
 /**
+ * Assert that the current user has a company_id in their session.
+ * Sends a 403 JSON response and exits if not. Use at the top of tenant-scoped pages.
+ * Note: getCurrentCompanyId() is defined in includes/company-functions.php
+ */
+function requireCompanyContext(): void {
+    if (isSuperAdmin()) return; // super admin can browse anything
+    if (!getCurrentCompanyId()) {
+        if (isApiRequest()) {
+            http_response_code(403);
+            die(json_encode(['success' => false, 'message' => 'No tenant context. Please contact support.']));
+        }
+        http_response_code(403);
+        die('No tenant context. Please sign in again.');
+    }
+}
+
+/**
  * Authenticate user with rate limiting
  */
 function authenticateUser($username, $password) {
