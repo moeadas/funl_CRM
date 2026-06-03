@@ -31,7 +31,18 @@ if (!function_exists('__')) { require_once __DIR__ . '/../includes/functions.php
                     </p>
                     <button onclick="confirmUnsub()" class="btn btn-primary btn-block" id="unsubBtn"><?php echo __('Yes, Unsubscribe Me'); ?></button>
                     <p class="unsub-footer">
-                        <?php echo __('You can also contact us at'); ?> <a href="mailto:info@victorygenomics.com">info@victorygenomics.com</a>
+                        <?php echo __('You can also contact us at'); ?>
+                        <?php
+                        // Use platform-configured support email (set in Super Admin > Platform Settings),
+                        // falling back to the legacy hardcoded address.
+                        $platformSupport = '';
+                        try {
+                            $row = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'platform_support_email' AND company_id IS NULL")->fetch();
+                            $platformSupport = $row['setting_value'] ?? '';
+                        } catch (Exception $e) { /* ignore */ }
+                        $supportEmail = $platformSupport ?: 'support@funl.online';
+                        ?>
+                        <a href="mailto:<?php echo htmlspecialchars($supportEmail); ?>"><?php echo htmlspecialchars($supportEmail); ?></a>
                     </p>
                 </div>
                 <div id="unsubDone" class="unsub-done" style="display:none;">

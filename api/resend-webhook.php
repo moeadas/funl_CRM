@@ -11,8 +11,53 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-// Get raw payload
-$payload = file_get_contents('php://input');
+// C-5 fix: verify Resend/Svix signature. Resend uses standard Svix headers
+// (svix-id, svix-timestamp, svix-signature) with HMAC-SHA256 over
+// "{svix-id}.{svix-timestamp}.{raw_payload}".
+$webhookSecret = getenv('RESEND_WEBHOOK_SECRET') ?: '';
+if (!empty($webhookSecret)) {
+    $svixId = $_SERVER['HTTP_SVIX_ID'] ?? '';
+    $svixTs = $_SERVER['HTTP_SVIX_TIMESTAMP'] ?? '';
+    $svixSig = $_SERVER['HTTP_SVIX_SIGNATURE'] ?? '';
+    $rawPayload = file_get_contents('php://input');
+
+    if (empty($svixId) || empty($svixTs) || empty($svixSig)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing Svix signature headers']);
+        exit;
+    }
+    // Reject timestamps more than 5 minutes old to prevent replay
+    if (abs(time() - intval($svixTs)) > 300) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Stale webhook timestamp']);
+        exit;
+    }
+    // Svix secret format: "whsec_<base64>" - the part after "whsec_" is the actual secret
+    $secretPart = str_starts_with($webhookSecret, 'whsec_') ? substr($webhookSecret, 6) : $webhookSecret;
+    $secretBytes = base64_decode($secretPart);
+    $signed = $svixId . '.' . $svixTs . '.' . $rawPayload;
+    $expected = hash_hmac('sha256', $signed, $secretBytes);
+    // svix-signature may contain "v1,<sig>" or multiple space-separated entries
+    $expectedPrefixed = 'v1,' . $expected;
+    $valid = false;
+    foreach (explode(' ', $svixSig) as $entry) {
+        if (hash_equals($expectedPrefixed, trim($entry))) { $valid = true; break; }
+    }
+    if (!$valid) {
+        error_log('Resend webhook signature verification failed');
+        http_response_code(401);
+        echo json_encode(['error' => 'Invalid signature']);
+        exit;
+    }
+    $payload = $rawPayload;
+} else {
+    // No secret configured: log a warning so operators notice, but allow
+    // the webhook through for now (uncomment http_response_code(401) + exit
+    // to enforce strict verification in production).
+    error_log('Resend webhook received with no RESEND_WEBHOOK_SECRET configured. Signature NOT verified.');
+    $payload = file_get_contents('php://input');
+}
+
 $data = json_decode($payload, true);
 
 if (!$data || !isset($data['type'])) {

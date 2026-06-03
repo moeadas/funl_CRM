@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/twilio.php';
 
 startSecureSession();
 requireLogin();
+requireEmailVerified();
 
 header('Content-Type: application/json');
 

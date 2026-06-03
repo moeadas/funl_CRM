@@ -240,7 +240,9 @@ function exportCSV($db, $scope, $companyId) {
         // Add BOM for Excel compatibility
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-        $rows = $db->query($queries[$scope])->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $db->prepare($queries[$scope]);
+        $rows->execute([$companyId]);
+        $rows = $rows->fetchAll(PDO::FETCH_ASSOC);
         if (!empty($rows)) {
             fputcsv($output, array_keys($rows[0]));
             foreach ($rows as $row) {

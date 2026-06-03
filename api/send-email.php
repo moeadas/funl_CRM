@@ -78,7 +78,12 @@ try {
 
 // Get lead info
 try {
-    $lead = $db->findOne('leads', ['lead_id' => $leadId]);
+    // Tenant isolation: scope the lead lookup to the current company (C-3)
+    $companyId = getCurrentCompanyId();
+    if (!$companyId) {
+        jsonError('No tenant context', 403);
+    }
+    $lead = $db->findOne('leads', ['lead_id' => $leadId, 'company_id' => $companyId]);
     if (!$lead) jsonError('Lead not found', 404);
 } catch (Exception $e) {
     jsonError('Error loading lead', 500);
@@ -126,7 +131,11 @@ if (!empty($msAccessToken) && !empty($msRefreshToken)) {
         jsonError('Email not configured. Go to Profile > Email Settings to connect your Microsoft Office 365 account.', 400);
     }
 
-    $smtpPass = base64_decode($smtpPass);
+    // H-4 fix: try proper decryption first; fall back to base64 for legacy
+    // (unencrypted) passwords. New passwords written via user-form.php will use
+    // encryptToken(); this dual-path keeps existing SMTP integrations working.
+    $decrypted = decryptToken($smtpPass);
+    $smtpPass  = $decrypted !== false && $decrypted !== '' ? $decrypted : base64_decode($smtpPass);
 
     try {
         $result = sendSmtpEmail($smtpHost, $smtpPort, $smtpEmail, $smtpPass, $smtpEnc, $to, $subject, $body, $currentUser['full_name'], $cc, $attachments);

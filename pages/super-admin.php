@@ -121,6 +121,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
             
+        case 'save_platform_settings':
+            // Save platform-level settings: support email + super admin email.
+            // Stored in settings table with company_id = NULL (global).
+            $supportEmail = trim($_POST['support_email'] ?? '');
+            $superAdminEmail = trim($_POST['super_admin_email'] ?? '');
+            $marketingUrl = trim($_POST['marketing_url'] ?? '');
+            $siteName = trim($_POST['site_name'] ?? '');
+            $updates = [
+                'platform_support_email' => filter_var($supportEmail, FILTER_VALIDATE_EMAIL) ?: '',
+                'platform_super_admin_email' => filter_var($superAdminEmail, FILTER_VALIDATE_EMAIL) ?: '',
+                'marketing_url' => $marketingUrl,
+                'site_name' => $siteName,
+            ];
+            foreach ($updates as $k => $v) {
+                $existing = $db->query("SELECT setting_id FROM settings WHERE setting_key = ? AND company_id IS NULL", [$k])->fetch();
+                if ($existing) {
+                    $db->query("UPDATE settings SET setting_value = ? WHERE setting_key = ? AND company_id IS NULL", [$v, $k]);
+                } else {
+                    $db->query("INSERT INTO settings (setting_key, setting_value, setting_type, company_id) VALUES (?, ?, 'text', NULL)", [$k, $v]);
+                }
+            }
+            $_SESSION['success'] = 'Platform settings saved.';
+            break;
+
+        case 'create_super_admin':
+            // Allow platform owner to add additional super admins.
+            $username = sanitizeInput($_POST['username'] ?? '');
+            $email = sanitizeInput($_POST['email'] ?? '');
+            $fullName = sanitizeInput($_POST['full_name'] ?? '');
+            $password = $_POST['password'] ?? '';
+            if ($username && $email && $fullName && strlen($password) >= 8) {
+                $existing = $db->query("SELECT user_id FROM users WHERE email = ?", [$email])->fetch();
+                if ($existing) {
+                    $_SESSION['error'] = "Email '$email' is already registered.";
+                } else {
+                    $db->insert('users', [
+                        'company_id' => null,
+                        'username' => $username,
+                        'email' => $email,
+                        'password_hash' => password_hash($password, PASSWORD_BCRYPT),
+                        'full_name' => $fullName,
+                        'role' => 'Admin',
+                        'status' => 'Active',
+                        'is_super_admin' => 1,
+                        'email_verified' => 1,
+                    ]);
+                    $_SESSION['success'] = "Super admin '$fullName' created.";
+                }
+            } else {
+                $_SESSION['error'] = 'All fields are required and password must be at least 8 characters.';
+            }
+            break;
+
+        case 'delete_super_admin':
+            $userId = intval($_POST['user_id'] ?? 0);
+            if ($userId && $userId != getCurrentUserId()) {
+                // Only allow removing other super admins, not yourself
+                $db->query("UPDATE users SET is_super_admin = 0, status = 'Inactive' WHERE user_id = ? AND is_super_admin = 1 AND user_id != ?", [$userId, getCurrentUserId()]);
+                $_SESSION['success'] = 'Super admin removed.';
+            } else {
+                $_SESSION['error'] = 'Cannot remove yourself.';
+            }
+            break;
+
         case 'delete_company':
             $companyId = intval($_POST['company_id'] ?? 0);
             if ($companyId) {
@@ -191,6 +255,15 @@ $companies = $db->query("
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 $plans = getActivePlans();
+
+// Load platform-level settings (support email, super admin email, etc.)
+$platformSettings = [];
+$psRows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL AND setting_key IN ('platform_support_email','platform_super_admin_email','marketing_url','site_name')")->fetchAll(PDO::FETCH_KEY_PAIR);
+foreach ($psRows as $k => $v) $platformSettings[$k] = $v;
+
+// Load all super admins
+$superAdmins = $db->query("SELECT user_id, username, email, full_name, status, created_at FROM users WHERE is_super_admin = 1 ORDER BY created_at ASC")->fetchAll(PDO::FETCH_ASSOC);
+
 $pageTitle = 'Super Admin';
 include '../includes/header.php';
 ?>
@@ -238,6 +311,119 @@ include '../includes/header.php';
     <div class="card" style="text-align:center;padding:24px;">
         <div style="font-size:32px;font-weight:700;"><?php echo $stats['total_leads']; ?></div>
         <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('Total Leads'); ?></div>
+    </div>
+</div>
+
+<!-- Platform Settings & Super Admins -->
+<div class="grid grid-2" style="gap:16px;margin-bottom:24px;">
+    <!-- Platform Settings Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><?php echo __('Platform Settings'); ?></h3>
+            <p style="font-size:12px;color:var(--color-text-muted);margin:4px 0 0;"><?php echo __('Global support email, super admin email, and marketing site URL.'); ?></p>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="super-admin.php">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="action" value="save_platform_settings">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo __('Site Name'); ?></label>
+                        <input type="text" name="site_name" class="form-control" value="<?php echo htmlspecialchars($platformSettings['site_name'] ?? 'White Label CRM'); ?>" placeholder="White Label CRM">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo __('Marketing Site URL'); ?></label>
+                        <input type="url" name="marketing_url" class="form-control" value="<?php echo htmlspecialchars($platformSettings['marketing_url'] ?? ''); ?>" placeholder="https://funl.online">
+                        <small style="color:var(--color-text-muted);font-size:11px;"><?php echo __('Logged-out users on the login page will be sent here instead of the register form.'); ?></small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo __('Support Email'); ?></label>
+                        <input type="email" name="support_email" class="form-control" value="<?php echo htmlspecialchars($platformSettings['platform_support_email'] ?? ''); ?>" placeholder="support@funl.online" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo __('Super Admin Email'); ?></label>
+                        <input type="email" name="super_admin_email" class="form-control" value="<?php echo htmlspecialchars($platformSettings['platform_super_admin_email'] ?? ''); ?>" placeholder="admin@funl.online" required>
+                    </div>
+                </div>
+                <div style="margin-top:16px;text-align:right;">
+                    <button type="submit" class="btn btn-primary"><?php echo __('Save Platform Settings'); ?></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Super Admins Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><?php echo __('Super Admins'); ?></h3>
+            <p style="font-size:12px;color:var(--color-text-muted);margin:4px 0 0;"><?php echo __('Platform owners with full access to all tenants.'); ?></p>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <table class="data-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th><?php echo __('Name'); ?></th>
+                        <th><?php echo __('Email'); ?></th>
+                        <th style="text-align:right;"><?php echo __('Action'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($superAdmins as $sa): ?>
+                        <tr>
+                            <td>
+                                <strong><?php echo htmlspecialchars($sa['full_name']); ?></strong>
+                                <?php if ($sa['user_id'] == getCurrentUserId()): ?>
+                                    <span class="badge badge-info" style="margin-left:6px;font-size:10px;"><?php echo __('You'); ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($sa['email']); ?></td>
+                            <td style="text-align:right;">
+                                <?php if ($sa['user_id'] != getCurrentUserId()): ?>
+                                    <form method="POST" action="super-admin.php" style="display:inline;" onsubmit="return confirm('<?php echo __('Remove this super admin?'); ?>');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                        <input type="hidden" name="action" value="delete_super_admin">
+                                        <input type="hidden" name="user_id" value="<?php echo $sa['user_id']; ?>">
+                                        <button type="submit" class="btn btn-xs btn-outline" style="color:#dc2626;"><?php echo __('Remove'); ?></button>
+                                    </form>
+                                <?php else: ?>
+                                    <span style="color:var(--color-text-muted);font-size:12px;">—</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <div style="padding:16px;border-top:1px solid var(--color-border);">
+                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('addSuperAdminForm').style.display = document.getElementById('addSuperAdminForm').style.display === 'none' ? 'block' : 'none';">
+                    + <?php echo __('Add Super Admin'); ?>
+                </button>
+                <form id="addSuperAdminForm" method="POST" action="super-admin.php" style="display:none;margin-top:16px;">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                    <input type="hidden" name="action" value="create_super_admin">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label"><?php echo __('Username'); ?></label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><?php echo __('Full Name'); ?></label>
+                            <input type="text" name="full_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><?php echo __('Email'); ?></label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><?php echo __('Password (min 8 chars)'); ?></label>
+                            <input type="password" name="password" class="form-control" minlength="8" required>
+                        </div>
+                    </div>
+                    <div style="text-align:right;margin-top:8px;">
+                        <button type="submit" class="btn btn-primary btn-sm"><?php echo __('Create Super Admin'); ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 

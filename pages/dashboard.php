@@ -16,8 +16,11 @@ $isSalesRep = !hasRole('Sales Manager');
 $isSuperAdmin = isSuperAdmin();
 $companyId = $currentUser['company_id'] ?? null;
 
-// Defensive: if non-super-admin lacks company_id, requireCompanyContext() will exit with 403.
-// This guarantees the unfiltered fallbacks below are only reached for super admins.
+// Defensive guard: if non-super-admin lacks company_id, exit 403 instead of
+// falling through to the unscoped "SELECT COUNT(*) FROM leads" fallbacks below.
+if (!$isSuperAdmin && !$companyId) {
+    requireCompanyContext();
+}
 
 // ─── Statistics ──────────────────────────────────────────
 $stats = [];

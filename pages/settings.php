@@ -59,6 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $value = ($value === 'on' || $value === '1') ? '1' : '0';
                 }
 
+                // H-4 fix: encrypt sensitive fields on write. If the field is empty
+                // (user didn't change it), preserve the existing value.
+                if ($key === 'smtp_password' && $value === '') {
+                    continue; // don't overwrite the existing password
+                }
+                if (in_array($key, ['smtp_password', 'twilio_auth_token'])) {
+                    $value = encryptToken($value);
+                }
+
                 // Check if setting exists
                 $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = ? AND (company_id = ? OR company_id IS NULL)");
                 $stmtCheck->execute([$key, $companyId]);

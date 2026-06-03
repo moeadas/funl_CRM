@@ -8,6 +8,7 @@ require_once __DIR__ . '/../includes/security.php';
 
 startSecureSession();
 requireLogin();
+requireEmailVerified();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';

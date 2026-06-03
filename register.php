@@ -23,6 +23,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         requireCSRF();
     }
 
+    // H-1 mitigation: rate-limit public signups by IP. 5 per hour per IP.
+    if ($_POST['action'] === 'register_company') {
+        $rateDir = sys_get_temp_dir() . '/wlrm_rate';
+        if (!is_dir($rateDir)) @mkdir($rateDir, 0755, true);
+        $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $rateKey  = 'register_' . preg_replace('/[^a-f0-9.:]/i', '', $clientIp);
+        $rateFile = $rateDir . '/' . $rateKey . '.json';
+        $now = time();
+        $hour = $now - 3600;
+        $attempts = [];
+        if (file_exists($rateFile)) {
+            $attempts = json_decode(file_get_contents($rateFile), true) ?: [];
+        }
+        $attempts = array_filter($attempts, fn($t) => $t > $hour);
+        if (count($attempts) >= 5) {
+            $error = 'Too many signups from your IP. Please try again in an hour.';
+        } else {
+            $attempts[] = $now;
+            @file_put_contents($rateFile, json_encode(array_values($attempts)));
+        }
+    }
+
     if ($_POST['action'] === 'register_company') {
         $companyName = sanitizeInput($_POST['company_name'] ?? '');
         $companySlug = preg_replace('/[^a-z0-9-]/', '', strtolower(str_replace(' ', '-', $companyName)));
@@ -39,6 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $error = __('Please enter a valid email address.');
         } elseif (strlen($password) < 8) {
             $error = __('Password must be at least 8 characters.');
+        } elseif (function_exists('validatePasswordStrength') && !validatePasswordStrength($password)) {
+            // M-10 fix: enforce the same strength policy used elsewhere
+            // (upper + lower + number, min 8 chars). Earlier this only checked length.
+            $error = __('Password must include uppercase, lowercase, and a number.');
         } elseif ($password !== $confirmPassword) {
             $error = __('Passwords do not match.');
         } else {

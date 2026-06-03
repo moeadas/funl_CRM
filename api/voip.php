@@ -10,9 +10,59 @@ require_once __DIR__ . '/../includes/twilio.php';
 
 $action = $_GET['action'] ?? '';
 
+/**
+ * Verify a Twilio webhook signature (C-4 fix).
+ * Twilio signs every request with X-Twilio-Signature using HMAC-SHA1 over
+ * the full URL + sorted POST params, using the auth token.
+ *
+ * Public endpoints that Twilio calls (twiml, call_status, recording_status,
+ * dial_status) MUST verify this signature to prevent toll-fraud / forgery.
+ *
+ * @return bool true if signature is valid OR if no auth token is configured
+ *              (development-only fallback; logs a warning in that case).
+ */
+function verifyTwilioSignature(): bool {
+    $authToken = getenv('TWILIO_AUTH_TOKEN') ?: '';
+    if (empty($authToken)) {
+        try {
+            $rows = \Database::getInstance()->getConnection()
+                ->query("SELECT setting_value FROM settings WHERE setting_key = 'twilio_auth_token' AND (company_id = ? OR company_id IS NULL) ORDER BY company_id IS NULL ASC LIMIT 1",
+                        [$_SESSION['company_id'] ?? 0])
+                ->fetch();
+            $authToken = $rows['setting_value'] ?? '';
+        } catch (\Exception $e) { /* ignore */ }
+    }
+    if (empty($authToken)) {
+        error_log('Twilio signature check skipped: no auth token configured');
+        return true;
+    }
+    $signature = $_SERVER['HTTP_X_TWILIO_SIGNATURE'] ?? '';
+    if (empty($signature)) return false;
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+    $uri  = $_SERVER['REQUEST_URI'] ?? '';
+    $fullUrl = $protocol . '://' . $host . $uri;
+    if (!empty($_POST)) {
+        ksort($_POST);
+        foreach ($_POST as $k => $v) {
+            $fullUrl .= $k . $v;
+        }
+    }
+    $expected = base64_encode(hash_hmac('sha1', $fullUrl, $authToken, true));
+    return hash_equals($expected, $signature);
+}
+
 // ─── Public webhook endpoints (no auth required) ───
 // These return TwiML (XML) or minimal responses — do NOT set JSON header here
+// C-4 fix: verify Twilio signature on every public webhook call. Without this,
+// an attacker could POST ?action=twiml&To=+1premium and cause the platform to
+// dial a premium number through your Twilio account (toll fraud).
 if (in_array($action, ['twiml', 'twiml_outbound', 'twiml_conference', 'call_status', 'dial_status', 'recording_status'])) {
+    if (!verifyTwilioSignature()) {
+        error_log('Twilio signature verification failed for action=' . $action . ', ip=' . ($_SERVER['REMOTE_ADDR'] ?? '?'));
+        http_response_code(403);
+        die('Forbidden: invalid Twilio signature');
+    }
     handleWebhook($action);
     exit;
 }
@@ -448,6 +498,14 @@ function getCallStats() {
 // WEBHOOK HANDLERS (no auth)
 // ──────────────────────────────────────
 function handleWebhook($action) {
+    // C-4 fix: verify Twilio signature on all public webhook actions.
+    // Without this, an attacker could POST to ?action=twiml&To=+1premium and
+    // cause the platform to dial a premium number through your Twilio account.
+    if (!verifyTwilioSignature()) {
+        error_log('Twilio signature verification failed for action=' . $action . ', ip=' . ($_SERVER['REMOTE_ADDR'] ?? '?'));
+        http_response_code(403);
+        die('Forbidden: invalid Twilio signature');
+    }
     switch ($action) {
         case 'twiml':
             // Generate TwiML for WebRTC calls.

@@ -262,15 +262,16 @@ function processLead($db, $incomingData, $fieldMapping, $leadDefaults, $assigned
     try {
         $stmt = $db->query("
             INSERT INTO leads (
-                lead_type, company_name, contact_person, title_position,
+                company_id, lead_type, company_name, contact_person, title_position,
                 region, country, city, address,
                 phone, mobile, email, website,
                 facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url,
                 specialization,
                 notes, lead_status, lead_source, priority,
                 assigned_to, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ", [
+            (int)($endpoint['company_id'] ?? 1), // C-1 fix: attribute lead to webhook owner
             $lead['lead_type'],
             $lead['company_name'],
             emptyToNull($lead['contact_person'] ?? null),

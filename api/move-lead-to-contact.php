@@ -5,6 +5,12 @@
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
+// H-7 fix: align authorization with api/leads.php::moveLeadToContact
+// (which requires Sales Manager or Admin). Without this, a regular Sales Rep
+// could convert any lead in their tenant.
+if (!hasRole('Sales Manager') && !hasRole('Admin')) {
+    jsonError('Permission denied', 403);
+}
 
 header('Content-Type: application/json');
 

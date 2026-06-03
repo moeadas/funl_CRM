@@ -9,6 +9,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/security.php';
 startSecureSession();
 requireLogin();
+requireEmailVerified();
 header('Content-Type: application/json; charset=utf8');
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';

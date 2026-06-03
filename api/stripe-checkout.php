@@ -32,6 +32,17 @@ if (empty($stripeSecretKey)) {
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
+// M-7 fix: require CSRF for all state-changing actions (create_checkout,
+// cancel_subscription). Stripe billing changes were only role-gated before,
+// which is insufficient if an attacker tricks an admin's browser.
+if (in_array($action, ['create_checkout', 'cancel_subscription']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (!verifyCSRFToken($token)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+        exit;
+    }
+}
+
 try {
     $db = Database::getInstance();
     $company = getCompany($companyId);

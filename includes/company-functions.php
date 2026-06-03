@@ -169,7 +169,7 @@ function verifyEmailToken($token) {
         $db = Database::getInstance();
         
         $verification = $db->query(
-            "SELECT * FROM email_verifications WHERE token = ? AND expires_at > datetime('now')",
+            "SELECT * FROM email_verifications WHERE token = ? AND expires_at > NOW()",
             [$token]
         )->fetch(PDO::FETCH_ASSOC);
         
@@ -179,13 +179,13 @@ function verifyEmailToken($token) {
         
         // Update user
         $db->query(
-            "UPDATE users SET email_verified_at = datetime('now') WHERE user_id = ?",
+            "UPDATE users SET email_verified_at = NOW() WHERE user_id = ?",
             [$verification['user_id']]
         );
         
         // Mark verification as used
         $db->query(
-            "UPDATE email_verifications SET verified_at = datetime('now') WHERE token = ?",
+            "UPDATE email_verifications SET verified_at = NOW() WHERE token = ?",
             [$token]
         );
         
@@ -234,7 +234,7 @@ function validateResetToken($token) {
         $db = Database::getInstance();
         
         $reset = $db->query(
-            "SELECT * FROM password_resets WHERE token = ? AND expires_at > datetime('now') AND used_at IS NULL",
+            "SELECT * FROM password_resets WHERE token = ? AND expires_at > NOW() AND used_at IS NULL",
             [$token]
         )->fetch(PDO::FETCH_ASSOC);
         

@@ -16,6 +16,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
 
+// H-3 fix: rate limit public form submissions to prevent spam/DB flooding.
+// 10 submissions per IP per hour. This endpoint is intentionally public (CORS:*)
+// so we rely on IP-based limiting since there is no user/session.
+$rateDir = sys_get_temp_dir() . '/wlrm_rate';
+if (!is_dir($rateDir)) @mkdir($rateDir, 0755, true);
+$clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$rateKey  = 'formsubmit_' . preg_replace('/[^a-f0-9.:]/i', '', $clientIp);
+$rateFile = $rateDir . '/' . $rateKey . '.json';
+$now = time();
+$hour = $now - 3600;
+$attempts = [];
+if (file_exists($rateFile)) {
+    $attempts = json_decode(file_get_contents($rateFile), true) ?: [];
+}
+$attempts = array_filter($attempts, fn($t) => $t > $hour);
+if (count($attempts) >= 10) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'message' => 'Too many submissions. Please try again later.']);
+    exit;
+}
+$attempts[] = $now;
+@file_put_contents($rateFile, json_encode(array_values($attempts)));
+
 $db = Database::getInstance();
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -127,6 +150,16 @@ try {
         }
         if ($rule['action_type'] === 'create_task') {
             $dueDate = date('Y-m-d', strtotime('+' . ($actionConfig['due_days'] ?? 1) . ' days'));
+            // B-8 fix: use the lead's assigned_to user, falling back to the form's
+            // default creator, then to a system user (1). Avoids orphan FK when
+            // user_id=0 doesn't exist.
+            $taskOwner = (int)($form['created_by'] ?? 0);
+            if (!$taskOwner) {
+                $taskOwner = (int)($lead['assigned_to'] ?? 0);
+            }
+            if (!$taskOwner) {
+                $taskOwner = 1; // System user as last resort
+            }
             $db->insert('tasks', [
                 'company_id' => $companyId,
                 'title'      => $actionConfig['title'] ?? 'Follow up webform submission',
@@ -134,7 +167,7 @@ try {
                 'priority'   => $actionConfig['priority'] ?? 'medium',
                 'due_date'   => $dueDate,
                 'lead_id'    => $leadId,
-                'created_by' => 0,
+                'created_by' => $taskOwner,
             ]);
         }
     }

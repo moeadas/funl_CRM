@@ -52,11 +52,31 @@ class TwilioHelper {
     private static function loadSettingsFromDB() {
         try {
             $db = Database::getInstance();
-            $rows = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN (
-                'twilio_account_sid','twilio_auth_token','twilio_phone_number','twilio_twiml_app_sid',
-                'whatsapp_from_number','twilio_api_key','twilio_api_secret','app_url',
-                'voip_recording_enabled','whatsapp_sandbox_mode'
-            )")->fetchAll(\PDO::FETCH_KEY_PAIR);
+            // Tenant scope: load Twilio settings for the current company only.
+            // For each key, prefer the company-specific row; fall back to a global
+            // (company_id IS NULL) row if no company-specific one exists.
+            $companyId = $_SESSION['company_id'] ?? null;
+            $keys = "'twilio_account_sid','twilio_auth_token','twilio_phone_number','twilio_twiml_app_sid',"
+                . "'whatsapp_from_number','twilio_api_key','twilio_api_secret','app_url',"
+                . "'voip_recording_enabled','whatsapp_sandbox_mode'";
+            if ($companyId) {
+                $stmt = $db->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ($keys) AND (company_id = ? OR company_id IS NULL) ORDER BY company_id IS NULL ASC");
+                $stmt->execute([$companyId]);
+            } else {
+                $stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ($keys) AND company_id IS NULL");
+            }
+            $rows = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+            // H-4 fix: decrypt sensitive fields (they were stored encrypted by
+            // settings.php). Try decryptToken() first; fall back to raw value for
+            // legacy (pre-encryption) rows.
+            foreach (['twilio_auth_token'] as $sens) {
+                if (!empty($rows[$sens])) {
+                    $dec = decryptToken($rows[$sens]);
+                    if ($dec !== false && $dec !== '') {
+                        $rows[$sens] = $dec;
+                    }
+                }
+            }
             // Only return keys that have non-empty values (so env fallback works)
             return array_filter($rows, function($v) { return $v !== '' && $v !== null; });
         } catch (\Exception $e) {

@@ -56,6 +56,12 @@ function getCompanyFavicon() {
 function getActiveCustomFields() {
     try {
         $db = Database::getInstance()->getConnection();
+        $companyId = getCurrentCompanyId();
+        if ($companyId) {
+            $stmt = $db->prepare("SELECT * FROM custom_fields WHERE is_active = 1 AND (company_id = ? OR company_id IS NULL) ORDER BY sort_order ASC, field_id ASC");
+            $stmt->execute([$companyId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
         $stmt = $db->query("SELECT * FROM custom_fields WHERE is_active = 1 ORDER BY sort_order ASC, field_id ASC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
@@ -66,8 +72,10 @@ function getActiveCustomFields() {
 function getCustomFieldValue($leadId, $fieldId) {
     try {
         $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("SELECT field_value FROM lead_custom_values WHERE lead_id = ? AND field_id = ?");
-        $stmt->execute([$leadId, $fieldId]);
+        $companyId = getCurrentCompanyId();
+        // Tenant scope: field must belong to current company
+        $stmt = $db->prepare("SELECT lcv.field_value FROM lead_custom_values lcv INNER JOIN custom_fields cf ON lcv.field_id = cf.field_id WHERE lcv.lead_id = ? AND lcv.field_id = ? AND (cf.company_id = ? OR cf.company_id IS NULL)");
+        $stmt->execute([$leadId, $fieldId, $companyId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? $row['field_value'] : '';
     } catch (Exception $e) {
@@ -78,14 +86,15 @@ function getCustomFieldValue($leadId, $fieldId) {
 function getAllCustomFieldValues($leadId) {
     try {
         $db = Database::getInstance()->getConnection();
+        $companyId = getCurrentCompanyId();
         $stmt = $db->prepare("
             SELECT cf.field_name, cf.field_label, cf.field_type, cf.field_options, lcv.field_value
             FROM custom_fields cf
             LEFT JOIN lead_custom_values lcv ON cf.field_id = lcv.field_id AND lcv.lead_id = ?
-            WHERE cf.is_active = 1
+            WHERE cf.is_active = 1 AND (cf.company_id = ? OR cf.company_id IS NULL)
             ORDER BY cf.sort_order ASC
         ");
-        $stmt->execute([$leadId]);
+        $stmt->execute([$leadId, $companyId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         return [];
@@ -156,9 +165,10 @@ function saveCustomFieldValues($leadId, $postData) {
                 $fieldValue = '0';
             }
 
-            // Delete existing value
-            $stmt = $db->prepare("DELETE FROM lead_custom_values WHERE lead_id = ? AND field_id = ?");
-            $stmt->execute([$leadId, $field['field_id']]);
+            // Delete existing value (tenant scope: only delete values for fields owned by current company)
+            $companyId = getCurrentCompanyId();
+            $stmt = $db->prepare("DELETE lcv FROM lead_custom_values lcv INNER JOIN custom_fields cf ON lcv.field_id = cf.field_id WHERE lcv.lead_id = ? AND lcv.field_id = ? AND (cf.company_id = ? OR cf.company_id IS NULL)");
+            $stmt->execute([$leadId, $field['field_id'], $companyId]);
 
             // Insert new value if not empty
             if ($fieldValue !== '' && $fieldValue !== null) {
@@ -352,7 +362,13 @@ function validateRequired($data, $requiredFields) {
  */
 function getAllUsers() {
     $db = Database::getInstance()->getConnection();
-    $stmt = $db->query("SELECT user_id, full_name, role FROM users WHERE status = 'Active' ORDER BY full_name");
+    $companyId = getCurrentCompanyId();
+    if ($companyId) {
+        $stmt = $db->prepare("SELECT user_id, full_name, role FROM users WHERE status = 'Active' AND (company_id = ? OR is_super_admin = 1) ORDER BY full_name");
+        $stmt->execute([$companyId]);
+    } else {
+        $stmt = $db->query("SELECT user_id, full_name, role FROM users WHERE status = 'Active' ORDER BY full_name");
+    }
     return $stmt->fetchAll();
 }
 

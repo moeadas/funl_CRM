@@ -23,6 +23,15 @@ requireRole(['Admin']);
 
 header('Content-Type: application/json');
 
+// Tenant scope: every read/write is filtered by company_id.
+// Super admins can pass ?company_id= to inspect another tenant; regular admins see only their own.
+$companyId = getCurrentCompanyId();
+$isSuperAdmin = isSuperAdmin();
+$scopeCompanyId = $isSuperAdmin && !empty($_GET['company_id']) ? (int)$_GET['company_id'] : (int)$companyId;
+if (!$isSuperAdmin && !$scopeCompanyId) {
+    jsonError('No tenant context', 403);
+}
+
 $db = Database::getInstance();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -73,18 +82,32 @@ try {
 
 // ─── List all endpoints ──────────────────────────────────────
 function listEndpoints($db) {
-    $rows = $db->query("
-        SELECT we.*, u.full_name AS assigned_name
-        FROM webhook_endpoints we
-        LEFT JOIN users u ON we.assigned_to = u.user_id
-        ORDER BY we.created_at DESC
-    ")->fetchAll(\PDO::FETCH_ASSOC);
+    global $scopeCompanyId, $isSuperAdmin;
+    if ($isSuperAdmin && empty($scopeCompanyId)) {
+        $rows = $db->query("
+            SELECT we.*, u.full_name AS assigned_name
+            FROM webhook_endpoints we
+            LEFT JOIN users u ON we.assigned_to = u.user_id
+            ORDER BY we.created_at DESC
+        ")->fetchAll(\PDO::FETCH_ASSOC);
+    } else {
+        $stmt = $db->prepare("
+            SELECT we.*, u.full_name AS assigned_name
+            FROM webhook_endpoints we
+            LEFT JOIN users u ON we.assigned_to = u.user_id
+            WHERE we.company_id = ?
+            ORDER BY we.created_at DESC
+        ");
+        $stmt->execute([$scopeCompanyId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 
     jsonSuccess('Endpoints retrieved', $rows);
 }
 
 // ─── Get single endpoint ─────────────────────────────────────
 function getEndpointDetail($db) {
+    global $scopeCompanyId, $isSuperAdmin;
     $id = intval($_GET['id'] ?? 0);
     if (!$id) jsonError('Endpoint ID required', 400);
 
@@ -102,6 +125,7 @@ function getEndpointDetail($db) {
 
 // ─── Get import logs for an endpoint ─────────────────────────
 function getEndpointLogs($db) {
+    global $scopeCompanyId, $isSuperAdmin;
     $id = intval($_GET['id'] ?? 0);
     if (!$id) jsonError('Endpoint ID required', 400);
 
@@ -151,6 +175,7 @@ function createEndpoint($db, $currentUser) {
     $sheetName = trim($input['sheet_name'] ?? '') ?: null;
 
     $endpointId = $db->insert('webhook_endpoints', [
+        'company_id'    => $scopeCompanyId,
         'name'          => $name,
         'api_key'       => $apiKey,
         'sheet_url'     => $sheetUrl ?: null,
@@ -172,12 +197,17 @@ function createEndpoint($db, $currentUser) {
 
 // ─── Update existing endpoint ────────────────────────────────
 function updateEndpoint($db, $currentUser) {
+    global $scopeCompanyId, $isSuperAdmin;
     $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
     $id = intval($input['endpoint_id'] ?? 0);
     if (!$id) jsonError('Endpoint ID required.', 400);
 
+    // Tenant scope check: super admins bypass, others must own the endpoint
     $existing = $db->findOne('webhook_endpoints', ['endpoint_id' => $id]);
+    if (!$isSuperAdmin && $existing && (int)$existing['company_id'] !== (int)$scopeCompanyId) {
+        jsonError('Not found', 404);
+    }
     if (!$existing) jsonError('Endpoint not found.', 404);
 
     $name = trim($input['name'] ?? '');
@@ -226,12 +256,18 @@ function updateEndpoint($db, $currentUser) {
 
 // ─── Delete endpoint ─────────────────────────────────────────
 function deleteEndpoint($db, $currentUser) {
+    global $scopeCompanyId, $isSuperAdmin;
+    global $scopeCompanyId, $isSuperAdmin;
     $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
     $id = intval($input['endpoint_id'] ?? 0);
     if (!$id) jsonError('Endpoint ID required.', 400);
 
+    // Tenant scope check: super admins bypass, others must own the endpoint
     $existing = $db->findOne('webhook_endpoints', ['endpoint_id' => $id]);
+    if (!$isSuperAdmin && $existing && (int)$existing['company_id'] !== (int)$scopeCompanyId) {
+        jsonError('Not found', 404);
+    }
     if (!$existing) jsonError('Endpoint not found.', 404);
 
     $db->delete('webhook_endpoints', ['endpoint_id' => $id]);
@@ -243,12 +279,18 @@ function deleteEndpoint($db, $currentUser) {
 
 // ─── Toggle enabled/disabled ─────────────────────────────────
 function toggleEndpoint($db, $currentUser) {
+    global $scopeCompanyId, $isSuperAdmin;
+    global $scopeCompanyId, $isSuperAdmin;
     $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
     $id = intval($input['endpoint_id'] ?? 0);
     if (!$id) jsonError('Endpoint ID required.', 400);
 
+    // Tenant scope check: super admins bypass, others must own the endpoint
     $existing = $db->findOne('webhook_endpoints', ['endpoint_id' => $id]);
+    if (!$isSuperAdmin && $existing && (int)$existing['company_id'] !== (int)$scopeCompanyId) {
+        jsonError('Not found', 404);
+    }
     if (!$existing) jsonError('Endpoint not found.', 404);
 
     $newEnabled = intval($existing['enabled']) === 1 ? 0 : 1;
@@ -262,12 +304,18 @@ function toggleEndpoint($db, $currentUser) {
 
 // ─── Regenerate API key ──────────────────────────────────────
 function regenerateKey($db, $currentUser) {
+    global $scopeCompanyId, $isSuperAdmin;
+    global $scopeCompanyId, $isSuperAdmin;
     $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
     $id = intval($input['endpoint_id'] ?? 0);
     if (!$id) jsonError('Endpoint ID required.', 400);
 
+    // Tenant scope check: super admins bypass, others must own the endpoint
     $existing = $db->findOne('webhook_endpoints', ['endpoint_id' => $id]);
+    if (!$isSuperAdmin && $existing && (int)$existing['company_id'] !== (int)$scopeCompanyId) {
+        jsonError('Not found', 404);
+    }
     if (!$existing) jsonError('Endpoint not found.', 404);
 
     $newKey = generateWebhookApiKey();
@@ -283,12 +331,18 @@ function regenerateKey($db, $currentUser) {
 
 // ─── Reset sync position ─────────────────────────────────────
 function resetSync($db, $currentUser) {
+    global $scopeCompanyId, $isSuperAdmin;
+    global $scopeCompanyId, $isSuperAdmin;
     $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
     $id = intval($input['endpoint_id'] ?? 0);
     if (!$id) jsonError('Endpoint ID required.', 400);
 
+    // Tenant scope check: super admins bypass, others must own the endpoint
     $existing = $db->findOne('webhook_endpoints', ['endpoint_id' => $id]);
+    if (!$isSuperAdmin && $existing && (int)$existing['company_id'] !== (int)$scopeCompanyId) {
+        jsonError('Not found', 404);
+    }
     if (!$existing) jsonError('Endpoint not found.', 404);
 
     $db->update('webhook_endpoints', ['last_synced_row' => 0], ['endpoint_id' => $id]);

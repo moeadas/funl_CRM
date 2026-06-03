@@ -106,9 +106,11 @@ switch ($action) {
                 $params[] = $companyId;
             }
             
-            // Delete values first (FK constraint)
-            $stmt = $db->prepare("DELETE FROM lead_custom_values WHERE field_id = ?");
-            $stmt->execute([$data['field_id']]);
+            // Delete values first (FK constraint). Tenant-scoped: only values
+            // for fields owned by this company (defense in depth — the custom_fields
+            // DELETE below also enforces ownership via $where).
+            $stmt = $db->prepare("DELETE lcv FROM lead_custom_values lcv INNER JOIN custom_fields cf ON lcv.field_id = cf.field_id WHERE lcv.field_id = ? AND (cf.company_id = ? OR cf.company_id IS NULL)");
+            $stmt->execute([$data['field_id'], $companyId]);
             
             // Delete field
             $stmt = $db->prepare("DELETE FROM custom_fields $where");

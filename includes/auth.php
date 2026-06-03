@@ -134,6 +134,23 @@ function requireCompanyContext(): void {
 }
 
 /**
+ * Assert the current user has verified their email. M-11 fix: unverified users
+ * can no longer hit the API or most pages; they are redirected to verify-email.php.
+ * Super admins bypass this check (they are seeded pre-verified).
+ */
+function requireEmailVerified(): void {
+    if (isSuperAdmin()) return;
+    $verified = $_SESSION['email_verified'] ?? false;
+    if ($verified) return;
+    if (isApiRequest()) {
+        http_response_code(403);
+        die(json_encode(['success' => false, 'message' => 'Please verify your email address first.', 'redirect' => '/verify-email.php']));
+    }
+    header('Location: /verify-email.php');
+    exit;
+}
+
+/**
  * Authenticate user with rate limiting
  */
 function authenticateUser($username, $password) {
@@ -389,8 +406,18 @@ function switchToUser($targetUserId) {
     }
 
     $db = Database::getInstance()->getConnection();
-    $stmt = $db->prepare("SELECT user_id, username, email, full_name, role, company_id, is_super_admin, language FROM users WHERE user_id = ? AND status = 'Active'");
-    $stmt->execute([$targetUserId]);
+    // Super admins can switch to anyone; regular admins can only switch within their own company
+    if (isSuperAdmin()) {
+        $stmt = $db->prepare("SELECT user_id, username, email, full_name, role, company_id, is_super_admin, language FROM users WHERE user_id = ? AND status = 'Active'");
+        $stmt->execute([$targetUserId]);
+    } else {
+        $myCompanyId = $_SESSION['company_id'] ?? null;
+        if (!$myCompanyId) {
+            return ['success' => false, 'message' => 'No tenant context for switch.'];
+        }
+        $stmt = $db->prepare("SELECT user_id, username, email, full_name, role, company_id, is_super_admin, language FROM users WHERE user_id = ? AND status = 'Active' AND company_id = ?");
+        $stmt->execute([$targetUserId, $myCompanyId]);
+    }
     $target = $stmt->fetch();
 
     if (!$target) {

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../includes/security.php';
 
 startSecureSession();
 requireLogin();
+requireEmailVerified();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
@@ -198,11 +199,13 @@ if ($action === 'move' && $method === 'POST') {
     
     // Log activity
     $db->insert('deal_activities', [
-        'deal_id'       => $dealId,
-        'user_id'       => $userId,
-        'activity_type' => 'stage_change',
-        'old_value'     => $oldStage,
-        'new_value'     => $newStage,
+        'deal_id'    => $dealId,
+        'user_id'    => $userId,
+        'type'       => 'stage_change',
+        'from_stage' => $oldStage,
+        'to_stage'   => $newStage,
+        'note'       => null,
+        'company_id' => getCurrentCompanyId(),
     ]);
     
     logActivity($userId, 'Move Deal', 'Deal', $dealId, "Moved to $newStage");
