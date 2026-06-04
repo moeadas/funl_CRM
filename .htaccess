@@ -1,5 +1,17 @@
 # ─── Deny access to setup, migration, and admin scripts ───
-<FilesMatch "^((setup|_finish_setup|_fix_plans|_test_plan|_check|check_indexes|check_tables|migrate_|create_proposals_table|_test|_debug|_inspect|_repair)\.php)$">
+<FilesMatch "^(setup|_finish_setup|_fix_plans|_test_plan|_check|check_indexes|check_tables)\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+<FilesMatch "^migrate_.+\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+<FilesMatch "^create_proposals_table\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+<FilesMatch "^_(test|debug|inspect|repair|fix|finish|verify).*\.php$">
     Order allow,deny
     Deny from all
 </FilesMatch>
