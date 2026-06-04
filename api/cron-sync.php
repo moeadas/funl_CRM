@@ -5,7 +5,7 @@
  * Authenticated by a secret key stored in the settings table.
  * Set up as a cron job on SiteGround:
  *
- *   curl -s "https://crm.victorygenomics.com/api/cron-sync.php?secret=YOUR_SECRET&_t=$(date+%%s)"
+ *   curl -s "https://crm.funl.online/api/cron-sync.php?secret=YOUR_SECRET&_t=$(date+%%s)"
  *
  * IMPORTANT: Include the &_t=$(date+%s) cache-buster to prevent SiteGround proxy cache.
  * Recommended schedule: every hour (or 5-10 minutes for faster sync).

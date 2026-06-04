@@ -1,6 +1,6 @@
 <?php
 /**
- * Pinpoint CRM — Proposals API
+ * FUNL CRM — Proposals API
  */
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();

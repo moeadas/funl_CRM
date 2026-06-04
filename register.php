@@ -1,6 +1,6 @@
 <?php
 /**
- * Pinpoint CRM - Registration Landing Page
+ * FUNL CRM - Registration Landing Page
  * SaaS signup with plan selection - ForceManager-inspired design
  */
 require_once __DIR__ . '/includes/auth.php';

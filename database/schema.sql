@@ -196,16 +196,16 @@ CREATE TABLE IF NOT EXISTS `webhook_log` (
 -- Password: Admin@123 (CHANGE IMMEDIATELY AFTER INSTALLATION)
 -- ============================================
 INSERT INTO `users` (`username`, `email`, `password_hash`, `full_name`, `role`, `status`) VALUES
-('admin', 'admin@victorygenomics.com', '$2y$12$qVcyFNvWp2I0COzf8w2VK.wtg8AUOz3C72S54hELo2ZyLWt8Bt1Sm', 'System Administrator', 'Admin', 'Active');
+('admin', 'admin@funl.online', '$2y$12$qVcyFNvWp2I0COzf8w2VK.wtg8AUOz3C72S54hELo2ZyLWt8Bt1Sm', 'System Administrator', 'Admin', 'Active');
 
 -- ============================================
 -- Insert Default Settings
 -- ============================================
 INSERT INTO `settings` (`setting_key`, `setting_value`, `setting_type`) VALUES
 ('company_name', 'White Label CRM', 'text'),
-('company_email', 'info@victorygenomics.com', 'email'),
+('company_email', 'support@funl.online', 'email'),
 ('company_phone', '', 'text'),
-('company_website', 'https://victorygenomics.com', 'url'),
+('company_website', 'https://funl.online', 'url'),
 ('records_per_page', '25', 'number'),
 ('date_format', 'Y-m-d', 'text'),
 ('timezone', 'UTC', 'text');

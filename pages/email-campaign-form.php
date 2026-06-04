@@ -71,7 +71,7 @@ include '../includes/header.php';
                 </div>
                 <div class="form-group">
                     <label class="form-label"><?php echo __('From Email'); ?></label>
-                    <input type="email" name="from_email" class="form-control" placeholder="marketing@victorygenomics.com" value="<?php echo htmlspecialchars($campaign['from_email'] ?? $defaultFromEmail); ?>">
+                    <input type="email" name="from_email" class="form-control" placeholder="marketing@funl.online" value="<?php echo htmlspecialchars($campaign['from_email'] ?? $defaultFromEmail); ?>">
                 </div>
             </div>
             <div class="form-group">

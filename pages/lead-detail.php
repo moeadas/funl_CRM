@@ -990,7 +990,7 @@ fetch('/api/send-email.php', {
 // ── Convert Lead to Contact ──
 function moveLeadToContact(leadId) {
 showConfirm('Convert this lead to a Contact? The lead status will be set to "Won".', function() {
-    fetch('/api/move-lead-to-contact.php', {
+    fetch('/api/leads.php?action=move_to_contact', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },

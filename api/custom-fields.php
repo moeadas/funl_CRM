@@ -29,7 +29,7 @@ switch ($action) {
             $fields = $stmt->fetchAll(PDO::FETCH_ASSOC);
             jsonSuccess('Custom fields loaded', $fields);
         } catch (Exception $e) {
-            jsonError($e->getMessage());
+            safeJsonError($e, 'Operation failed', 500);
         }
         break;
 
@@ -54,7 +54,7 @@ switch ($action) {
             logActivity(getCurrentUserId(), 'Create Custom Field', 'CustomField', $db->lastInsertId(), "Created field: {$data['field_label']}");
             jsonSuccess('Custom field created');
         } catch (Exception $e) {
-            jsonError($e->getMessage());
+            safeJsonError($e, 'Operation failed', 500);
         }
         break;
 
@@ -89,7 +89,7 @@ switch ($action) {
             logActivity(getCurrentUserId(), 'Update Custom Field', 'CustomField', $data['field_id'], "Updated field: {$data['field_label']}");
             jsonSuccess('Custom field updated');
         } catch (Exception $e) {
-            jsonError($e->getMessage());
+            safeJsonError($e, 'Operation failed', 500);
         }
         break;
 
@@ -119,7 +119,7 @@ switch ($action) {
             logActivity(getCurrentUserId(), 'Delete Custom Field', 'CustomField', $data['field_id'], "Deleted field #{$data['field_id']}");
             jsonSuccess('Custom field deleted');
         } catch (Exception $e) {
-            jsonError($e->getMessage());
+            safeJsonError($e, 'Operation failed', 500);
         }
         break;
 
@@ -137,7 +137,7 @@ switch ($action) {
             jsonSuccess('Fields reordered');
         } catch (Exception $e) {
             $db->rollBack();
-            jsonError($e->getMessage());
+            safeJsonError($e, 'Operation failed', 500);
         }
         break;
 

@@ -178,6 +178,6 @@ try {
     ]);
     
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Failed to process submission: ' . $e->getMessage()]);
+    safeJsonError($e, 'Failed to process submission: ', 500);
 }
 ?>

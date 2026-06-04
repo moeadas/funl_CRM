@@ -170,7 +170,7 @@ function sendMessage() {
         ]);
     } catch (Exception $e) {
         error_log("WhatsApp send error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Failed to send: ' . $e->getMessage()]);
+        safeJsonError($e, 'Failed to send: ', 500);
     }
 }
 
@@ -244,7 +244,7 @@ function sendTemplate() {
         ]);
     } catch (Exception $e) {
         error_log("WhatsApp template error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Failed: ' . $e->getMessage()]);
+        safeJsonError($e, 'Failed: ', 500);
     }
 }
 
@@ -291,7 +291,7 @@ function getChatHistory() {
 
         echo json_encode(['success' => true, 'data' => $messages]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -307,7 +307,7 @@ function getTemplates() {
 
         echo json_encode(['success' => true, 'data' => $templates]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -334,7 +334,7 @@ function saveTemplate() {
 
         echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template saved']);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -379,7 +379,7 @@ function getLeadChats() {
 
         echo json_encode(['success' => true, 'data' => $chats]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -415,7 +415,7 @@ function getWhatsAppStats() {
         }
         echo json_encode(['success' => true, 'data' => $stats]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -510,7 +510,7 @@ function getContentTemplates() {
 
         echo json_encode(['success' => true, 'data' => $templates]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -630,7 +630,7 @@ function createContentTemplate() {
             'message'         => "Template created and submitted for Meta approval (status: $approvalStatus).",
         ]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -691,7 +691,7 @@ function deleteContentTemplate() {
             echo json_encode(['success' => false, 'message' => $errMsg]);
         }
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -782,7 +782,7 @@ function sendContentTemplate() {
         ]);
     } catch (Exception $e) {
         error_log("WhatsApp content template send error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Failed to send: ' . $e->getMessage()]);
+        safeJsonError($e, 'Failed to send: ', 500);
     }
 }
 
@@ -827,7 +827,7 @@ function getUnmatchedMessages() {
 
         echo json_encode(['success' => true, 'data' => array_values($grouped)]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -887,7 +887,7 @@ function linkMessageToLead() {
             'message' => "$updated message(s) linked to {$lead['contact_person']} ({$lead['company_name']})",
         ]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -955,7 +955,7 @@ function createLeadFromMessage() {
             'message'  => "Lead '$contactPerson' created and $updated message(s) linked.",
         ]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -1000,7 +1000,7 @@ function getUnmatchedChatHistory() {
 
         echo json_encode(['success' => true, 'data' => $messages]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 

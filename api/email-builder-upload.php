@@ -1,6 +1,6 @@
 <?php
 /**
- * Pinpoint CRM — Email Builder image upload endpoint
+ * FUNL CRM — Email Builder image upload endpoint
  *
  * Accepts: multipart/form-data with fields:
  *   - image       (file)

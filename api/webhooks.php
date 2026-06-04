@@ -77,7 +77,7 @@ try {
     }
 } catch (Exception $e) {
     error_log("Webhooks API Error: " . $e->getMessage());
-    jsonError('An error occurred: ' . $e->getMessage(), 500);
+    safeJsonError($e, 'An error occurred', 500);
 }
 
 // ─── List all endpoints ──────────────────────────────────────

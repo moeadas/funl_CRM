@@ -1,6 +1,6 @@
 <?php
 /**
- * Pinpoint CRM — Email Builder v2 (page shell)
+ * FUNL CRM — Email Builder v2 (page shell)
  *
  * Loads campaign or template JSON from the DB and hands it to
  * the front-end EmailBuilder module (assets/js/email-builder.js).

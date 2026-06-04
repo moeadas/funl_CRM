@@ -1,5 +1,5 @@
 /**
- * Victory Genomics CRM - VoIP Softphone (Twilio Voice SDK 2.x)
+ * FUNL CRM - VoIP Softphone (Twilio Voice SDK 2.x)
  * 
  * CALL FLOW (simple, single path):
  *   1. Log call in CRM → get call_id

@@ -37,7 +37,7 @@ class TwilioHelper {
         $this->whatsappFromNumber = $dbSettings['whatsapp_from_number']  ?? getenv('WHATSAPP_FROM_NUMBER')  ?: '';
         $this->apiKey             = $dbSettings['twilio_api_key']        ?? getenv('TWILIO_API_KEY')        ?: '';
         $this->apiSecret          = $dbSettings['twilio_api_secret']     ?? getenv('TWILIO_API_SECRET')     ?: '';
-        $this->appUrl             = $dbSettings['app_url']               ?? getenv('APP_URL')               ?: 'https://crm.victorygenomics.com';
+        $this->appUrl             = $dbSettings['app_url']               ?? getenv('APP_URL')               ?: 'https://crm.funl.online';
         $this->voipEnabled        = ($dbSettings['voip_enabled'] ?? getenv('VOIP_ENABLED') ?: '1') === '1';
         $this->voipRecordingEnabled = ($dbSettings['voip_recording_enabled'] ?? getenv('VOIP_RECORDING_ENABLED') ?: '0') === '1';
 

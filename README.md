@@ -1,6 +1,6 @@
 # White Label CRM 📊
 
-A fully white-labelable Customer Relationship Management system that can be rebranded and resold to any client. Previously built as Victory Genomics CRM, now generalized for any business vertical.
+A fully white-labelable Customer Relationship Management system that can be rebranded and resold to any client. Previously built as FUNL CRM, now generalized for any business vertical.
 
 ## 🚀 Quick Start
 

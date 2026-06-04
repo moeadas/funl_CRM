@@ -1,6 +1,6 @@
 <?php
 /**
- * Pinpoint CRM — Email Campaign Report (with Delivery Stats)
+ * FUNL CRM — Email Campaign Report (with Delivery Stats)
  */
 require_once '../includes/auth.php';
 require_once '../includes/functions.php';

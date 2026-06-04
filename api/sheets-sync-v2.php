@@ -283,7 +283,7 @@ function fetchCsv($url) {
             'timeout'       => 30,
             'follow_location' => 1,
             'max_redirects' => 5,
-            'header'        => "User-Agent: VictoryGenomicsCRM/1.0\r\n",
+            'header'        => "User-Agent: FUNL CRM/1.0\r\n",
         ],
         'ssl' => [
             'verify_peer' => true,
@@ -301,7 +301,7 @@ function fetchCsv($url) {
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS      => 5,
                 CURLOPT_TIMEOUT        => 30,
-                CURLOPT_USERAGENT      => 'VictoryGenomicsCRM/1.0',
+                CURLOPT_USERAGENT      => 'FUNL CRM/1.0',
                 CURLOPT_SSL_VERIFYPEER => true,
             ]);
             $data = curl_exec($ch);

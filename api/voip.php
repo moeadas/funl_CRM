@@ -136,7 +136,7 @@ function getVoiceToken() {
         ]);
     } catch (Exception $e) {
         error_log("VoIP token error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Could not generate token: ' . $e->getMessage()]);
+        safeJsonError($e, 'Could not generate token: ', 500);
     }
 }
 
@@ -194,7 +194,7 @@ function initiateCall() {
         ]);
     } catch (Exception $e) {
         error_log("VoIP call error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Failed to initiate call: ' . $e->getMessage()]);
+        safeJsonError($e, 'Failed to initiate call: ', 500);
     }
 }
 
@@ -273,15 +273,18 @@ function serverSideCall() {
             'message'   => 'Call initiated via Twilio',
         ]);
     } catch (Exception $e) {
+        // M-6: log full error server-side, return safe message to client
         error_log("Server-side call error: " . $e->getMessage());
 
-        // Provide helpful error for trial accounts
-        $errMsg = $e->getMessage();
-        if (stripos($errMsg, 'not verified') !== false || stripos($errMsg, 'trial') !== false || $e->getCode() == 21219) {
+        // Provide helpful error for KNOWN Twilio error patterns; fall back to generic
+        $errMsg = 'Could not initiate call. Please check the number and try again.';
+        $fullMsg = $e->getMessage();
+        if (stripos($fullMsg, 'not verified') !== false || stripos($fullMsg, 'trial') !== false || $e->getCode() == 21219) {
             $errMsg = 'Twilio trial accounts can only call verified numbers. Please verify this number in your Twilio Console > Verified Caller IDs.';
-        }
-        if (stripos($errMsg, 'VoIP is disabled') !== false) {
+        } elseif (stripos($fullMsg, 'VoIP is disabled') !== false) {
             $errMsg = 'VoIP is disabled. Enable it in Settings > VoIP & WhatsApp.';
+        } elseif (stripos($fullMsg, 'unauthorized') !== false || stripos($fullMsg, 'authenticate') !== false) {
+            $errMsg = 'Twilio credentials are invalid. Update them in Settings > VoIP & WhatsApp.';
         }
 
         echo json_encode(['success' => false, 'message' => $errMsg]);
@@ -345,7 +348,7 @@ function endCall() {
 
         echo json_encode(['success' => true, 'message' => 'Call ended']);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -398,7 +401,7 @@ function logCallOutcome() {
 
         echo json_encode(['success' => true, 'message' => 'Call logged']);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -452,7 +455,7 @@ function getCallHistory() {
 
         echo json_encode(['success' => true, 'data' => $calls, 'total' => $total]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -490,7 +493,7 @@ function getCallStats() {
 
         echo json_encode(['success' => true, 'data' => $stats]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -760,7 +763,7 @@ function pollCallStatus() {
 
         echo json_encode(['success' => true, 'data' => $call]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }
 
@@ -840,7 +843,7 @@ function configureWebhooks() {
         ]);
     } catch (Exception $e) {
         error_log("Configure webhooks error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Failed: ' . $e->getMessage()]);
+        safeJsonError($e, 'Failed: ', 500);
     }
 }
 
@@ -915,6 +918,6 @@ function checkWebhooks() {
         $result['healthy'] = empty($result['issues']);
         echo json_encode($result);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
 }

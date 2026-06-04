@@ -115,7 +115,7 @@ try {
     $_SESSION['success'] = "Microsoft Office 365 connected successfully! Email: $userEmail";
 } catch (Exception $e) {
     error_log("OAuth token storage error: " . $e->getMessage());
-    $_SESSION['error'] = "Connected to Microsoft but failed to save tokens: " . $e->getMessage();
+    $_SESSION['error'] = "Connected to Microsoft but failed to save tokens. Please contact support if this persists. (ref: " . substr(md5($e->getMessage()), 0, 8) . ")";
 }
 
 header('Location: /pages/profile.php');

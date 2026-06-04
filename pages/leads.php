@@ -556,7 +556,7 @@ function getPriorityClass(priority) {
 function moveLeadToContact(leadId, e) {
     if (e) e.stopPropagation();
     showConfirm('Convert this lead to a Contact? The lead status will be set to "Won".', function() {
-        fetch('/api/move-lead-to-contact.php', {
+        fetch('/api/leads.php?action=move_to_contact', {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },

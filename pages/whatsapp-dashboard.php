@@ -940,14 +940,26 @@ async function submitCreateTemplate() {
 
 // ─── Delete Template ───
 async function deleteTemplate(contentSid, templateName) {
-    if (!confirm('Are you sure you want to delete the template "' + templateName + '"?\n\nThis will permanently remove it from Twilio and Meta/WhatsApp. This action cannot be undone.')) {
-        return;
-    }
+    // M-1 fix: use showConfirm (in-app modal) instead of raw confirm() which
+    // was being silently blocked.
+    const proceed = await new Promise((resolve) => {
+        showConfirm(
+            'Are you sure you want to delete the template "' + templateName + '"?\n\nThis will permanently remove it from Twilio and Meta/WhatsApp. This action cannot be undone.',
+            function() { resolve(true); },
+            function() { resolve(false); }
+        );
+    });
+    if (!proceed) return;
 
     // Second confirmation for extra safety
-    if (!confirm('Final confirmation: Delete "' + templateName + '" (SID: ' + contentSid + ')?\n\nClick OK to permanently delete.')) {
-        return;
-    }
+    const finalConfirm = await new Promise((resolve) => {
+        showConfirm(
+            'Final confirmation: Delete "' + templateName + '" (SID: ' + contentSid + ')?\n\nClick OK to permanently delete.',
+            function() { resolve(true); },
+            function() { resolve(false); }
+        );
+    });
+    if (!finalConfirm) return;
 
     // Find and disable the delete button
     var buttons = document.querySelectorAll('#templates-container button');

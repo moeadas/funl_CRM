@@ -339,10 +339,11 @@ function processLead($db, $incomingData, $fieldMapping, $leadDefaults, $assigned
     } catch (\Exception $e) {
         error_log("Webhook lead insert error: " . $e->getMessage());
         logWebhook($db, $endpointId, null, 'error', json_encode($incomingData), $e->getMessage(), $clientIp);
+        // M-6: log full error server-side, return generic to the webhook caller
         return [
             'success' => false,
             'status' => 'error',
-            'message' => 'Failed to create lead: ' . $e->getMessage(),
+            'message' => 'Failed to create lead',
         ];
     }
 }

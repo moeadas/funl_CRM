@@ -343,6 +343,27 @@ function jsonError($message, $code = 400) {
 }
 
 /**
+ * M-6 fix: log the real exception details server-side and return a generic
+ * message + an error_id the user can quote to support. Prevents SQL/schema
+ * internals from leaking to API clients.
+ *
+ * Usage:
+ *   try { ... } catch (Exception $e) { safeJsonError($e, 'Could not save lead'); }
+ */
+function safeJsonError(\Throwable $e, string $userMessage = 'An error occurred', int $code = 500) {
+    $errorId = 'err_' . bin2hex(random_bytes(6));
+    error_log("[$errorId] safeJsonError: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n" . $e->getTraceAsString());
+    header('Content-Type: application/json');
+    http_response_code($code);
+    echo json_encode([
+        'success' => false,
+        'message' => $userMessage . ' (ref: ' . $errorId . ')',
+        'error_id' => $errorId
+    ]);
+    exit;
+}
+
+/**
  * Validate required fields
  */
 function validateRequired($data, $requiredFields) {

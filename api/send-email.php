@@ -73,7 +73,7 @@ try {
     $db = Database::getInstance();
     $user = $db->findOne('users', ['user_id' => $userId]);
 } catch (Exception $e) {
-    jsonError('Error loading user settings: ' . $e->getMessage(), 500);
+    safeJsonError($e, 'Error loading user settings:', 500);
 }
 
 // Get lead info
@@ -117,7 +117,7 @@ if (!empty($msAccessToken) && !empty($msRefreshToken)) {
             jsonError('Failed to send email: ' . $result, 500);
         }
     } catch (Exception $e) {
-        jsonError('Error sending email: ' . $e->getMessage(), 500);
+        safeJsonError($e, 'Error sending email:', 500);
     }
 } else {
     // ===== SMTP FALLBACK =====
@@ -143,7 +143,7 @@ if (!empty($msAccessToken) && !empty($msRefreshToken)) {
             jsonError('Failed to send email: ' . $result, 500);
         }
     } catch (Exception $e) {
-        jsonError('Error sending email: ' . $e->getMessage(), 500);
+        safeJsonError($e, 'Error sending email:', 500);
     }
 }
 
@@ -171,7 +171,7 @@ try {
     ]);
 } catch (Exception $e) {
     // Email was sent but logging failed
-    jsonSuccess('Email sent successfully (but logging failed: ' . $e->getMessage() . ')', []);
+    jsonSuccess('Email sent successfully', []);
 }
 
 
@@ -392,7 +392,7 @@ function sendSmtpEmail($host, $port, $fromEmail, $password, $encryption, $toEmai
     $headers .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=" . $crlf;
     $headers .= "Message-ID: $messageId" . $crlf;
     $headers .= "MIME-Version: 1.0" . $crlf;
-    $headers .= "X-Mailer: VictoryGenomicsCRM/2.0" . $crlf;
+    $headers .= "X-Mailer: FUNL CRM/2.0" . $crlf;
 
     $plainBody = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>'], "\n", $body));
     $htmlBody = '<html><body style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">'

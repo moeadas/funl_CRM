@@ -1,5 +1,5 @@
 /**
- * Victory Genomics CRM — Main JavaScript (Vanilla, no jQuery)
+ * FUNL CRM — Main JavaScript (Vanilla, no jQuery)
  */
 
 // Override native browser dialogs to keep notifications in-app
@@ -7,9 +7,13 @@ window.alert = function (message) {
     showNotification(message, 'warning');
 };
 
+// M-1 fix: legacy code uses `if (!confirm(...)) return;` synchronously.
+// Returning false (the previous behavior) made destructive actions silently
+// no-op. We now log the prompt and return true so existing code proceeds;
+// new code should use showConfirm() for the in-app modal flow.
 window.confirm = function (message) {
-    console.warn("Blocked native confirm dialog: " + message);
-    return false;
+    console.warn("Native confirm() called; using legacy pass-through. Prefer showConfirm() for new code. Message: " + message);
+    return true;
 };
 
 document.addEventListener('DOMContentLoaded', function () {

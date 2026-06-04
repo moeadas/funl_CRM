@@ -107,7 +107,7 @@ DROP PROCEDURE IF EXISTS AddColumnSafely;
 
 -- 3. Create a default company and assign existing records to it
 INSERT INTO `companies` (`company_id`, `company_name`, `company_slug`, `email`, `status`, `subscription_status`, `plan_id`, `plan_user_limit`) 
-VALUES (1, 'Victory Genomics', 'victory', 'admin@victorygenomics.com', 'active', 'active', 'enterprise', 999)
+VALUES (1, 'FUNL Demo', 'funl', 'admin@funl.online', 'active', 'active', 'enterprise', 999)
 ON DUPLICATE KEY UPDATE `company_name` = `company_name`;
 
 UPDATE `users` SET `company_id` = 1, `is_super_admin` = 1, `email_verified` = 1 WHERE `company_id` IS NULL;

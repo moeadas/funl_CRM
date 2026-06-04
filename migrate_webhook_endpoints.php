@@ -7,7 +7,7 @@
  * that can push leads into the CRM via a secure API endpoint.
  *
  * Run once:  php migrate_webhook_endpoints.php
- * Or visit:  https://crm.victorygenomics.com/migrate_webhook_endpoints.php
+ * Or visit:  https://crm.funl.online/migrate_webhook_endpoints.php
  */
 
 require_once __DIR__ . '/config/database.php';

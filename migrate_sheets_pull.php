@@ -7,7 +7,7 @@
  * 3. Expand lead_source enum with Facebook, Instagram, Google Ads
  *
  * Run once:  php migrate_sheets_pull.php
- * Or visit:  https://crm.victorygenomics.com/migrate_sheets_pull.php
+ * Or visit:  https://crm.funl.online/migrate_sheets_pull.php
  */
 
 require_once __DIR__ . '/config/database.php';
@@ -63,7 +63,7 @@ if ($success) {
     // Show the cron secret for reference
     $secret = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'sheets_cron_secret'")->fetchColumn();
     echo "\nCron sync URL (set up in SiteGround Cron Jobs):\n";
-    echo "  curl -s \"https://crm.victorygenomics.com/api/cron-sync.php?secret=$secret\"\n";
+    echo "  curl -s \"https://crm.funl.online/api/cron-sync.php?secret=$secret\"\n";
     echo "\nRecommended schedule: every 5-10 minutes.\n";
 } else {
     echo "\nMigration completed with errors. Check messages above.\n";

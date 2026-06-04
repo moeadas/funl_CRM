@@ -1,5 +1,5 @@
 /**
- * Pinpoint CRM — Email Builder v2
+ * FUNL CRM — Email Builder v2
  * Production-grade visual email editor
  * - SortableJS-only DnD (palette clones, canvas/columns receive)
  * - Single source of truth: design JSON → canvas AND email-safe HTML

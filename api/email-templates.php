@@ -126,6 +126,6 @@ try {
             jsonError('Unknown action: ' . $action);
     }
 } catch (Exception $e) {
-    jsonError($e->getMessage(), 500);
+    safeJsonError($e, 'Operation failed', 500);
 }
 ?>

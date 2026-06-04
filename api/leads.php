@@ -39,7 +39,7 @@ try {
     }
 } catch (Exception $e) {
     error_log("Leads API Error: " . $e->getMessage() . " | Trace: " . $e->getTraceAsString());
-    jsonError('An error occurred: ' . $e->getMessage(), 500);
+    safeJsonError($e, 'An error occurred', 500);
 }
 
 function handleGetRequest($db, $action, $currentUser) {

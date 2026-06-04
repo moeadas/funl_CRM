@@ -1,5 +1,5 @@
 /**
- * Victory Genomics CRM — WhatsApp Chat Panel
+ * FUNL CRM — WhatsApp Chat Panel
  * Slide-out chat UI for messaging leads
  * Supports Twilio Content Templates for business-initiated messages
  */

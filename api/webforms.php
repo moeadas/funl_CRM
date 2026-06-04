@@ -1,6 +1,6 @@
 <?php
 /**
- * Pinpoint CRM — Web Forms API with Field Mapping
+ * FUNL CRM — Web Forms API with Field Mapping
  */
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
@@ -129,7 +129,7 @@ if ($action === 'save' && $method === 'POST') {
         
     } catch (Exception $e) {
         $pdo->rollBack();
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
     exit;
 }
@@ -157,7 +157,7 @@ if ($action === 'delete' && $method === 'POST') {
         echo json_encode(['success' => true, 'message' => 'Form deleted']);
     } catch (Exception $e) {
         $pdo->rollBack();
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        safeJsonError($e, 'Operation failed', 500);
     }
     exit;
 }
