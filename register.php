@@ -25,6 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // H-1 mitigation: rate-limit public signups by IP. 5 per hour per IP.
     if ($_POST['action'] === 'register_company') {
+        // H-1 honeypot: real users don't see/fill the hidden website_url field.
+        // If it's non-empty, treat as a bot and silently fake success.
+        if (!empty($_POST['website_url'])) {
+            error_log('register honeypot triggered from IP ' . ($_SERVER['REMOTE_ADDR'] ?? '?'));
+            $_SESSION['success'] = 'Account created! Check your email to verify.';
+            header('Location: /register.php');
+            exit;
+        }
+
         $rateDir = sys_get_temp_dir() . '/wlrm_rate';
         if (!is_dir($rateDir)) @mkdir($rateDir, 0755, true);
         $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -592,6 +601,11 @@ if (!$selectedPlan && !empty($plans)) {
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                     <input type="hidden" name="action" value="register_company">
                     <input type="hidden" name="plan" id="selectedPlan" value="<?php echo htmlspecialchars($defaultPlan); ?>">
+                    <!-- H-1 honeypot: real users won't fill this; bots usually do. -->
+                    <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+                        <label>Leave this field empty</label>
+                        <input type="text" name="website_url" tabindex="-1" autocomplete="off" value="">
+                    </div>
 
                     <div class="form-grid">
                         <div class="form-group">

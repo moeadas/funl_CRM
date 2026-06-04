@@ -54,16 +54,31 @@
 
 ### Step 3: Import Database Schema
 
+> ⚠️ **Important:** For multi-tenant SaaS deployment, use the **SaaS multi-tenant** schema — **not** `schema.sql` (which is the legacy single-tenant schema and will break per-company `settings` isolation).
+
 1. **Access phpMyAdmin**
    - Go to Site Tools → MySQL → phpMyAdmin
    - Select your database from the left sidebar
 
-2. **Import Schema**
+2. **Import the SaaS Multi-Tenant Schema**
    - Click "Import" tab
    - Click "Choose File"
-   - Select `database/schema.sql`
+   - Select **`database/apply_saas_mysql.sql`** (this creates the `companies` table, adds `company_id` to all shared tables, and sets up composite `UNIQUE(company_id, setting_key)` so per-tenant settings don't collide)
    - Click "Go" at the bottom
    - Wait for success message
+
+3. **(Optional) Apply incremental migrations** — only if upgrading from a much older version:
+   - `database/migrate-v2-email-safe.sql`
+   - `database/migrate-v4-user-smtp.sql`
+   - `database/migrate-v5-oauth2.sql`
+   - `database/migrate-v6-region-nullable.sql`
+   - `database/migrate-v7-nullable-fields.sql`
+   - `database/migrate-v8-profile-name.sql`
+   - `database/migrate-v9-add-lead-columns.sql`
+   - `database/migrate-v10-add-indexes.sql`
+   - `database/migrate-v11-contact-status.sql`
+
+4. **Immediately rotate the seeded admin password** (see H-8 below) — the default `admin / Admin@123` (or the bcrypt hash in the seed) is a known credential if the install guide is followed literally.
 
 ### Step 4: Configure Database Connection
 
@@ -75,7 +90,7 @@
 2. **Update Database Credentials**
    ```php
    define('DB_HOST', 'localhost');
-   define('DB_NAME', 'victory_genomics_crm');  // Your database name
+   define('DB_NAME', 'funl_crm');               // Your database name
    define('DB_USER', 'your_db_username');      // Your database user
    define('DB_PASS', 'your_db_password');      // Your database password
    ```

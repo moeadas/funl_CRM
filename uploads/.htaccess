@@ -1,5 +1,7 @@
-\u003cFilesMatch "\.(php|phtml|phps|php3|php4|php5|php7|phar)$"\u003e
+# Disable PHP execution and any CGI in the uploads directory
+<FilesMatch "\.(php|phtml|phps|php3|php4|php5|php7|phar)$">
     Require all denied
-\u003c/FilesMatch\u003e
+</FilesMatch>
 Options -ExecCGI
 AddHandler cgi-script .php .phtml .pl .py .jsp .asp .sh .cgi
+php_flag engine off

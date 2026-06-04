@@ -39,6 +39,18 @@ if (count($attempts) >= 10) {
 $attempts[] = $now;
 @file_put_contents($rateFile, json_encode(array_values($attempts)));
 
+// H-3 honeypot: legitimate form owners add a hidden <input name="website_url">.
+// If it's filled in, the request is from a bot - silently fake success.
+if (!empty($_POST['website_url'])) {
+    error_log('form-submit honeypot triggered from IP ' . ($_SERVER['REMOTE_ADDR'] ?? '?'));
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'message' => 'Thank you! Your submission has been received.',
+    ]);
+    exit;
+}
+
 $db = Database::getInstance();
 
 $input = json_decode(file_get_contents('php://input'), true);

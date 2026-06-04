@@ -44,6 +44,8 @@ function requireLogin() {
         header('Location: /login.php');
         exit;
     }
+    // H-8: enforce password change for flagged users (skips super admins)
+    requireNoPasswordChange();
 }
 
 /**
@@ -151,6 +153,37 @@ function requireEmailVerified(): void {
 }
 
 /**
+ * H-8 fix: force a password change for users flagged with must_change_password.
+ * Skips for super admins (they manage the system, not a tenant).
+ * Sends the user to /pages/profile.php?must_change=1, where the change-password
+ * form is the only thing allowed until the password is rotated.
+ */
+function requireNoPasswordChange(): void {
+    if (isSuperAdmin()) return;
+    if (empty($_SESSION['must_change_password'])) return;
+    // Allow the change-password page itself + logout endpoints
+    $allowed = [
+        '/pages/profile.php',
+        '/logout.php',
+    ];
+    $current = $_SERVER['REQUEST_URI'] ?? '';
+    $path = parse_url($current, PHP_URL_PATH) ?? '';
+    foreach ($allowed as $a) {
+        if (strpos($path, $a) !== false) return;
+    }
+    if (isApiRequest()) {
+        http_response_code(403);
+        die(json_encode([
+            'success' => false,
+            'message' => 'You must change your password before continuing.',
+            'redirect' => '/pages/profile.php?must_change=1',
+        ]));
+    }
+    header('Location: /pages/profile.php?must_change=1');
+    exit;
+}
+
+/**
  * Authenticate user with rate limiting
  */
 function authenticateUser($username, $password) {
@@ -163,7 +196,7 @@ function authenticateUser($username, $password) {
     $db = Database::getInstance()->getConnection();
 
     $stmt = $db->prepare("
-        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified, language
+        SELECT user_id, username, email, password_hash, full_name, role, status, company_id, is_super_admin, email_verified, language, must_change_password
         FROM users 
         WHERE (username = :username OR email = :email) AND status = 'Active'
     ");
@@ -192,6 +225,9 @@ function authenticateUser($username, $password) {
         if (!empty($user['company_id'])) {
             $_SESSION['company_id'] = $user['company_id'];
         }
+
+        // H-8: flag forced password change (set by admin or by seed default-cred migration)
+        $_SESSION['must_change_password'] = !empty($user['must_change_password']);
 
         logActivity($user['user_id'], 'Login', 'System', null, 'User logged in');
         return true;
@@ -271,14 +307,20 @@ function getCurrentUser() {
 
 /**
  * Sanitize input
+ *
+ * M-5 fix: previously used strip_tags() which silently mangles legitimate
+ * content like "price < 100" (becomes "price  100"). Output is already
+ * escaped with htmlspecialchars() at render time, so storage only needs
+ * to normalize whitespace.
  */
 function sanitizeInput($data) {
     if (is_array($data)) {
         return array_map('sanitizeInput', $data);
     }
-    // Only strip tags and trim — DO NOT apply htmlspecialchars here
-    // htmlspecialchars should only be used on OUTPUT, not on storage
-    return strip_tags(trim($data));
+    // Trim + collapse runs of whitespace; never modify the characters.
+    // htmlspecialchars() must be applied at OUTPUT time, not storage.
+    if ($data === null) return '';
+    return trim(preg_replace('/\s+/', ' ', (string)$data));
 }
 
 /**

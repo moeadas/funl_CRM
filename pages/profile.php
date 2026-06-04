@@ -26,6 +26,12 @@ if (!$user) {
     die("User not found");
 }
 
+// H-8: if the user was forced to change their password, surface a banner above the page
+$forcePasswordChange = !empty($_GET['must_change']) && !empty($_SESSION['must_change_password']);
+if ($forcePasswordChange) {
+    $error = 'You must change your password before continuing to use the system. Please set a new password below.';
+}
+
 // Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requireCSRF();
@@ -92,7 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $newHash = password_hash($newPass, PASSWORD_BCRYPT);
-                $db->update('users', ['password_hash' => $newHash], ['user_id' => $userId]);
+                $db->update('users', [
+                    'password_hash' => $newHash,
+                    'must_change_password' => 0,  // H-8: clear the force-change flag
+                ], ['user_id' => $userId]);
+                $_SESSION['must_change_password'] = false;
                 $success = 'Password changed successfully!';
                 logActivity($userId, 'Change Password', 'User', $userId, 'Changed account password');
             } catch (Exception $e) {

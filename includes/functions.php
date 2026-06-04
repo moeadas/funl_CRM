@@ -5,26 +5,29 @@
 
 // Load branding from settings
 function getSetting($key, $default = '') {
-    static $settings = null;
-    if ($settings === null) {
+    // M-8 fix: cache is keyed by the (company_id, impersonation state) tuple so
+    // a switch-user mid-request (or any tenant change) gets a fresh load.
+    // Previously the static was per-request, so an admin impersonating a tenant
+    // would see the admin's settings for the rest of the request.
+    $companyId = $_SESSION['company_id'] ?? null;
+    $impersonating = !empty($_SESSION['impersonate_original_user_id']);
+    $cacheKey = ($companyId ?? 'global') . '|' . ($impersonating ? '1' : '0');
+    static $cache = [];   // [cacheKey => [key => value]]
+    if (!isset($cache[$cacheKey])) {
         try {
             $db = Database::getInstance()->getConnection();
-            $companyId = $_SESSION['company_id'] ?? null;
             if ($companyId) {
-                // Load company specific settings or global fallback settings
-                // We order by company_id ASC so company-specific values overwrite global fallback values
                 $stmt = $db->prepare("SELECT setting_key, setting_value FROM settings WHERE company_id = ? OR company_id IS NULL ORDER BY company_id ASC");
                 $stmt->execute([$companyId]);
-                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             } else {
                 $stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL");
-                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             }
+            $cache[$cacheKey] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         } catch (Exception $e) {
-            $settings = [];
+            $cache[$cacheKey] = [];
         }
     }
-    return $settings[$key] ?? $default;
+    return $cache[$cacheKey][$key] ?? $default;
 }
 
 // Alias for backward compatibility
@@ -458,8 +461,16 @@ function encryptToken(string $plaintext, ?string $key = null) {
         $key = getenv('APP_ENCRYPTION_KEY');
     }
     if (empty($key)) {
-        error_log('encryptToken: No encryption key configured');
-        return base64_encode($plaintext); // Fallback (not encrypted!)
+        // H-5: when FUNL_STRICT_SECRETS=true, refuse to silently base64-encode secrets
+        $strict = filter_var(getenv('FUNL_STRICT_SECRETS'), FILTER_VALIDATE_BOOLEAN);
+        if ($strict) {
+            throw new \RuntimeException(
+                'APP_ENCRYPTION_KEY is not set but FUNL_STRICT_SECRETS=true. ' .
+                'Refusing to store secrets in reversible base64. Set APP_ENCRYPTION_KEY in .env.'
+            );
+        }
+        error_log('encryptToken: No encryption key configured (set FUNL_STRICT_SECRETS=true to hard-fail)');
+        return base64_encode($plaintext); // Fallback (not encrypted!) — only for dev
     }
     
     if (extension_loaded('sodium')) {
@@ -479,7 +490,13 @@ function decryptToken(string $encrypted, ?string $key = null) {
         $key = getenv('APP_ENCRYPTION_KEY');
     }
     if (empty($key)) {
-        // Try base64 decode as fallback
+        // H-5: in strict mode, refuse to decode (the stored value would be base64 plaintext)
+        $strict = filter_var(getenv('FUNL_STRICT_SECRETS'), FILTER_VALIDATE_BOOLEAN);
+        if ($strict) {
+            error_log('decryptToken: APP_ENCRYPTION_KEY unset + FUNL_STRICT_SECRETS=true; refusing to decode base64-stored secret');
+            return '';
+        }
+        // Try base64 decode as fallback (legacy data written before APP_ENCRYPTION_KEY was set)
         $decoded = base64_decode($encrypted, true);
         return $decoded !== false ? $decoded : '';
     }

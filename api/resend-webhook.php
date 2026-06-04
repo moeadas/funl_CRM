@@ -51,9 +51,15 @@ if (!empty($webhookSecret)) {
     }
     $payload = $rawPayload;
 } else {
-    // No secret configured: log a warning so operators notice, but allow
-    // the webhook through for now (uncomment http_response_code(401) + exit
-    // to enforce strict verification in production).
+    // C-5: when FUNL_STRICT_SECRETS=true, refuse unsigned webhooks entirely.
+    // Otherwise (dev) log a warning and allow the request through.
+    $strict = filter_var(getenv('FUNL_STRICT_SECRETS'), FILTER_VALIDATE_BOOLEAN);
+    if ($strict) {
+        error_log('Resend webhook rejected: RESEND_WEBHOOK_SECRET unset + FUNL_STRICT_SECRETS=true');
+        http_response_code(503);
+        echo json_encode(['error' => 'Webhook not configured. Set RESEND_WEBHOOK_SECRET in .env.']);
+        exit;
+    }
     error_log('Resend webhook received with no RESEND_WEBHOOK_SECRET configured. Signature NOT verified.');
     $payload = file_get_contents('php://input');
 }
