@@ -338,8 +338,146 @@ try {
             ]);
             break;
             
+        // ── Create Checkout Session (for billing.php / 3DS flow) ───────────────
+        case 'create_checkout_session':
+            requireCSRF();
+            $planKey = $_POST['plan_key'] ?? '';
+            $billingCycle = $_POST['billing_cycle'] ?? 'monthly';
+            $returnUrl = $_POST['return_url'] ?? 'https://app.funl.online/pages/billing.php';
+            $companyId = (int)($_POST['company_id'] ?? 0);
+            
+            // Validate company context (tenant can only create session for own company)
+            if ($companyId !== (int)getCurrentCompanyId() && !isSuperAdmin()) {
+                echo json_encode(['success' => false, 'error' => 'Invalid company context']);
+                break;
+            }
+            
+            // Look up plan price
+            $plan = $db->query("SELECT * FROM plans WHERE plan_key = ? AND is_active = 1", [$planKey])->fetch(PDO::FETCH_ASSOC);
+            if (!$plan) {
+                echo json_encode(['success' => false, 'error' => 'Plan not found']);
+                break;
+            }
+            
+            $amount = ($billingCycle === 'yearly') ? (float)$plan['yearly_price'] : (float)$plan['monthly_price'];
+            $currency = 'USD';
+            $orderId = 'ORD-' . strtoupper(bin2hex(random_bytes(6))) . '-' . $companyId;
+            
+            // Create checkout session at NI Gateway
+            $result = niGatewayRequest('POST', '/session', [
+                'apiOperation' => 'CREATE_CHECKOUT_SESSION',
+                'session' => [
+                    'authenticationLimit' => 5,
+                    'transactionModes' => ['PAN_ENTRY', 'TOKEN'],
+                ],
+            ]);
+            
+            if (!$result['success']) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Failed to create checkout session',
+                    'gateway_error' => $result['data']['error']['explanation'] ?? 'Unknown error',
+                ]);
+                break;
+            }
+            
+            $niSessionId = $result['data']['session']['id'] ?? '';
+            $aesKey = $result['data']['session']['aes256Key'] ?? '';
+            
+            // Store order in payment_transactions for audit trail
+            $stmt = $db->prepare("INSERT INTO payment_transactions (company_id, order_id, ni_session_id, plan_key, amount, currency, billing_cycle, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
+            $stmt->execute([$companyId, $orderId, $niSessionId, $planKey, $amount, $currency, $billingCycle]);
+            $txnId = $db->lastInsertId();
+            $db->query("UPDATE payment_transactions SET aes_key = ? WHERE id = ?", [$aesKey, $txnId]);
+            
+            echo json_encode([
+                'success' => true,
+                'session_id' => $niSessionId,
+                'aes_key' => $aesKey,
+                'order_id' => $orderId,
+                'amount' => $amount,
+                'currency' => $currency,
+                'gateway_url' => getNIGatewaySettings()['ni_gateway_url'] ?? '',
+                'return_url' => $returnUrl . '?status=success&session_id=' . $niSessionId,
+            ]);
+            break;
+        
+        // ── Create Order + Redirect to hosted checkout ──────────────────────────
+        // billing.php calls this, we create the NI session and redirect to ni-payment.php
+        case 'create_order':
+            requireCSRF();
+            $planKey = $_POST['plan_key'] ?? $_GET['plan_key'] ?? '';
+            $billingCycle = $_POST['billing_cycle'] ?? $_GET['billing_cycle'] ?? 'monthly';
+            $companyId = (int)($_POST['company_id'] ?? $_GET['company_id'] ?? getCurrentCompanyId());
+            
+            if (!$planKey || !$companyId) {
+                if (isApiRequest()) {
+                    echo json_encode(['success' => false, 'error' => 'Missing plan_key or company_id']);
+                } else {
+                    header('Location: /pages/billing.php?error=missing_params');
+                }
+                exit;
+            }
+            
+            $plan = $db->query("SELECT * FROM plans WHERE plan_key = ? AND is_active = 1", [$planKey])->fetch(PDO::FETCH_ASSOC);
+            if (!$plan) {
+                if (isApiRequest()) {
+                    echo json_encode(['success' => false, 'error' => 'Plan not found']);
+                } else {
+                    header('Location: /pages/billing.php?error=plan_not_found');
+                }
+                exit;
+            }
+            
+            $amount = ($billingCycle === 'yearly') ? (float)$plan['yearly_price'] : (float)$plan['monthly_price'];
+            $orderId = 'ORD-' . strtoupper(bin2hex(random_bytes(6))) . '-' . $companyId;
+            
+            // Create checkout session at NI Gateway
+            $result = niGatewayRequest('POST', '/session', [
+                'apiOperation' => 'CREATE_CHECKOUT_SESSION',
+                'session' => [
+                    'authenticationLimit' => 5,
+                    'transactionModes' => ['PAN_ENTRY', 'TOKEN'],
+                ],
+            ]);
+            
+            if (!$result['success']) {
+                $err = $result['data']['error']['explanation'] ?? 'Failed to create checkout session';
+                if (isApiRequest()) {
+                    echo json_encode(['success' => false, 'error' => $err]);
+                } else {
+                    header('Location: /pages/billing.php?error=' . urlencode($err));
+                }
+                exit;
+            }
+            
+            $niSessionId = $result['data']['session']['id'] ?? '';
+            $aesKey = $result['data']['session']['aes256Key'] ?? '';
+            
+            // Store in payment_transactions
+            $stmt = $db->prepare("INSERT INTO payment_transactions (company_id, order_id, ni_session_id, plan_key, amount, currency, billing_cycle, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
+            $stmt->execute([$companyId, $orderId, $niSessionId, $planKey, $amount, 'USD', $billingCycle]);
+            $txnId = $db->lastInsertId();
+            $db->query("UPDATE payment_transactions SET aes_key = ? WHERE id = ?", [$aesKey, $txnId]);
+            
+            // Redirect to hosted checkout page
+            $returnUrl = urlencode('https://app.funl.online/pages/billing.php?status=success&session_id=' . $niSessionId);
+            $redirectUrl = 'https://app.funl.online/pages/ni-payment.php?session_id=' . urlencode($niSessionId) . '&order_id=' . urlencode($orderId) . '&return_url=' . $returnUrl;
+            
+            if (isApiRequest()) {
+                echo json_encode([
+                    'success' => true,
+                    'redirect' => $redirectUrl,
+                    'session_id' => $niSessionId,
+                    'order_id' => $orderId,
+                ]);
+            } else {
+                header('Location: ' . $redirectUrl);
+            }
+            exit;
+        
         default:
-            echo json_encode(['success' => false, 'error' => 'Invalid action. Use: create_session, verify_payment, get_session, health']);
+            echo json_encode(['success' => false, 'error' => 'Invalid action. Use: create_session, verify_payment, get_session, health, create_checkout_session, create_order']);
     }
 } catch (Exception $e) {
     safeJsonError($e, 'NI Gateway error: ');

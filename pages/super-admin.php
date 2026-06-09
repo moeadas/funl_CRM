@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $niApiPassword = encryptToken($niApiPasswordRaw);
             } else {
                 // Keep existing
-                $existingPw = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'ni_api_password' AND company_id IS NULL")->fetchColumn();
+                $existingPw = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'ni_api_password' AND company_id = 0")->fetchColumn();
                 if ($existingPw) $niApiPassword = $existingPw;
             }
             
@@ -161,11 +161,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 'ni_enabled' => $niEnabled,
             ];
             foreach ($updates as $k => $v) {
-                $existing = $db->query("SELECT setting_id FROM settings WHERE setting_key = ? AND company_id IS NULL", [$k])->fetch();
+                $existing = $db->query("SELECT setting_id FROM settings WHERE setting_key = ? AND company_id = 0", [$k])->fetch();
                 if ($existing) {
-                    $db->query("UPDATE settings SET setting_value = ? WHERE setting_key = ? AND company_id IS NULL", [$v, $k]);
+                    $db->query("UPDATE settings SET setting_value = ? WHERE setting_key = ? AND company_id = 0", [$v, $k]);
                 } else {
-                    $db->query("INSERT INTO settings (setting_key, setting_value, setting_type, company_id) VALUES (?, ?, 'text', NULL)", [$k, $v]);
+                    $db->query("INSERT INTO settings (setting_key, setting_value, setting_type, company_id) VALUES (?, ?, 'text', 0)", [$k, $v]);
                 }
             }
             $_SESSION['success'] = 'Platform settings saved.';
@@ -284,7 +284,7 @@ $plans = getActivePlans();
 
 // Load platform-level settings (support email, super admin email, etc.)
 $platformSettings = [];
-$psRows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id = 0 AND setting_key IN ('platform_support_email','platform_super_admin_email','marketing_url','site_name','ni_gateway_url','ni_merchant_id','ni_api_username','ni_api_password','ni_api_version','ni_enabled')")->fetchAll(PDO::FETCH_KEY_PAIR);
+$psRows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id = 0 AND setting_key IN ('platform_support_email','platform_super_admin_email','marketing_url','site_name','ni_gateway_url','ni_merchant_id','ni_api_username','ni_api_password','ni_api_version','ni_enabled','ni_webhook_secret')")->fetchAll(PDO::FETCH_KEY_PAIR);
 foreach ($psRows as $k => $v) $platformSettings[$k] = $v;
 
 // Load all super admins
@@ -495,6 +495,11 @@ include '../includes/header.php';
                     <label class="form-label"><?php echo __('API Password'); ?></label>
                     <input type="password" name="ni_api_password" class="form-control" value="" placeholder="Leave blank to keep current">
                     <small style="color:var(--color-text-muted);font-size:11px;">Stored encrypted. Leave blank to keep current.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Webhook Secret'); ?></label>
+                    <input type="text" name="ni_webhook_secret" class="form-control" value="<?php echo htmlspecialchars($platformSettings['ni_webhook_secret'] ?? ''); ?>" placeholder="Optional — for webhook signature verification">
+                    <small style="color:var(--color-text-muted);font-size:11px;">Used to verify NI Gateway webhook signatures. Get this from your NI dashboard.</small>
                 </div>
                 <div class="form-group" style="display:flex;align-items:flex-end;gap:8px;">
                     <button type="button" class="btn btn-outline" onclick="testNIGateway()" style="height:42px;">Test Connection</button>

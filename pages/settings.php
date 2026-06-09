@@ -196,6 +196,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="tab-link" data-tab="smtp" onclick="switchTab('smtp')"><?php echo htmlspecialchars(__('SMTP & Email')); ?></div>
         <div class="tab-link" data-tab="tracking" onclick="switchTab('tracking')"><?php echo htmlspecialchars(__('Pixels & Tracking')); ?></div>
         <div class="tab-link" data-tab="custom_fields" onclick="switchTab('custom_fields')"><?php echo htmlspecialchars(__('Custom Lead Fields')); ?></div>
+        <div class="tab-link" data-tab="subscription" onclick="switchTab('subscription')"><?php echo htmlspecialchars(__('Subscription')); ?></div>
     </div>
 
     <form method="POST" enctype="multipart/form-data" id="settingsForm">
@@ -463,6 +464,39 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
+        <!-- ── Subscription Tab ──────────────────────────────────────────── -->
+        <div class="tab-pane" id="pane-subscription">
+            <?php
+            $companySub = getCompany(getCurrentCompanyId());
+            $subBadge = $companySub['subscription_status'] ?? 'trial';
+            $badgeMap = ['active' => 'badge-active', 'trial' => 'badge-trial', 'past_due' => 'badge-past_due', 'cancelled' => 'badge-cancelled'];
+            $badgeClass = $badgeMap[$subBadge] ?? 'badge-cancelled';
+            ?>
+            <div style="padding: 40px 24px; text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 16px;">💳</div>
+                <h2 style="margin-bottom: 12px;">Your Subscription</h2>
+                <div style="margin-bottom: 20px;">
+                    <span class="badge <?= $badgeClass ?>" style="font-size:14px;padding:6px 16px;">
+                        <?= ucfirst($subBadge) ?>
+                    </span>
+                </div>
+                <p style="color:#666;margin-bottom:24px;">
+                    <?php if ($subBadge === 'active'): ?>
+                        Your plan is active. Manage billing, upgrade, or cancel below.
+                    <?php elseif ($subBadge === 'trial'): ?>
+                        You're on a trial period. Subscribe to keep your data.
+                    <?php elseif ($subBadge === 'past_due'): ?>
+                        Payment failed. Please update your payment method.
+                    <?php else: ?>
+                        Subscription cancelled. Resubscribe to restore access.
+                    <?php endif; ?>
+                </p>
+                <a href="/pages/billing.php" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:#667eea;color:white;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;">
+                    Manage Subscription →
+                </a>
+            </div>
+        </div>
+        
         <!-- Submit Button Panel -->
         <div style="margin-top:24px;display:flex;justify-content:flex-end;" id="settingsSubmitBtn">
             <button type="submit" class="btn btn-primary btn-lg"><?php echo htmlspecialchars(__('Save Settings')); ?></button>
