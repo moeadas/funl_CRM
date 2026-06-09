@@ -128,11 +128,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $superAdminEmail = trim($_POST['super_admin_email'] ?? '');
             $marketingUrl = trim($_POST['marketing_url'] ?? '');
             $siteName = trim($_POST['site_name'] ?? '');
+            // NI Gateway settings
+            $niGatewayUrl = trim($_POST['ni_gateway_url'] ?? '');
+            $niMerchantId = trim($_POST['ni_merchant_id'] ?? '');
+            $niApiUsername = trim($_POST['ni_api_username'] ?? '');
+            $niApiPasswordRaw = $_POST['ni_api_password'] ?? '';
+            $niApiVersion = trim($_POST['ni_api_version'] ?? '100');
+            $niEnabled = isset($_POST['ni_enabled']) ? '1' : '0';
+            
+            // H-4 fix: encrypt NI password if provided (never store plaintext).
+            // If blank, preserve the existing stored value.
+            $niApiPassword = '';
+            if ($niApiPasswordRaw !== '') {
+                $niApiPassword = encryptToken($niApiPasswordRaw);
+            } else {
+                // Keep existing
+                $existingPw = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'ni_api_password' AND company_id IS NULL")->fetchColumn();
+                if ($existingPw) $niApiPassword = $existingPw;
+            }
+            
             $updates = [
                 'platform_support_email' => filter_var($supportEmail, FILTER_VALIDATE_EMAIL) ?: '',
                 'platform_super_admin_email' => filter_var($superAdminEmail, FILTER_VALIDATE_EMAIL) ?: '',
                 'marketing_url' => $marketingUrl,
                 'site_name' => $siteName,
+                // Network International Gateway settings
+                'ni_gateway_url' => $niGatewayUrl,
+                'ni_merchant_id' => $niMerchantId,
+                'ni_api_username' => $niApiUsername,
+                'ni_api_password' => $niApiPassword,
+                'ni_api_version' => $niApiVersion ?: '100',
+                'ni_enabled' => $niEnabled,
             ];
             foreach ($updates as $k => $v) {
                 $existing = $db->query("SELECT setting_id FROM settings WHERE setting_key = ? AND company_id IS NULL", [$k])->fetch();
@@ -258,7 +284,7 @@ $plans = getActivePlans();
 
 // Load platform-level settings (support email, super admin email, etc.)
 $platformSettings = [];
-$psRows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL AND setting_key IN ('platform_support_email','platform_super_admin_email','marketing_url','site_name')")->fetchAll(PDO::FETCH_KEY_PAIR);
+$psRows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL AND setting_key IN ('platform_support_email','platform_super_admin_email','marketing_url','site_name','ni_gateway_url','ni_merchant_id','ni_api_username','ni_api_password','ni_api_version','ni_enabled')")->fetchAll(PDO::FETCH_KEY_PAIR);
 foreach ($psRows as $k => $v) $platformSettings[$k] = $v;
 
 // Load all super admins
@@ -426,6 +452,62 @@ include '../includes/header.php';
         </div>
     </div>
 </div>
+
+
+
+<!-- Network International / Mastercard Gateway Settings -->
+<form method="POST" action="super-admin.php" style="margin-bottom:24px;">
+    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+    <input type="hidden" name="action" value="save_platform_settings">
+    <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <h3 class="card-title"><?php echo __('Payment Gateway (Network International)'); ?></h3>
+                <p style="font-size:12px;color:var(--color-text-muted);margin:4px 0 0;"><?php echo __('Mastercard Hosted Checkout for subscription payments.'); ?></p>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <label style="font-size:13px;color:var(--color-text-secondary);display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" name="ni_enabled" value="1" <?php echo ($platformSettings['ni_enabled'] ?? '0') === '1' ? 'checked' : ''; ?>>
+                    Enable NI Gateway
+                </label>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Gateway URL'); ?></label>
+                    <input type="url" name="ni_gateway_url" class="form-control" value="<?php echo htmlspecialchars($platformSettings['ni_gateway_url'] ?? 'https://test-network.mtf.gateway.mastercard.com/api'); ?>" placeholder="https://test-network.mtf.gateway.mastercard.com/api">
+                    <small style="color:var(--color-text-muted);font-size:11px;">Test: test-network.mtf | Live: gateway.mastercard.com</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('API Version'); ?></label>
+                    <input type="text" name="ni_api_version" class="form-control" value="<?php echo htmlspecialchars($platformSettings['ni_api_version'] ?? '100'); ?>" placeholder="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Merchant ID'); ?></label>
+                    <input type="text" name="ni_merchant_id" class="form-control" value="<?php echo htmlspecialchars($platformSettings['ni_merchant_id'] ?? ''); ?>" placeholder="test12122024">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('API Username'); ?></label>
+                    <input type="text" name="ni_api_username" class="form-control" value="<?php echo htmlspecialchars($platformSettings['ni_api_username'] ?? ''); ?>" placeholder="merchant.test12122024">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('API Password'); ?></label>
+                    <input type="password" name="ni_api_password" class="form-control" value="" placeholder="Leave blank to keep current">
+                    <small style="color:var(--color-text-muted);font-size:11px;">Stored encrypted. Leave blank to keep current.</small>
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;gap:8px;">
+                    <button type="button" class="btn btn-outline" onclick="testNIGateway()" style="height:42px;">Test Connection</button>
+                    <button type="submit" class="btn btn-primary" style="height:42px;">Save Gateway</button>
+                </div>
+            </div>
+            <div style="margin-top:16px;padding:12px 16px;background:#f0f9ff;border-radius:8px;font-size:13px;color:#0369a1;">
+                <strong>Test Credentials:</strong> Merchant: test12122024 | User: merchant.test12122024 | Pass: 0cb74bdcb05329641aa7bed1caff4e8a
+            </div>
+        </div>
+    </div>
+</form>
+
 
 <!-- Companies Table -->
 <div class="card">
@@ -633,4 +715,38 @@ function closeAddUserModal() {
 }
 </script>
 
+
+<script>
+function testNIGateway() {
+    const gatewayUrl = document.querySelector('[name="ni_gateway_url"]').value;
+    const merchantId = document.querySelector('[name="ni_merchant_id"]').value;
+    const apiUsername = document.querySelector('[name="ni_api_username"]').value;
+    
+    if (!merchantId || !apiUsername) {
+        alert('Please fill in Merchant ID and API Username first.');
+        return;
+    }
+    
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Testing...';
+    
+    fetch('/api/ni-checkout.php?action=health')
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = 'Test Connection';
+        if (data.configured) {
+            alert('\u2713 NI Gateway is configured and reachable.');
+        } else {
+            alert('\u2717 NI Gateway not configured or not reachable: ' + (data.error || 'Check credentials'));
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.textContent = 'Test Connection';
+        alert('Connection test failed: ' + err.message);
+    });
+}
+</script>
 <?php include '../includes/footer.php'; ?>
