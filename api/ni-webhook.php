@@ -18,6 +18,14 @@
  * https://test-gateway.mastercard.com/api/documentation/integrationGuidelines/
  */
 
+// Load config + functions for getNIGatewaySettings()
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Load NI Gateway helpers (getNIGatewaySettings, niGatewayRequest)
+require_once __DIR__ . '/ni-checkout-helpers.php';
+
 // =====================================================================
 // Security: Verify webhook authenticity
 // =====================================================================
@@ -90,7 +98,7 @@ switch ($eventType) {
         
         // Find the pending transaction by session ID
         $txn = $db->query(
-            "SELECT * FROM payment_transactions WHERE ni_session_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 1",
+            "SELECT * FROM payment_transactions WHERE session_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 1",
             [$sessionId]
         )->fetch(PDO::FETCH_ASSOC);
         
@@ -139,7 +147,7 @@ switch ($eventType) {
     case 'TRANSACTION_COMPLETED':
     case 'PAYMENT_COMPLETED': {
         $txn = $db->query(
-            "SELECT * FROM payment_transactions WHERE ni_session_id = ? ORDER BY id DESC LIMIT 1",
+            "SELECT * FROM payment_transactions WHERE session_id = ? ORDER BY id DESC LIMIT 1",
             [$sessionId]
         )->fetch(PDO::FETCH_ASSOC);
         
@@ -215,7 +223,7 @@ switch ($eventType) {
     case 'PAYMENT_FAILED':
     case 'TRANSACTION_DECLINED': {
         $txn = $db->query(
-            "SELECT * FROM payment_transactions WHERE ni_session_id = ? ORDER BY id DESC LIMIT 1",
+            "SELECT * FROM payment_transactions WHERE session_id = ? ORDER BY id DESC LIMIT 1",
             [$sessionId]
         )->fetch(PDO::FETCH_ASSOC);
         

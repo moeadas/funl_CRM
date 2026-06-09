@@ -260,9 +260,8 @@ function requireActiveSubscription(): void {
         $isLogin = strpos($current, '/login.php') !== false;
         $isRegister = strpos($current, '/register.php') !== false;
         
-        // Always allow: billing page, ni-payment (checkout), logout, profile, login, register
-        $isNiPayment = strpos($current, '/pages/ni-payment.php') !== false;
-        if ($isBilling || $isNiPayment || $isLogout || $isProfile || $isLogin || $isRegister) {
+        // Always allow: billing page, logout, profile, login, register
+        if ($isBilling || $isLogout || $isProfile || $isLogin || $isRegister) {
             return;
         }
         

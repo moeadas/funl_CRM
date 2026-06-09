@@ -13,6 +13,9 @@
  *   6. billing.php calls verify_payment to finalize
  */
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../api/ni-checkout-helpers.php';
+startSecureSession();
 requireLogin();
 require_once __DIR__ . '/../includes/company-functions.php';
 
