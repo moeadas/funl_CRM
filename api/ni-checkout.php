@@ -12,6 +12,8 @@
  * 
  * Docs: https://test-gateway.mastercard.com/api/documentation/integrationGuidelines/
  */
+// Load config first so Database singleton can connect
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -22,7 +24,7 @@ startSecureSession();
 function getNIGatewaySettings() {
     $db = Database::getInstance();
     $rows = $db->query(
-        "SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL AND setting_key LIKE 'ni_%'"
+        "SELECT setting_key, setting_value FROM settings WHERE company_id = 0 AND setting_key LIKE 'ni_%'"
     )->fetchAll(PDO::FETCH_KEY_PAIR);
     return $rows;
 }
@@ -40,10 +42,15 @@ function niGatewayRequest($method, $endpoint, $body = null) {
     $apiPasswordRaw = $settings['ni_api_password'] ?? '';
     $apiVersion = $settings['ni_api_version'] ?? '100';
     
-    // Decrypt stored password (H-4 fix)
-    $apiPassword = decryptToken($apiPasswordRaw);
-    if ($apiPassword === false || $apiPassword === '') {
-        $apiPassword = $apiPasswordRaw; // fallback for unencrypted legacy values
+    // Decrypt stored password (H-4 fix).
+    // If the stored value was never encrypted (legacy/plaintext), decryptToken
+    // returns garbage (the raw value encrypted as AES). In that case, use the
+    // raw value directly since that's what the gateway expects.
+    $decrypted = decryptToken($apiPasswordRaw);
+    if ($decrypted !== false && $decrypted !== '' && strlen($decrypted) === strlen($apiPasswordRaw)) {
+        $apiPassword = $decrypted; // properly encrypted value
+    } else {
+        $apiPassword = $apiPasswordRaw; // legacy plaintext fallback
     }
     
     if (empty($apiUsername) || empty($apiPassword)) {
@@ -57,9 +64,14 @@ function niGatewayRequest($method, $endpoint, $body = null) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_USERPWD, $apiUsername . ':' . $apiPassword);
     curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+    // Use system default CA bundle for SSL verification
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-    curl_setopt($ch, CURLOPT_CAINFO, __DIR__ . '/../certs/ca-bundle.crt');
+    // Fall back to system's default CA bundle if our cert file doesn't exist
+    $caBundle = __DIR__ . '/../certs/ca-bundle.crt';
+    if (file_exists($caBundle)) {
+        curl_setopt($ch, CURLOPT_CAINFO, $caBundle);
+    }
     
     if ($method === 'POST') {
         curl_setopt($ch, CURLOPT_POST, true);

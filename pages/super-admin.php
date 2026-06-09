@@ -284,7 +284,7 @@ $plans = getActivePlans();
 
 // Load platform-level settings (support email, super admin email, etc.)
 $platformSettings = [];
-$psRows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL AND setting_key IN ('platform_support_email','platform_super_admin_email','marketing_url','site_name','ni_gateway_url','ni_merchant_id','ni_api_username','ni_api_password','ni_api_version','ni_enabled')")->fetchAll(PDO::FETCH_KEY_PAIR);
+$psRows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id = 0 AND setting_key IN ('platform_support_email','platform_super_admin_email','marketing_url','site_name','ni_gateway_url','ni_merchant_id','ni_api_username','ni_api_password','ni_api_version','ni_enabled')")->fetchAll(PDO::FETCH_KEY_PAIR);
 foreach ($psRows as $k => $v) $platformSettings[$k] = $v;
 
 // Load all super admins
