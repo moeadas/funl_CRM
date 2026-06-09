@@ -189,6 +189,10 @@ function verifyEmailToken($token) {
             [$token]
         );
         
+        // Mark session as verified
+        if (!empty($_SESSION['user_id']) && $_SESSION['user_id'] == $verification['user_id']) {
+            $_SESSION['email_verified'] = true;
+        }
         return ['success' => true, 'message' => 'Email verified successfully!'];
         
     } catch (Exception $e) {

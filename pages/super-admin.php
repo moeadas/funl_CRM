@@ -534,10 +534,12 @@ include '../includes/header.php';
                 <?php foreach ($companies as $company): ?>
                 <tr>
                     <td>
-                        <strong><?php echo htmlspecialchars($company['company_name']); ?></strong>
+                        <a href="super-admin-company.php?id=<?= $company['company_id'] ?>" style="text-decoration:none;color:inherit;">
+                            <strong style="color:var(--color-primary);"><?= htmlspecialchars($company['company_name']) ?> ↗</strong>
+                        </a>
                         <div style="font-size:12px;color:var(--color-text-muted);">
-                            <?php echo htmlspecialchars($company['email']); ?>
-                            <?php if ($company['phone']): ?> &middot; <?php echo htmlspecialchars($company['phone']); endif; ?>
+                            <?= htmlspecialchars($company['email']) ?>
+                            <?php if ($company['phone']): ?> &middot; <?= htmlspecialchars($company['phone']) ?><?php endif; ?>
                         </div>
                     </td>
                     <td>
