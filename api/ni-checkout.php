@@ -328,12 +328,13 @@ try {
             
         // ── Health Check ─────────────────────────────────────────────────────
         case 'health':
-            $result = niGatewayRequest('GET', '/session/_health');
+            // Try to create a test session to verify connectivity + credentials
+            $result = niGatewayRequest('POST', '/session', ['apiOperation' => 'CREATE_CHECKOUT_SESSION']);
             echo json_encode([
                 'success' => $result['success'],
                 'configured' => !empty(getNIGatewaySettings()['ni_api_username']),
                 'settings' => !empty(getNIGatewaySettings()['ni_api_username']),
-                'gateway_response' => $result['data'] ?? null,
+                'gateway_result' => $result['success'] ? 'OK' : ($result['data']['error']['explanation'] ?? 'Unknown error'),
             ]);
             break;
             
