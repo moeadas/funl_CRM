@@ -71,13 +71,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $error = __('Please enter a valid email address.');
         } elseif (strlen($password) < 8) {
             $error = __('Password must be at least 8 characters.');
-        } elseif (function_exists('validatePasswordStrength') && !validatePasswordStrength($password)) {
-            // M-10 fix: enforce the same strength policy used elsewhere
-            // (upper + lower + number, min 8 chars). Earlier this only checked length.
-            $error = __('Password must include uppercase, lowercase, and a number.');
-        } elseif ($password !== $confirmPassword) {
+        } elseif (function_exists('validatePasswordStrength')) {
+            // validatePasswordStrength returns array of errors (empty if OK).
+            // BUGFIX: previously used !validatePasswordStrength() which is inverted
+            // (empty array is falsy, so !empty was true → wrong error always shown).
+            $pwErrors = validatePasswordStrength($password);
+            if (!empty($pwErrors)) {
+                // Show the specific reason(s) the password failed validation.
+                $error = implode(' ', $pwErrors);
+            }
+        }
+        if (empty($error) && $password !== $confirmPassword) {
             $error = __('Passwords do not match.');
-        } else {
+        }
+        if (empty($error)) {
             try {
                 $db = Database::getInstance();
 
@@ -857,15 +864,15 @@ if (!$selectedPlan && !empty($plans)) {
                 <div class="reg-fields">
                     <div class="reg-field reg-field-full">
                         <label for="company_name"><?= __('Company name') ?> *</label>
-                        <input type="text" id="company_name" name="company_name" placeholder="<?= __('Acme Inc.') ?>" required>
+                        <input type="text" id="company_name" name="company_name" placeholder="<?= __('Acme Inc.') ?>" required value="<?= htmlspecialchars($companyName ?? '') ?>">
                     </div>
                     <div class="reg-field">
                         <label for="full_name"><?= __('Your full name') ?> *</label>
-                        <input type="text" id="full_name" name="full_name" placeholder="<?= __('John Doe') ?>" required>
+                        <input type="text" id="full_name" name="full_name" placeholder="<?= __('John Doe') ?>" required value="<?= htmlspecialchars($fullName ?? '') ?>">
                     </div>
                     <div class="reg-field">
                         <label for="email"><?= __('Work email') ?> *</label>
-                        <input type="email" id="email" name="email" placeholder="<?= __('you@company.com') ?>" required>
+                        <input type="email" id="email" name="email" placeholder="<?= __('you@company.com') ?>" required value="<?= htmlspecialchars($email ?? '') ?>">
                     </div>
                     <div class="reg-field reg-field-full">
                         <label for="phone"><?= __('Phone') ?> <span style="color:var(--color-text-tertiary);"><?= __('(optional)') ?></span></label>
