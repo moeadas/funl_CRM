@@ -23,6 +23,12 @@ if ($token) {
     $success = $result['success'];
     $message = $result['message'];
     $state   = $success ? 'token_ok' : 'token_bad';
+    
+    // If successful verification and there's a pending subscription, redirect to billing
+    if ($success && !empty($_SESSION['pending_subscription'])) {
+        header('Location: /pages/billing.php?start_subscription=1');
+        exit;
+    }
 } elseif (isLoggedIn()) {
     // Logged in. If already verified, send them to the dashboard.
     if (!empty($_SESSION['email_verified'])) {

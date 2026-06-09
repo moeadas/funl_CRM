@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $fullName = sanitizeInput($_POST['full_name'] ?? '');
         $phone = sanitizeInput($_POST['phone'] ?? '');
         $planKey = sanitizeInput($_POST['plan'] ?? 'single');
+        $signupMode = sanitizeInput($_POST['signup_mode'] ?? 'trial');
 
         if (empty($companyName) || empty($email) || empty($password) || empty($fullName)) {
             $error = __('All fields are required.');
@@ -92,7 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             $plan = getPlan($planKey);
                             if (!$plan) $plan = getPlan('single');
 
-                    $trialEnds = date('Y-m-d H:i:s', strtotime('+14 days'));
+                    // signup_mode: 'trial' gives 14 days free; 'subscribe' requires immediate payment
+                    $isTrialMode = ($signupMode !== 'subscribe');
+                    $trialEnds = $isTrialMode ? date('Y-m-d H:i:s', strtotime('+14 days')) : null;
+                    $initialSubStatus = $isTrialMode ? 'trial' : 'pending_payment';
                     $companyId = $db->insert('companies', [
                         'company_name' => $companyName,
                         'company_slug' => $companySlug,
@@ -100,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         'phone' => $phone,
                         'status' => 'active',
                         'trial_ends_at' => $trialEnds,
-                        'subscription_status' => 'trial',
+                        'subscription_status' => $initialSubStatus,
                         'plan_id' => $planKey,
                         'plan_name' => $plan['plan_name'] ?? 'Single User',
                         'plan_user_limit' => $plan['user_limit'] ?? 1,
@@ -160,7 +164,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $_SESSION['company_id'] = $companyId;
                     $_SESSION['email_verified'] = false;
                     
-                    // Redirect to verification page instead of dashboard
+                    // If subscribe mode, store pending subscription for after email verification
+                    if ($signupMode === 'subscribe') {
+                        $_SESSION['pending_subscription'] = [
+                            'plan_key' => $planKey,
+                            'company_id' => $companyId,
+                            'user_id' => $userId,
+                        ];
+                    }
+                    
+                    // Redirect to verification page
                     header('Location: /verify-email.php');
                     exit;
                 }
@@ -425,6 +438,27 @@ if (!$selectedPlan && !empty($plans)) {
             font-size: 14.5px;
             margin-bottom: 32px;
         }
+        .plan-picker { margin-bottom: 20px; }
+        .plan-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        @media (max-width: 600px) { .plan-options { grid-template-columns: 1fr; } }
+        .plan-option { display: block; cursor: pointer; }
+        .plan-option input { display: none; }
+        .plan-option-content { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; transition: all .2s; text-align: center; }
+        .plan-option:hover .plan-option-content { border-color: #d97706; }
+        .plan-option input:checked + .plan-option-content { border-color: #d97706; background: #fef3c7; }
+        .plan-option-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+        .plan-option-meta { font-size: 11px; color: #888; }
+        .subscription-mode { margin-bottom: 20px; }
+        .mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        @media (max-width: 600px) { .mode-options { grid-template-columns: 1fr; } }
+        .mode-option { display: block; cursor: pointer; }
+        .mode-option input { display: none; }
+        .mode-option-content { padding: 16px; border: 2px solid #e0e0e0; border-radius: 8px; transition: all .2s; text-align: center; }
+        .mode-option:hover .mode-option-content { border-color: #d97706; }
+        .mode-option input:checked + .mode-option-content { border-color: #d97706; background: #fef3c7; }
+        .mode-option-icon { font-size: 24px; margin-bottom: 6px; }
+        .mode-option-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+        .mode-option-desc { font-size: 11px; color: #888; }
         .form-group {
             margin-bottom: 20px;
         }
@@ -607,6 +641,47 @@ if (!$selectedPlan && !empty($plans)) {
                         <input type="text" name="website_url" tabindex="-1" autocomplete="off" value="">
                     </div>
 
+                    <!-- Plan Picker (visible plan cards) -->
+                    <div class="plan-picker">
+                        <h3 style="font-size:14px;margin-bottom:12px;color:#666;"><?php echo __('Choose your plan'); ?></h3>
+                        <div class="plan-options">
+                            <?php foreach ($plans as $plan): ?>
+                            <label class="plan-option" data-plan="<?php echo htmlspecialchars($plan['plan_key']); ?>">
+                                <input type="radio" name="plan" value="<?php echo htmlspecialchars($plan['plan_key']); ?>" 
+                                    <?php echo ($plan['plan_key'] === $defaultPlan) ? 'checked' : ''; ?>
+                                    onchange="document.getElementById('selectedPlan').value=this.value;">
+                                <div class="plan-option-content">
+                                    <div class="plan-option-name"><?php echo htmlspecialchars($plan['plan_name']); ?></div>
+                                    <div class="plan-option-meta"><?php echo (int)$plan['user_limit']; ?> users · $<?php echo number_format($plan['monthly_price'], 0); ?>/mo</div>
+                                </div>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Subscription mode: Trial or Subscribe Now -->
+                    <div class="subscription-mode" style="margin-top:20px;">
+                        <h3 style="font-size:14px;margin-bottom:12px;color:#666;"><?php echo __('How do you want to start?'); ?></h3>
+                        <div class="mode-options">
+                            <label class="mode-option" id="mode-trial">
+                                <input type="radio" name="signup_mode" value="trial" checked onchange="updateSignupMode()">
+                                <div class="mode-option-content">
+                                    <div class="mode-option-icon">🎁</div>
+                                    <div class="mode-option-title"><?php echo __('Start Free Trial'); ?></div>
+                                    <div class="mode-option-desc">14 days · No credit card required</div>
+                                </div>
+                            </label>
+                            <label class="mode-option" id="mode-now">
+                                <input type="radio" name="signup_mode" value="subscribe" onchange="updateSignupMode()">
+                                <div class="mode-option-content">
+                                    <div class="mode-option-icon">💳</div>
+                                    <div class="mode-option-title"><?php echo __('Subscribe Now'); ?></div>
+                                    <div class="mode-option-desc">Pay today, full access immediately</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label"><?php echo __('Company Name'); ?> *</label>
@@ -634,7 +709,7 @@ if (!$selectedPlan && !empty($plans)) {
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-submit"><?php echo __('Start 14-Day Free Trial'); ?></button>
+                    <button type="submit" class="btn-submit" id="submitBtn"><?php echo __('Start 14-Day Free Trial'); ?></button>
                 </form>
 
                 <p class="form-footer">
@@ -644,6 +719,20 @@ if (!$selectedPlan && !empty($plans)) {
         </div>
     </div>
 </div>
+
+<script>
+function updateSignupMode() {
+    const mode = document.querySelector('input[name="signup_mode"]:checked').value;
+    const btn = document.getElementById('submitBtn');
+    if (mode === 'subscribe') {
+        btn.textContent = 'Continue to Payment';
+    } else {
+        btn.textContent = 'Start 14-Day Free Trial';
+    }
+}
+// Run on load
+updateSignupMode();
+</script>
 
 <!-- Footer -->
 <footer class="footer">
