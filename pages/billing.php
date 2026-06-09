@@ -14,6 +14,8 @@
  *   6. verify_payment activates subscription
  */
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+startSecureSession();
 requireLogin();
 require_once __DIR__ . '/../includes/company-functions.php';
 
@@ -32,6 +34,12 @@ $errorCode = $_GET['error_code'] ?? null;
 $errorMsg = $_GET['error_message'] ?? null;
 $suspended = $_GET['suspended'] ?? null;
 $expired = $_GET['expired'] ?? null;
+
+// Auto-detect expired trial
+if (!$expired && isset($company['subscription_status']) && $company['subscription_status'] === 'trial' 
+    && isset($company['trial_ends_at']) && strtotime($company['trial_ends_at']) < time()) {
+    $expired = '1';
+}
 
 // CSRF token for forms
 $csrfToken = generateCSRFToken();

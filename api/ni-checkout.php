@@ -16,18 +16,13 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/ni-checkout-helpers.php';
 
 header('Content-Type: application/json');
 startSecureSession();
 
 // Load NI gateway settings from platform-level settings
-function getNIGatewaySettings() {
-    $db = Database::getInstance();
-    $rows = $db->query(
-        "SELECT setting_key, setting_value FROM settings WHERE company_id = 0 AND setting_key LIKE 'ni_%'"
-    )->fetchAll(PDO::FETCH_KEY_PAIR);
-    return $rows;
-}
+
 
 /**
  * Make an authenticated request to the Network International Gateway.
@@ -111,7 +106,7 @@ function niGatewayRequest($method, $endpoint, $body = null) {
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // M-7: CSRF protection for state-changing operations
-if (in_array($action, ['create_session', 'process_payment', 'verify_payment'])) {
+if (in_array($action, ['create_session', 'process_payment', 'verify_payment', 'create_order', 'create_checkout_session'])) {
     $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     if (!verifyCSRFToken($token)) {
         echo json_encode(['success' => false, 'error' => 'Invalid CSRF token. Refresh and try again.']);
@@ -341,6 +336,7 @@ try {
         // ── Create Checkout Session (for billing.php / 3DS flow) ───────────────
         case 'create_checkout_session':
             requireCSRF();
+            $db = Database::getInstance();
             $planKey = $_POST['plan_key'] ?? '';
             $billingCycle = $_POST['billing_cycle'] ?? 'monthly';
             $returnUrl = $_POST['return_url'] ?? 'https://app.funl.online/pages/billing.php';
@@ -367,9 +363,7 @@ try {
             $result = niGatewayRequest('POST', '/session', [
                 'apiOperation' => 'CREATE_CHECKOUT_SESSION',
                 'session' => [
-                    'authenticationLimit' => 5,
-                    'transactionModes' => ['PAN_ENTRY', 'TOKEN'],
-                ],
+                    'authenticationLimit' => 5,                ],
             ]);
             
             if (!$result['success']) {
@@ -385,9 +379,9 @@ try {
             $aesKey = $result['data']['session']['aes256Key'] ?? '';
             
             // Store order in payment_transactions for audit trail
-            $stmt = $db->prepare("INSERT INTO payment_transactions (company_id, order_id, ni_session_id, plan_key, amount, currency, billing_cycle, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
+            $stmt = $db->prepare("INSERT INTO payment_transactions (company_id, order_id, session_id, plan_key, amount, currency, billing_cycle, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
             $stmt->execute([$companyId, $orderId, $niSessionId, $planKey, $amount, $currency, $billingCycle]);
-            $txnId = $db->lastInsertId();
+            $txnId = dbLastInsertId();
             $db->query("UPDATE payment_transactions SET aes_key = ? WHERE id = ?", [$aesKey, $txnId]);
             
             echo json_encode([
@@ -403,9 +397,10 @@ try {
             break;
         
         // ── Create Order + Redirect to hosted checkout ──────────────────────────
-        // billing.php calls this, we create the NI session and redirect to ni-payment.php
         case 'create_order':
+            try {
             requireCSRF();
+            $db = Database::getInstance();
             $planKey = $_POST['plan_key'] ?? $_GET['plan_key'] ?? '';
             $billingCycle = $_POST['billing_cycle'] ?? $_GET['billing_cycle'] ?? 'monthly';
             $companyId = (int)($_POST['company_id'] ?? $_GET['company_id'] ?? getCurrentCompanyId());
@@ -436,9 +431,7 @@ try {
             $result = niGatewayRequest('POST', '/session', [
                 'apiOperation' => 'CREATE_CHECKOUT_SESSION',
                 'session' => [
-                    'authenticationLimit' => 5,
-                    'transactionModes' => ['PAN_ENTRY', 'TOKEN'],
-                ],
+                    'authenticationLimit' => 5,                ],
             ]);
             
             if (!$result['success']) {
@@ -455,9 +448,9 @@ try {
             $aesKey = $result['data']['session']['aes256Key'] ?? '';
             
             // Store in payment_transactions
-            $stmt = $db->prepare("INSERT INTO payment_transactions (company_id, order_id, ni_session_id, plan_key, amount, currency, billing_cycle, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
+            $stmt = $db->prepare("INSERT INTO payment_transactions (company_id, order_id, session_id, plan_key, amount, currency, billing_cycle, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
             $stmt->execute([$companyId, $orderId, $niSessionId, $planKey, $amount, 'USD', $billingCycle]);
-            $txnId = $db->lastInsertId();
+            $txnId = dbLastInsertId();
             $db->query("UPDATE payment_transactions SET aes_key = ? WHERE id = ?", [$aesKey, $txnId]);
             
             // Redirect to hosted checkout page
@@ -475,6 +468,12 @@ try {
                 header('Location: ' . $redirectUrl);
             }
             exit;
+        
+            } catch (Exception $e) {
+                file_put_contents('/tmp/ni_error.txt', '[' . date('Y-m-d H:i:s') . '] create_order error: ' . $e->getMessage() . "\n", FILE_APPEND);
+                echo json_encode(['success' => false, 'error' => 'create_order failed: ' . $e->getMessage()]);
+                break;
+            }
         
         default:
             echo json_encode(['success' => false, 'error' => 'Invalid action. Use: create_session, verify_payment, get_session, health, create_checkout_session, create_order']);
