@@ -214,341 +214,462 @@ if (!$selectedPlan && !empty($plans)) {
     <title><?php echo __('Create Your Account'); ?> - <?php echo htmlspecialchars(getAppName()); ?></title>
     <link rel="icon" type="image/png" href="<?php echo getCompanyFavicon(); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
-        :root {
-            --color-primary: #dd2d4a;
-            --color-primary-dark: #9d1830;
-            --color-primary-light: #ff627d;
-            --color-grey: #999999;
-            --color-bg-light: #f8f9fb;
-            --color-border: #e8e8ef;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ───────────────────────────────────────────────
+           Modern Registration Page
+           App design tokens (matches /assets/css/style.css)
+           ─────────────────────────────────────────────── */
         body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--color-bg-light);
-            color: #1a1a2e;
-            line-height: 1.6;
+            background: #f5f5f7;
+            font-family: 'Inter', var(--font-family);
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Minimal Header */
-        .nav {
-            position: fixed;
+        /* Top nav */
+        .reg-nav {
+            position: sticky;
             top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            z-index: 100;
-            padding: 0 24px;
+            z-index: 50;
         }
-        .nav-inner {
-            max-width: 1140px;
+        .reg-nav-inner {
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 14px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 64px;
         }
-        .nav-logo {
+        .reg-nav-logo {
             display: flex;
             align-items: center;
             gap: 10px;
             font-weight: 700;
-            font-size: 18px;
-            color: var(--color-primary);
+            font-size: 17px;
+            color: var(--color-text);
             text-decoration: none;
         }
-        .nav-logo img { height: 32px; }
-        .nav-signin {
-            color: #4b5563;
+        .reg-nav-logo img { height: 30px; width: auto; }
+        .reg-nav-links { display: flex; align-items: center; gap: 20px; }
+        .reg-nav-link {
+            color: var(--color-text-secondary);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            transition: color 0.2s;
+            transition: color .2s;
         }
-        .nav-signin strong {
-            color: var(--color-primary);
+        .reg-nav-link:hover { color: var(--color-accent); }
+        .reg-nav-signin {
+            background: var(--color-accent);
+            color: white !important;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 600;
+            text-decoration: none;
+            transition: all .2s;
         }
-        .nav-signin:hover {
-            color: var(--color-primary-dark);
+        .reg-nav-signin:hover { background: var(--color-accent-hover); transform: translateY(-1px); }
+
+        /* Layout */
+        .reg-container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+        .reg-header { text-align: center; margin-bottom: 32px; }
+        .reg-header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--color-text);
+            margin-bottom: 8px;
+        }
+        .reg-header p {
+            color: var(--color-text-secondary);
+            font-size: 17px;
+        }
+        .reg-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .reg-layout { grid-template-columns: 1fr; gap: 24px; }
+            .reg-summary { position: relative !important; top: 0 !important; }
         }
 
-        /* Split Layout Container */
-        .checkout-container {
-            max-width: 1140px;
-            margin: 100px auto 60px;
-            padding: 0 24px;
-        }
-        .checkout-split {
-            display: flex;
-            gap: 48px;
-            align-items: flex-start;
-        }
-
-        /* Left Side: Summary */
-        .checkout-summary {
-            flex: 0 0 42%;
-            position: sticky;
-            top: 100px;
-        }
-        .summary-card {
-            background: #ffffff;
+        /* Card base */
+        .reg-card {
+            background: var(--color-surface);
             border: 1px solid var(--color-border);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--shadow-xs);
         }
-        .summary-badge {
-            display: inline-block;
-            background: rgba(221, 45, 74, 0.08);
-            color: var(--color-primary);
-            padding: 4px 12px;
-            border-radius: 50px;
+
+        /* ── Left: Plan Summary Card ─────────────────── */
+        .reg-summary { position: sticky; top: 80px; }
+        .reg-summary-label {
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 16px;
+            letter-spacing: 0.08em;
+            color: var(--color-accent);
+            margin-bottom: 8px;
         }
-        .summary-card h2 {
-            font-size: 24px;
+        .reg-plan-name {
+            font-size: 28px;
             font-weight: 800;
-            color: #111827;
-            margin-bottom: 6px;
-            letter-spacing: -0.01em;
-        }
-        .summary-desc {
-            font-size: 14px;
-            color: var(--color-grey);
-            margin-bottom: 24px;
-            line-height: 1.4;
-        }
-        .summary-price {
-            display: flex;
-            align-items: baseline;
+            letter-spacing: -0.02em;
+            color: var(--color-text);
+            line-height: 1.1;
             margin-bottom: 4px;
         }
-        .summary-price .currency {
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-        }
-        .summary-price .amount {
-            font-size: 40px;
-            font-weight: 800;
-            color: var(--color-primary);
-            letter-spacing: -0.02em;
-        }
-        .summary-price .period {
+        .reg-plan-desc {
             font-size: 14px;
-            font-weight: 500;
-            color: var(--color-grey);
-            margin-left: 4px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
-        .billing-note {
-            font-size: 13px;
-            color: var(--color-grey);
-            margin-bottom: 24px;
+        .reg-plan-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .reg-plan-price {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--color-text);
+            line-height: 1;
+        }
+        .reg-plan-period {
+            font-size: 15px;
+            color: var(--color-text-secondary);
             font-weight: 500;
         }
-        .yearly-comparison {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 12px;
+        .reg-plan-billing-note {
             font-size: 13px;
-            color: #475569;
+            color: var(--color-text-secondary);
+            margin-bottom: 20px;
+        }
+        .reg-plan-save {
+            background: linear-gradient(135deg, #e8f4fd 0%, #f0e8fd 100%);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #1d4d80;
             line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
         }
-        .summary-divider {
+        .reg-plan-save strong { color: #0d3a6e; }
+
+        .reg-divider {
             border: none;
             border-top: 1px solid var(--color-border);
-            margin: 24px 0;
+            margin: 22px 0;
         }
-        .summary-features {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .summary-features li {
-            font-size: 13.5px;
-            color: #4b5563;
-            padding: 8px 0;
+
+        .reg-features { list-style: none; padding: 0; margin: 0; }
+        .reg-features li {
             display: flex;
             align-items: center;
             gap: 10px;
+            padding: 7px 0;
+            font-size: 14px;
+            color: var(--color-text);
         }
-        .summary-features li::before {
-            content: "✓";
-            color: var(--color-primary);
-            font-weight: bold;
+        .reg-features li svg {
             flex-shrink: 0;
+            color: var(--color-success);
         }
-        .trust-list {
-            margin-top: 8px;
+
+        .reg-trust {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        .trust-item {
+        .reg-trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 13px;
-            color: #6b7280;
+            color: var(--color-text-secondary);
+        }
+        .reg-trust-item svg { color: var(--color-text-tertiary); flex-shrink: 0; }
+
+        /* ── Right: Form Card ───────────────────────── */
+        .reg-form-card { padding: 36px 32px; }
+        .reg-form-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
+        }
+        .reg-form-subtitle {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* Plan picker */
+        .reg-section-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 0 0 10px;
+        }
+        .reg-plan-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+        .reg-plan-card {
+            display: block;
+            cursor: pointer;
+            position: relative;
+        }
+        .reg-plan-card input { position: absolute; opacity: 0; pointer-events: none; }
+        .reg-plan-card-inner {
+            border: 1.5px solid var(--color-border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            transition: all .15s ease;
+            background: var(--color-surface);
+        }
+        .reg-plan-card:hover .reg-plan-card-inner {
+            border-color: #c4c4c8;
+        }
+        .reg-plan-card input:checked + .reg-plan-card-inner {
+            border-color: var(--color-accent);
+            background: var(--color-accent-bg);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.08);
+        }
+        .reg-plan-card input:checked + .reg-plan-card-inner .reg-plan-check {
+            opacity: 1;
+        }
+        .reg-plan-card-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: 2px;
+        }
+        .reg-plan-card-meta {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+        .reg-plan-check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            color: var(--color-accent);
+            transition: opacity .15s;
+        }
+
+        /* Mode toggle */
+        .reg-mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 26px;
+        }
+        .reg-mode-card {
+            display: block;
+            cursor: pointer;
+            position: relative;
+        }
+        .reg-mode-card input { position: absolute; opacity: 0; pointer-events: none; }
+        .reg-mode-card-inner {
+            border: 1.5px solid var(--color-border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all .15s ease;
+            background: var(--color-surface);
+        }
+        .reg-mode-card:hover .reg-mode-card-inner {
+            border-color: #c4c4c8;
+        }
+        .reg-mode-card input:checked + .reg-mode-card-inner {
+            border-color: var(--color-accent);
+            background: var(--color-accent-bg);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.08);
+        }
+        .reg-mode-card-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 0;
+            margin-bottom: 4px;
         }
-        .trust-item .icon {
-            font-size: 16px;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: var(--color-grey);
-            text-decoration: none;
-            font-size: 13.5px;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        .back-link:hover {
-            color: var(--color-primary);
-        }
-
-        /* Right Side: Form */
-        .checkout-form-wrap {
-            flex: 0 0 58%;
-        }
-        .form-card {
-            background: #ffffff;
-            border: 1px solid var(--color-border);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-        }
-        .form-card h2 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
-        }
-        .form-card .subtitle {
-            color: var(--color-grey);
-            font-size: 14.5px;
-            margin-bottom: 32px;
-        }
-        .plan-picker { margin-bottom: 20px; }
-        .plan-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        @media (max-width: 600px) { .plan-options { grid-template-columns: 1fr; } }
-        .plan-option { display: block; cursor: pointer; }
-        .plan-option input { display: none; }
-        .plan-option-content { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; transition: all .2s; text-align: center; }
-        .plan-option:hover .plan-option-content { border-color: #d97706; }
-        .plan-option input:checked + .plan-option-content { border-color: #d97706; background: #fef3c7; }
-        .plan-option-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-        .plan-option-meta { font-size: 11px; color: #888; }
-        .subscription-mode { margin-bottom: 20px; }
-        .mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        @media (max-width: 600px) { .mode-options { grid-template-columns: 1fr; } }
-        .mode-option { display: block; cursor: pointer; }
-        .mode-option input { display: none; }
-        .mode-option-content { padding: 16px; border: 2px solid #e0e0e0; border-radius: 8px; transition: all .2s; text-align: center; }
-        .mode-option:hover .mode-option-content { border-color: #d97706; }
-        .mode-option input:checked + .mode-option-content { border-color: #d97706; background: #fef3c7; }
-        .mode-option-icon { font-size: 24px; margin-bottom: 6px; }
-        .mode-option-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
-        .mode-option-desc { font-size: 11px; color: #888; }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 6px;
-        }
-        .form-control {
-            width: 100%;
-            height: 44px;
-            padding: 0 14px;
-            border: 1.5px solid #e5e7eb;
+        .reg-mode-icon {
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
-            font-size: 14.5px;
-            transition: all 0.2s;
-            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-accent-bg);
+            color: var(--color-accent);
         }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(221, 45, 74, 0.1);
+        .reg-mode-card input:checked + .reg-mode-card-inner .reg-mode-icon {
+            background: var(--color-accent);
+            color: white;
         }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .btn-submit {
-            width: 100%;
-            height: 48px;
-            background: var(--color-primary);
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+        .reg-mode-title {
+            font-size: 14px;
             font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 10px;
-            box-shadow: 0 4px 14px rgba(221, 45, 74, 0.25);
+            color: var(--color-text);
         }
-        .btn-submit:hover {
-            background: var(--color-primary-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(221, 45, 74, 0.35);
-        }
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-        .form-footer {
-            text-align: center;
-            margin-top: 24px;
-            font-size: 13px;
-            color: var(--color-grey);
+        .reg-mode-desc {
+            font-size: 12.5px;
+            color: var(--color-text-secondary);
             line-height: 1.4;
         }
 
-        /* Footer minimal */
-        .footer {
-            border-top: 1px solid var(--color-border);
-            padding: 30px 24px;
-            text-align: center;
+        /* Form fields */
+        .reg-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .reg-fields { grid-template-columns: 1fr; }
+        }
+        .reg-field-full { grid-column: 1 / -1; }
+        .reg-field label {
+            display: block;
             font-size: 13px;
-            color: var(--color-grey);
-            background: #ffffff;
-            margin-top: 60px;
+            font-weight: 500;
+            color: var(--color-text);
+            margin-bottom: 6px;
+        }
+        .reg-field input {
+            width: 100%;
+            height: 42px;
+            padding: 0 14px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 14.5px;
+            font-family: inherit;
+            color: var(--color-text);
+            background: var(--color-surface);
+            transition: all .15s ease;
+        }
+        .reg-field input::placeholder { color: var(--color-text-tertiary); }
+        .reg-field input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
         }
 
-        @media (max-width: 900px) {
-            .checkout-split {
-                flex-direction: column;
-                gap: 32px;
-            }
-            .checkout-summary {
-                flex: 1 1 100%;
-                width: 100%;
-                position: relative;
-                top: 0;
-            }
-            .checkout-form-wrap {
-                flex: 1 1 100%;
-                width: 100%;
-            }
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
+        /* Submit button */
+        .reg-submit {
+            display: block;
+            width: 100%;
+            height: 50px;
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15.5px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .2s ease;
+            margin-top: 28px;
+            box-shadow: 0 4px 14px rgba(0, 113, 227, 0.25);
+        }
+        .reg-submit:hover {
+            background: var(--color-accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 113, 227, 0.32);
+        }
+        .reg-submit:active { transform: translateY(0); }
+        .reg-submit:disabled { background: #a0a0a0; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .reg-form-footer {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 12.5px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+        .reg-form-footer a { color: var(--color-accent); text-decoration: none; }
+
+        .reg-alert {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .reg-alert-info {
+            background: var(--color-accent-bg);
+            border: 1px solid rgba(0, 113, 227, 0.2);
+            color: #0c4a8a;
+            padding: 14px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 24px;
+            max-width: 1200px;
+            margin: 24px auto 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .reg-alert-info a {
+            background: var(--color-accent);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 13px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        /* Sign-in link for already-logged-in */
+        .reg-redirect {
+            background: var(--color-accent-bg);
+            border: 1px solid rgba(0, 113, 227, 0.15);
+            color: #0c4a8a;
+            padding: 14px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 24px;
+            max-width: 1080px;
+            margin: 0 auto 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .reg-redirect strong { font-weight: 600; }
+        .reg-redirect a {
+            background: var(--color-accent);
+            color: white;
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 13px;
+            margin-left: auto;
+            flex-shrink: 0;
         }
     </style>
     <?php echo getSetting('tracking_head_code'); ?>
@@ -557,187 +678,296 @@ if (!$selectedPlan && !empty($plans)) {
 <?php echo getSetting('tracking_body_code'); ?>
 <?php require_once __DIR__ . '/includes/preloader.php'; ?>
 
-<!-- Navigation -->
-<nav class="nav">
-    <div class="nav-inner">
-        <a href="https://funl.online" class="nav-logo">
+<!-- Sticky Nav -->
+<nav class="reg-nav">
+    <div class="reg-nav-inner">
+        <a href="https://funl.online" class="reg-nav-logo">
             <img src="<?php echo getCompanyLogo(); ?>" alt="<?php echo htmlspecialchars(getAppName()); ?>">
             <span><?php echo htmlspecialchars(getAppName()); ?></span>
         </a>
-        <a href="/login.php" class="nav-signin"><?php echo __('Already have an account?'); ?> <strong><?php echo __('Sign In'); ?></strong></a>
+        <div class="reg-nav-links">
+            <a href="/login.php" class="reg-nav-link"><?php echo __('Already have an account?'); ?></a>
+            <a href="/login.php" class="reg-nav-signin"><?php echo __('Sign In'); ?></a>
+        </div>
     </div>
 </nav>
 
 <?php if (isLoggedIn()): ?>
-    <div style="max-width: 1140px; margin: 90px auto -60px; padding: 14px 20px; background: #fff8eb; border: 1px solid #ffe8cc; border-radius: 10px; color: #b45309; font-size: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.03); z-index: 50; position: relative;">
-        <span>👋 <?php echo sprintf(__('You are currently signed in as %s. You can view this page for testing, or return to your dashboard.'), '<strong>' . htmlspecialchars($_SESSION['full_name'] ?? 'Administrator') . '</strong>'); ?></span>
-        <a href="/pages/dashboard.php" style="background: #d97706; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 12px; margin-left: 16px;"><?php echo __('Go to Dashboard'); ?></a>
+    <div class="reg-redirect">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+        <span><?php echo sprintf(__('You are signed in as %s.'), '<strong>' . htmlspecialchars($_SESSION['full_name'] ?? 'Administrator') . '</strong>'); ?></span>
+        <a href="/pages/dashboard.php"><?php echo __('Go to Dashboard'); ?></a>
     </div>
 <?php endif; ?>
 
-<div class="checkout-container">
-    <div class="checkout-split">
-        <!-- Left Column: Selected Plan Overview -->
-        <div class="checkout-summary">
-            <div class="summary-card">
-                <div class="summary-badge"><?php echo __('Chosen Plan'); ?></div>
-                <h2><?php echo sprintf(__('%s Plan'), htmlspecialchars($selectedPlan['plan_name'])); ?></h2>
-                <p class="summary-desc"><?php echo htmlspecialchars($selectedPlan['description'] ?? ''); ?></p>
-                
-                <div class="summary-price">
-                    <span class="currency">$</span>
-                    <span class="amount"><?php echo number_format($selectedPlan['monthly_price'], 0); ?></span>
-                    <span class="period"><?php echo __('/month'); ?></span>
+<div class="reg-container">
+    <div class="reg-header">
+        <h1><?php echo __('Create your account'); ?></h1>
+        <p><?php echo __('Start your free trial in less than a minute. No credit card required.'); ?></p>
+    </div>
+
+    <div class="reg-layout">
+        <!-- ── Left: Plan Summary ─────────────────── -->
+        <aside class="reg-summary">
+            <div class="reg-card">
+                <div class="reg-summary-label"><?php echo __('Your plan'); ?></div>
+                <div class="reg-plan-name" id="summary-name">
+                    <?= htmlspecialchars($selectedPlan['plan_name']) ?>
                 </div>
-                <p class="billing-note"><?php echo __('Billed monthly after your 14-day free trial'); ?></p>
-                
-                <div class="yearly-comparison">
-                    💡 <?php echo sprintf(__('Save with yearly billing at %s (2 months free!)'), '<strong>$' . number_format($selectedPlan['yearly_price'] ?? $selectedPlan['monthly_price'] * 10, 0) . '/' . __('year') . '</strong>'); ?>
+                <div class="reg-plan-desc" id="summary-desc">
+                    <?= htmlspecialchars($selectedPlan['description'] ?? '') ?>
                 </div>
-                
-                <hr class="summary-divider">
-                
-                <ul class="summary-features">
-                    <li><?php echo sprintf(__('Up to %s'), '<strong>' . $selectedPlan['user_limit'] . '</strong> ' . ($selectedPlan['user_limit'] > 1 ? __('users') : __('user'))); ?></li>
-                    <li><?php echo __('Unlimited leads & contacts'); ?></li>
-                    <li><?php echo __('Lead pipeline management'); ?></li>
-                    <li><?php echo __('Email campaigns tool'); ?></li>
-                    <li><?php echo __('Task & interaction tracking'); ?></li>
-                    <li><?php echo __('Mobile-ready sales dashboard'); ?></li>
-                    <?php if ($selectedPlan['extra_user_price'] > 0): ?>
-                    <li><?php echo sprintf(__('Extra users at %s'), '$' . number_format($selectedPlan['extra_user_price'], 0) . '/' . __('user')); ?></li>
-                    <?php endif; ?>
+
+                <div class="reg-plan-price-row">
+                    <span class="reg-plan-price" id="summary-price">$<?= number_format($selectedPlan['monthly_price'], 0) ?></span>
+                    <span class="reg-plan-period">/<?= __('month') ?></span>
+                </div>
+                <div class="reg-plan-billing-note" id="summary-billing-note">
+                    <?= __('Billed monthly after your 14-day free trial') ?>
+                </div>
+
+                <div class="reg-plan-save" id="summary-save">
+                    💡 <?= sprintf(__('Save with yearly billing — %s (2 months free)'), '<strong>$' . number_format($selectedPlan['yearly_price'] ?? $selectedPlan['monthly_price'] * 10, 0) . '/' . __('year') . '</strong>') ?>
+                </div>
+
+                <hr class="reg-divider">
+
+                <ul class="reg-features" id="summary-features">
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span id="summary-users"><?= sprintf(__('Up to %d users'), (int)$selectedPlan['user_limit']) ?></span>
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <?= __('Unlimited leads & contacts') ?>
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <?= __('Lead pipeline & deal management') ?>
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <?= __('Email campaigns & automation') ?>
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <?= __('Tasks & interaction tracking') ?>
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <?= __('Mobile-ready sales dashboard') ?>
+                    </li>
+                    <li id="summary-extra-user" <?= ($selectedPlan['extra_user_price'] <= 0) ? 'style="display:none"' : '' ?>>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span id="summary-extra-text"><?= sprintf(__('Extra users at %s/user'), '$' . number_format($selectedPlan['extra_user_price'], 0)) ?></span>
+                    </li>
                 </ul>
-                
-                <hr class="summary-divider">
-                
-                <div class="trust-list">
-                    <div class="trust-item"><span class="icon">⚡</span> <?php echo __('Setup in 60 seconds'); ?></div>
-                    <div class="trust-item"><span class="icon">🎁</span> <?php echo __('14-day full-access trial'); ?></div>
-                    <div class="trust-item"><span class="icon">💳</span> <?php echo __('No credit card required'); ?></div>
+
+                <hr class="reg-divider">
+
+                <div class="reg-trust">
+                    <div class="reg-trust-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        <?= __('Setup in 60 seconds') ?>
+                    </div>
+                    <div class="reg-trust-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+                        <?= __('14-day full-access free trial') ?>
+                    </div>
+                    <div class="reg-trust-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg>
+                        <?= __('No credit card required for trial') ?>
+                    </div>
                 </div>
             </div>
-            
-            <a href="https://funl.online" class="back-link">← <?php echo __('Back to Marketing Site'); ?></a>
-        </div>
-        
-        <!-- Right Column: Sign-Up Form -->
-        <div class="checkout-form-wrap">
-            <div class="form-card">
-                <h2><?php echo __('Create your account'); ?></h2>
-                <p class="subtitle"><?php echo __('Set up your sales CRM dashboard instantly.'); ?></p>
+        </aside>
 
-                <?php if ($error): ?>
-                    <div class="alert alert-error" style="margin-bottom:20px;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:14px;"><?php echo htmlspecialchars($error); ?></div>
-                <?php endif; ?>
+        <!-- ── Right: Form ────────────────────────── -->
+        <main class="reg-card reg-form-card">
+            <h2 class="reg-form-title"><?= __('Sign up details') ?></h2>
+            <p class="reg-form-subtitle"><?= __('Choose a plan, then tell us about your company.') ?></p>
 
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                    <input type="hidden" name="action" value="register_company">
-                    <input type="hidden" name="plan" id="selectedPlan" value="<?php echo htmlspecialchars($defaultPlan); ?>">
-                    <!-- H-1 honeypot: real users won't fill this; bots usually do. -->
-                    <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
-                        <label>Leave this field empty</label>
-                        <input type="text" name="website_url" tabindex="-1" autocomplete="off" value="">
-                    </div>
+            <?php if ($error): ?>
+                <div class="reg-alert"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
 
-                    <!-- Plan Picker (visible plan cards) -->
-                    <div class="plan-picker">
-                        <h3 style="font-size:14px;margin-bottom:12px;color:#666;"><?php echo __('Choose your plan'); ?></h3>
-                        <div class="plan-options">
-                            <?php foreach ($plans as $plan): ?>
-                            <label class="plan-option" data-plan="<?php echo htmlspecialchars($plan['plan_key']); ?>">
-                                <input type="radio" name="plan" value="<?php echo htmlspecialchars($plan['plan_key']); ?>" 
-                                    <?php echo ($plan['plan_key'] === $defaultPlan) ? 'checked' : ''; ?>
-                                    onchange="document.getElementById('selectedPlan').value=this.value;">
-                                <div class="plan-option-content">
-                                    <div class="plan-option-name"><?php echo htmlspecialchars($plan['plan_name']); ?></div>
-                                    <div class="plan-option-meta"><?php echo (int)$plan['user_limit']; ?> users · $<?php echo number_format($plan['monthly_price'], 0); ?>/mo</div>
+            <form method="POST" id="signupForm">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
+                <input type="hidden" name="action" value="register_company">
+                <input type="hidden" name="plan" id="selectedPlan" value="<?= htmlspecialchars($defaultPlan) ?>">
+                <!-- H-1 honeypot -->
+                <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+                    <label>Leave this field empty</label>
+                    <input type="text" name="website_url" tabindex="-1" autocomplete="off" value="">
+                </div>
+
+                <!-- Plan Picker -->
+                <h3 class="reg-section-label"><?= __('1. Choose your plan') ?></h3>
+                <div class="reg-plan-grid">
+                    <?php foreach ($plans as $plan): ?>
+                    <label class="reg-plan-card" data-plan-key="<?= htmlspecialchars($plan['plan_key']) ?>"
+                        data-name="<?= htmlspecialchars($plan['plan_name']) ?>"
+                        data-desc="<?= htmlspecialchars($plan['description'] ?? '') ?>"
+                        data-monthly="<?= number_format($plan['monthly_price'], 2, '.', '') ?>"
+                        data-yearly="<?= number_format($plan['yearly_price'] ?? $plan['monthly_price'] * 10, 0) ?>"
+                        data-users="<?= (int)$plan['user_limit'] ?>"
+                        data-extra="<?= number_format($plan['extra_user_price'] ?? 0, 2, '.', '') ?>">
+                        <input type="radio" name="plan_radio" value="<?= htmlspecialchars($plan['plan_key']) ?>"
+                            <?= ($plan['plan_key'] === $defaultPlan) ? 'checked' : '' ?>>
+                        <div class="reg-plan-card-inner">
+                            <svg class="reg-plan-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <div class="reg-plan-card-name"><?= htmlspecialchars($plan['plan_name']) ?></div>
+                            <div class="reg-plan-card-meta"><?= (int)$plan['user_limit'] ?> users · $<?= number_format($plan['monthly_price'], 0) ?>/mo</div>
+                        </div>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Subscription mode -->
+                <h3 class="reg-section-label"><?= __('2. How do you want to start?') ?></h3>
+                <div class="reg-mode-grid">
+                    <label class="reg-mode-card" id="mode-trial-label">
+                        <input type="radio" name="signup_mode" value="trial" checked>
+                        <div class="reg-mode-card-inner">
+                            <div class="reg-mode-card-header">
+                                <div class="reg-mode-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
                                 </div>
-                            </label>
-                            <?php endforeach; ?>
+                                <div class="reg-mode-title"><?= __('Free Trial') ?></div>
+                            </div>
+                            <div class="reg-mode-desc">14 days · <?= __('No credit card required') ?></div>
                         </div>
-                    </div>
-
-                    <!-- Subscription mode: Trial or Subscribe Now -->
-                    <div class="subscription-mode" style="margin-top:20px;">
-                        <h3 style="font-size:14px;margin-bottom:12px;color:#666;"><?php echo __('How do you want to start?'); ?></h3>
-                        <div class="mode-options">
-                            <label class="mode-option" id="mode-trial">
-                                <input type="radio" name="signup_mode" value="trial" checked onchange="updateSignupMode()">
-                                <div class="mode-option-content">
-                                    <div class="mode-option-icon">🎁</div>
-                                    <div class="mode-option-title"><?php echo __('Start Free Trial'); ?></div>
-                                    <div class="mode-option-desc">14 days · No credit card required</div>
+                    </label>
+                    <label class="reg-mode-card" id="mode-subscribe-label">
+                        <input type="radio" name="signup_mode" value="subscribe">
+                        <div class="reg-mode-card-inner">
+                            <div class="reg-mode-card-header">
+                                <div class="reg-mode-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                                 </div>
-                            </label>
-                            <label class="mode-option" id="mode-now">
-                                <input type="radio" name="signup_mode" value="subscribe" onchange="updateSignupMode()">
-                                <div class="mode-option-content">
-                                    <div class="mode-option-icon">💳</div>
-                                    <div class="mode-option-title"><?php echo __('Subscribe Now'); ?></div>
-                                    <div class="mode-option-desc">Pay today, full access immediately</div>
-                                </div>
-                            </label>
+                                <div class="reg-mode-title"><?= __('Subscribe Now') ?></div>
+                            </div>
+                            <div class="reg-mode-desc"><?= __('Pay today, full access immediately') ?></div>
                         </div>
+                    </label>
+                </div>
+
+                <!-- Account fields -->
+                <h3 class="reg-section-label"><?= __('3. Your details') ?></h3>
+                <div class="reg-fields">
+                    <div class="reg-field reg-field-full">
+                        <label for="company_name"><?= __('Company name') ?> *</label>
+                        <input type="text" id="company_name" name="company_name" placeholder="<?= __('Acme Inc.') ?>" required>
                     </div>
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label"><?php echo __('Company Name'); ?> *</label>
-                            <input type="text" name="company_name" class="form-control" placeholder="<?php echo __('Acme Inc.'); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label"><?php echo __('Your Full Name'); ?> *</label>
-                            <input type="text" name="full_name" class="form-control" placeholder="<?php echo __('John Doe'); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label"><?php echo __('Work Email'); ?> *</label>
-                            <input type="email" name="email" class="form-control" placeholder="<?php echo __('you@company.com'); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label"><?php echo __('Phone (optional)'); ?></label>
-                            <input type="tel" name="phone" class="form-control" placeholder="+1 234 567 890" value="<?php echo htmlspecialchars($post['phone'] ?? ''); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label"><?php echo __('Password'); ?> *</label>
-                            <input type="password" name="password" class="form-control" placeholder="<?php echo __('Min 8 characters'); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label"><?php echo __('Confirm Password'); ?> *</label>
-                            <input type="password" name="confirm_password" class="form-control" placeholder="<?php echo __('Repeat password'); ?>" required>
-                        </div>
+                    <div class="reg-field">
+                        <label for="full_name"><?= __('Your full name') ?> *</label>
+                        <input type="text" id="full_name" name="full_name" placeholder="<?= __('John Doe') ?>" required>
                     </div>
+                    <div class="reg-field">
+                        <label for="email"><?= __('Work email') ?> *</label>
+                        <input type="email" id="email" name="email" placeholder="<?= __('you@company.com') ?>" required>
+                    </div>
+                    <div class="reg-field reg-field-full">
+                        <label for="phone"><?= __('Phone') ?> <span style="color:var(--color-text-tertiary);"><?= __('(optional)') ?></span></label>
+                        <input type="tel" id="phone" name="phone" placeholder="+1 234 567 890" value="<?= htmlspecialchars($post['phone'] ?? '') ?>">
+                    </div>
+                    <div class="reg-field">
+                        <label for="password"><?= __('Password') ?> *</label>
+                        <input type="password" id="password" name="password" placeholder="<?= __('Min 8 characters') ?>" required>
+                    </div>
+                    <div class="reg-field">
+                        <label for="confirm_password"><?= __('Confirm password') ?> *</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="<?= __('Repeat password') ?>" required>
+                    </div>
+                </div>
 
-                    <button type="submit" class="btn-submit" id="submitBtn"><?php echo __('Start 14-Day Free Trial'); ?></button>
-                </form>
+                <button type="submit" class="reg-submit" id="submitBtn">
+                    <?= __('Start 14-Day Free Trial') ?>
+                </button>
 
-                <p class="form-footer">
-                    <?php echo __('By signing up, you agree to our Terms of Service and Privacy Policy.'); ?>
+                <p class="reg-form-footer">
+                    <?= __('By signing up, you agree to our Terms of Service and Privacy Policy.') ?>
                 </p>
-            </div>
-        </div>
+            </form>
+        </main>
     </div>
 </div>
 
 <script>
-function updateSignupMode() {
-    const mode = document.querySelector('input[name="signup_mode"]:checked').value;
-    const btn = document.getElementById('submitBtn');
-    if (mode === 'subscribe') {
-        btn.textContent = 'Continue to Payment';
-    } else {
-        btn.textContent = 'Start 14-Day Free Trial';
+(function() {
+    // Plan data for live summary sync
+    const planData = {
+        <?php foreach ($plans as $p): ?>
+        '<?= $p['plan_key'] ?>': {
+            name: '<?= addslashes($p['plan_name']) ?>',
+            desc: '<?= addslashes($p['description'] ?? '') ?>',
+            monthly: <?= (float)$p['monthly_price'] ?>,
+            yearly: <?= (float)($p['yearly_price'] ?? $p['monthly_price'] * 10) ?>,
+            users: <?= (int)$p['user_limit'] ?>,
+            extra: <?= (float)($p['extra_user_price'] ?? 0) ?>,
+        },
+        <?php endforeach; ?>
+    };
+
+    const $name = document.getElementById('summary-name');
+    const $desc = document.getElementById('summary-desc');
+    const $price = document.getElementById('summary-price');
+    const $billingNote = document.getElementById('summary-billing-note');
+    const $save = document.getElementById('summary-save');
+    const $users = document.getElementById('summary-users');
+    const $extraUser = document.getElementById('summary-extra-user');
+    const $extraText = document.getElementById('summary-extra-text');
+    const $submit = document.getElementById('submitBtn');
+    const $selectedPlan = document.getElementById('selectedPlan');
+    const $signupModeInputs = document.querySelectorAll('input[name="signup_mode"]');
+
+    function fmtMoney(n) { return '$' + Number(n).toFixed(0); }
+
+    function updateSummary() {
+        const checked = document.querySelector('input[name="plan_radio"]:checked');
+        if (!checked) return;
+        const key = checked.value;
+        const data = planData[key];
+        if (!data) return;
+
+        $name.textContent = data.name;
+        $desc.textContent = data.desc;
+        $price.textContent = fmtMoney(data.monthly);
+        $users.textContent = data.users === 1 ? 'Up to 1 user' : 'Up to ' + data.users + ' users';
+        $save.innerHTML = '💡 Save with yearly billing — <strong>' + fmtMoney(data.yearly) + '/year</strong> (2 months free)';
+
+        if (data.extra > 0) {
+            $extraUser.style.display = '';
+            $extraText.textContent = 'Extra users at $' + data.extra.toFixed(0) + '/user';
+        } else {
+            $extraUser.style.display = 'none';
+        }
+
+        // Sync the hidden field
+        $selectedPlan.value = key;
     }
-}
-// Run on load
-updateSignupMode();
+
+    // Live update on radio change
+    document.querySelectorAll('input[name="plan_radio"]').forEach(input => {
+        input.addEventListener('change', updateSummary);
+    });
+
+    // Update submit button text based on signup mode
+    function updateSubmitButton() {
+        const mode = document.querySelector('input[name="signup_mode"]:checked').value;
+        $submit.textContent = mode === 'subscribe' ? 'Continue to Payment' : 'Start 14-Day Free Trial';
+        $billingNote.textContent = mode === 'subscribe'
+            ? 'You will be charged immediately after signup'
+            : 'Billed monthly after your 14-day free trial';
+    }
+    $signupModeInputs.forEach(input => {
+        input.addEventListener('change', updateSubmitButton);
+    });
+
+    // Init
+    updateSummary();
+    updateSubmitButton();
+})();
 </script>
-
-<!-- Footer -->
-<footer class="footer">
-    <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(getAppName()); ?><?php echo __('.&nbsp;All rights reserved.'); ?> | <a href="/login.php"><?php echo __('Sign In'); ?></a></p>
-</footer>
-
 </body>
 </html>
