@@ -46,6 +46,9 @@ function requireLogin() {
     }
     // H-8: enforce password change for flagged users (skips super admins)
     requireNoPasswordChange();
+    // B-6: enforce active subscription (block tenants whose trial expired
+    // or whose subscription was cancelled)
+    requireActiveSubscription();
 }
 
 /**
@@ -181,6 +184,103 @@ function requireNoPasswordChange(): void {
     }
     header('Location: /pages/profile.php?must_change=1');
     exit;
+}
+
+/**
+ * B-6 / Trial Enforcement:
+ *  Block tenant users when their trial has expired or subscription is
+ *  cancelled/past_due. Super admins always pass.
+ *
+ *  Allows through:
+ *   - 'active' subscription
+ *   - 'trial' with trial_ends_at > now
+ *   - access to /pages/billing.php or /logout.php (so they can pay)
+ *   - access to /pages/profile.php (so they can change password)
+ *   - access to any /api/ endpoint (so payment APIs can be called)
+ */
+function requireActiveSubscription(): void {
+    if (isSuperAdmin()) return;
+    if (empty($_SESSION['user_id'])) return;
+    if (empty($_SESSION['company_id'])) return;
+    
+    try {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("
+            SELECT company_id, status, subscription_status, trial_ends_at,
+                   current_period_end, cancel_at_period_end
+            FROM companies WHERE company_id = ?
+        ");
+        $stmt->execute([(int)$_SESSION['company_id']]);
+        $company = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$company) return;
+        
+        // Company suspended by super admin
+        if ($company['status'] !== 'active') {
+            $current = $_SERVER['REQUEST_URI'] ?? '';
+            $isApiRequest = (strpos($current, '/api/') !== false);
+            if ($isApiRequest) {
+                http_response_code(403);
+                die(json_encode(['success' => false, 'message' => 'Account suspended. Contact support.']));
+            }
+            header('Location: /pages/billing.php?suspended=1');
+            exit;
+        }
+        
+        $subStatus = $company['subscription_status'] ?? 'trial';
+        $now = time();
+        
+        // Trial check
+        $trialExpired = false;
+        if ($subStatus === 'trial' && $company['trial_ends_at']) {
+            if (strtotime($company['trial_ends_at']) < $now) {
+                $trialExpired = true;
+            }
+        }
+        
+        // Active subscription check
+        $hasActiveSubscription = ($subStatus === 'active' && 
+                                  (!$company['current_period_end'] || strtotime($company['current_period_end']) > $now));
+        
+        // Allow access if:
+        //   1. Has active subscription, OR
+        //   2. Still in trial (not expired), OR
+        //   3. Past_due (grace period - allow access to fix payment)
+        $isOk = $hasActiveSubscription || 
+                ($subStatus === 'trial' && !$trialExpired) || 
+                $subStatus === 'past_due';
+        
+        if ($isOk) return;
+        
+        // Subscription required - redirect to billing
+        $current = $_SERVER['REQUEST_URI'] ?? '';
+        $isApiRequest = (strpos($current, '/api/') !== false);
+        $isBilling = strpos($current, '/pages/billing.php') !== false;
+        $isLogout = strpos($current, '/logout.php') !== false;
+        $isProfile = strpos($current, '/pages/profile.php') !== false;
+        $isLogin = strpos($current, '/login.php') !== false;
+        $isRegister = strpos($current, '/register.php') !== false;
+        
+        // Always allow: billing page, logout, profile, login, register
+        if ($isBilling || $isLogout || $isProfile || $isLogin || $isRegister) {
+            return;
+        }
+        
+        if ($isApiRequest) {
+            http_response_code(402);
+            die(json_encode([
+                'success' => false,
+                'message' => $trialExpired ? 'Trial period expired. Please subscribe to continue.' : 'Subscription required.',
+                'redirect' => '/pages/billing.php' . ($trialExpired ? '?expired=1' : ''),
+            ]));
+        }
+        
+        header('Location: /pages/billing.php' . ($trialExpired ? '?expired=1' : ''));
+        exit;
+        
+    } catch (Exception $e) {
+        // Never block login on a metadata check failure
+        error_log('requireActiveSubscription check failed: ' . $e->getMessage());
+    }
 }
 
 /**
