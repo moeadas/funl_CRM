@@ -101,9 +101,9 @@ include '../includes/header.php';
 
 <div class="page-header">
     <h1 class="page-title"><?php echo __("whatsapp_messaging"); ?></h1>
-    <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="showNewMessage()">
+    <a href="/pages/whatsapp-new-message.php" class="btn btn-primary" style="background:#16a34a;border-color:#16a34a;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        <?php echo __("new_message"); ?></button>
+        <?php echo __("new_message"); ?></a>
 </div>
 
 <!-- Stats -->
@@ -318,75 +318,6 @@ include '../includes/header.php';
 </div>
 <?php endif; ?>
 
-<!-- Link to Lead Modal (Admin/Manager only) -->
-<?php if ($isManager): ?>
-<div id="linkLeadModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="closeLinkLeadModal()"></div>
-    <div class="modal-content modal-sm">
-        <div class="modal-header" style="background:#ff9500;">
-            <h3 style="color:#fff;"><?php echo __("link_to_existing_lead"); ?></h3>
-            <button type="button" class="btn-close" onclick="closeLinkLeadModal()" style="color:#fff;">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;">
-                Messages from <strong id="linkFromNumber"></strong> will be linked to the selected lead.
-            </p>
-            <input type="hidden" id="linkFromNumberHidden">
-            <div class="form-group">
-                <label class="form-label"><?php echo __("search_lead"); ?></label>
-                <input type="text" id="linkLeadSearch" class="form-control" placeholder="<?php echo __("type_lead_name_or_company"); ?>"
-                       oninput="searchLeadsForLink(this.value)" autocomplete="off">
-            </div>
-            <div id="linkLeadResults" style="max-height:200px;overflow-y:auto;border:1px solid var(--color-border-light);border-radius:8px;display:none;"></div>
-            <input type="hidden" id="linkLeadId">
-            <div id="linkLeadSelected" style="display:none;margin-top:8px;padding:10px 12px;background:var(--color-bg);border-radius:8px;font-size:13px;">
-                <span id="linkLeadSelectedName"></span>
-                <button type="button" onclick="clearLinkLead()" style="float:right;border:none;background:none;color:#ff3b30;font-size:12px;cursor:pointer;">Clear</button>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeLinkLeadModal()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#ff9500;border-color:#ff9500;" onclick="submitLinkToLead()" id="linkSubmitBtn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                <?php echo __("link_messages"); ?></button>
-        </div>
-    </div>
-</div>
-
-<!-- Create Lead from Message Modal -->
-<div id="createLeadModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="closeCreateLeadModal()"></div>
-    <div class="modal-content modal-sm">
-        <div class="modal-header" style="background:#25D366;">
-            <h3 style="color:#fff;"><?php echo __("create_new_lead"); ?></h3>
-            <button type="button" class="btn-close" onclick="closeCreateLeadModal()" style="color:#fff;">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;">
-                <?php echo __("create_lead_unmatched_desc"); ?>
-            </p>
-            <input type="hidden" id="createLeadFromNumber">
-            <div class="form-group">
-                <label class="form-label"><?php echo __("phone_number"); ?></label>
-                <input type="text" id="createLeadPhone" class="form-control" readonly style="background:var(--color-bg);">
-            </div>
-            <div class="form-group">
-                <label class="form-label"><?php echo __("contact_person"); ?></label>
-                <input type="text" id="createLeadName" class="form-control" placeholder="<?php echo __("e_g_john_smith"); ?>">
-            </div>
-            <div class="form-group">
-                <label class="form-label"><?php echo __("company_name"); ?></label>
-                <input type="text" id="createLeadCompany" class="form-control" placeholder="<?php echo __("e_g_acme_corp_optional"); ?>">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeCreateLeadModal()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="submitCreateLead()" id="createLeadSubmitBtn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                <?php echo __("create_lead"); ?></button>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
 <!-- ========== TAB: TEMPLATES (Twilio Content Templates) ========== -->
 <div id="tab-templates" style="display:none;">
     <!-- Template creation guide for managers -->
@@ -457,9 +388,9 @@ include '../includes/header.php';
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                     <?php echo __("refresh"); ?></button>
                 <?php if ($isManager): ?>
-                    <button class="btn btn-sm btn-primary" style="background:#25D366;border-color:#25D366;" onclick="showCreateTemplate()">
+                    <a href="/pages/whatsapp-template-new.php" class="btn btn-sm btn-primary" style="background:#16a34a;border-color:#16a34a;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        <?php echo __("create_whatsapp_template"); ?></button>
+                        <?php echo __("create_whatsapp_template"); ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -472,105 +403,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- New Message Modal -->
-<div id="newMsgModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="hideNewMessage()"></div>
-    <div class="modal-content modal-sm">
-        <div class="modal-header" style="background:#25D366;">
-            <h3 style="color:#fff;"><?php echo __("new_whatsapp_message"); ?></h3>
-            <button type="button" class="btn-close" onclick="hideNewMessage()" style="color:#fff;">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label"><?php echo __("phone_number"); ?></label>
-                <input type="tel" id="waMsgNumber" class="form-control" placeholder="+971 50 123 4567">
-            </div>
-            <div class="form-group">
-                <label class="form-label"><?php echo __("message"); ?></label>
-                <textarea id="waMsgBody" class="form-control" rows="4" placeholder="<?php echo __("type_your_message"); ?>"></textarea>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideNewMessage()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="sendQuickMessage()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                <?php echo __("send"); ?></button>
-        </div>
-    </div>
-</div>
-
-<!-- Create Template Modal (Admin/Manager only) -->
-<?php if ($isManager): ?>
-<div id="createTplModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="hideCreateTemplate()"></div>
-    <div class="modal-content" style="max-width:600px;">
-        <div class="modal-header" style="background:#25D366;">
-            <h3 style="color:#fff;"><?php echo __("create_whatsapp_template"); ?></h3>
-            <button type="button" class="btn-close" onclick="hideCreateTemplate()" style="color:#fff;">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label"><?php echo __("template_name"); ?></label>
-                <input type="text" id="ctplName" class="form-control" placeholder="<?php echo __("e_g_template_name_lowercase"); ?>">
-                <small class="text-muted"><?php echo __("template_name_lowercase_desc"); ?></small>
-            </div>
-            <div class="grid grid-2" style="gap:12px;">
-                <div class="form-group">
-                    <label class="form-label"><?php echo __("category"); ?></label>
-                    <select id="ctplCategory" class="form-control">
-                        <option value="UTILITY"><?php echo __("utility_transactional"); ?></option>
-                        <option value="MARKETING"><?php echo __("marketing_promotional"); ?></option>
-                    </select>
-                    <small class="text-muted"><?php echo __("utility_templates_approval_note"); ?></small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __("language"); ?></label>
-                    <select id="ctplLanguage" class="form-control">
-                        <option value="en">English (en)</option>
-                        <option value="ar">Arabic (ar)</option>
-                        <option value="es">Spanish (es)</option>
-                        <option value="fr">French (fr)</option>
-                        <option value="de">German (de)</option>
-                        <option value="pt">Portuguese (pt)</option>
-                        <option value="it">Italian (it)</option>
-                        <option value="tr">Turkish (tr)</option>
-                        <option value="nl">Dutch (nl)</option>
-                        <option value="ja">Japanese (ja)</option>
-                        <option value="zh_CN">Chinese Simplified (zh_CN)</option>
-                    </select>
-                    <small class="text-muted"><?php echo __("meta_lang_guidelines_note"); ?></small>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label"><?php echo __("template_body"); ?></label>
-                <textarea id="ctplBody" class="form-control" rows="5" placeholder="<?php echo __("ctpl_body_placeholder"); ?>"
-                    oninput="updateCreatePreview()"></textarea>
-                <small class="text-muted"><?php echo __("ctpl_body_desc"); ?></small>
-            </div>
-
-            <!-- Dynamic variable descriptions -->
-            <div id="ctplVarsContainer" style="display:none;">
-                <label class="form-label" style="margin-bottom:8px;"><?php echo __("variable_descriptions"); ?></label>
-                <div id="ctplVarsList"></div>
-                <small class="text-muted"><?php echo __("ctpl_vars_desc"); ?></small>
-            </div>
-
-            <!-- Live Preview -->
-            <div style="margin-top:16px;">
-                <label class="form-label"><?php echo __("preview"); ?></label>
-                <div id="ctplPreview" style="background:#ECE5DD;padding:12px 16px;border-radius:8px;font-size:13px;line-height:1.5;color:#333;min-height:40px;">
-                    <em class="text-muted"><?php echo __("start_typing_template_preview"); ?></em>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideCreateTemplate()"><?php echo __("cancel"); ?></button> <button class="btn btn-primary" style="background:#25D366;border-color:#25D366;" onclick="submitCreateTemplate()" id="ctplSubmitBtn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                <?php echo __("create_submit_approval"); ?>
-            </button>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -661,9 +493,9 @@ function filterMessages() {
     });
 }
 
-// ─── New Message Modal ───
-function showNewMessage() { document.getElementById('newMsgModal').style.display = 'flex'; }
-function hideNewMessage() { document.getElementById('newMsgModal').style.display = 'none'; }
+// ─── New Message Modal (now standalone page) ───
+function showNewMessage() { window.location.href = '/pages/whatsapp-new-message.php'; }
+function hideNewMessage() { /* no-op - standalone page now */ }
 
 async function sendQuickMessage() {
     var num = document.getElementById('waMsgNumber').value.trim();
@@ -793,9 +625,8 @@ async function loadDashboardTemplates() {
     }
 }
 
-// ─── Create Template Modal ───
-function showCreateTemplate() {
-    document.getElementById('createTplModal').style.display = 'flex';
+// ─── Create Template Modal (now standalone page) ───
+function showCreateTemplate() { window.location.href = '/pages/whatsapp-template-new.php'; }
     // Reset form
     document.getElementById('ctplName').value = '';
     document.getElementById('ctplCategory').value = 'UTILITY';
@@ -1109,14 +940,14 @@ async function loadUnmatchedMessages() {
                         '</div>' +
                     '</div>' +
                     '<div class="unmatched-thread-actions">' +
-                        '<button class="btn btn-sm btn-outline" style="font-size:11px;" onclick="openLinkLeadModal(\'' + safePhone + '\')" title="Link to existing lead">' +
+                        '<a href="/pages/whatsapp-link-lead.php?from=' + encodeURIComponent(safePhone) + '" class="btn btn-sm btn-outline" style="font-size:11px;" title="Link to existing lead">' +
                             '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>' +
                             'Link to Lead' +
-                        '</button>' +
-                        '<button class="btn btn-sm btn-primary" style="background:#25D366;border-color:#25D366;font-size:11px;" onclick="openCreateLeadModal(\'' + safePhone + '\')" title="Create new lead">' +
+                        '</a>' +
+                        '<a href="/pages/whatsapp-create-lead.php?from=' + encodeURIComponent(safePhone) + '" class="btn btn-sm btn-primary" style="background:#16a34a;border-color:#16a34a;font-size:11px;" title="Create new lead">' +
                             '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>' +
                             'Create Lead' +
-                        '</button>' +
+                        '</a>' +
                         '<button class="btn btn-sm btn-outline" style="font-size:11px;margin-left:auto;" onclick="WhatsAppChat.open(0, \'' + safePhone + '\', \'' + (profileName || phone) + '\')" title="Open full chat panel">' +
                             '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
                             'Full Chat' +
@@ -1281,9 +1112,10 @@ async function sendUnmatchedReply(idx, phone) {
     }
 }
 
-// ── Link to Lead Modal ──
+// ── Link to Lead Modal (now standalone page) ──
 function openLinkLeadModal(fromNumber) {
-    document.getElementById('linkFromNumber').textContent = fromNumber;
+    window.location.href = '/pages/whatsapp-link-lead.php?from=' + encodeURIComponent(fromNumber);
+}
     document.getElementById('linkFromNumberHidden').value = fromNumber;
     document.getElementById('linkLeadSearch').value = '';
     document.getElementById('linkLeadId').value = '';
@@ -1373,9 +1205,10 @@ async function submitLinkToLead() {
     }
 }
 
-// ── Create Lead from Message Modal ──
+// ── Create Lead from Message Modal (now standalone page) ──
 function openCreateLeadModal(fromNumber) {
-    document.getElementById('createLeadFromNumber').value = fromNumber;
+    window.location.href = '/pages/whatsapp-create-lead.php?from=' + encodeURIComponent(fromNumber);
+}
     document.getElementById('createLeadPhone').value = fromNumber;
     document.getElementById('createLeadCompany').value = '';
 

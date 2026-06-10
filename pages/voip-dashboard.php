@@ -146,10 +146,10 @@ include '../includes/header.php';
             <?php echo __('Setup'); ?>
         </button>
         <?php endif; ?>
-        <button class="btn btn-primary" onclick="showDialer()">
+        <a href="/pages/voip-dial.php" class="btn btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             <?php echo __('Quick Dial'); ?>
-        </button>
+        </a>
     </div>
 </div>
 
@@ -455,9 +455,9 @@ include '../includes/header.php';
                                                 <?php echo __('Play'); ?>
                                             </button>
                                         <?php endif; ?>
-                                        <button class="comm-btn" style="font-size:11px;padding:4px 8px;background:#f5f5f7;color:#636366;" onclick="showCallDetail(<?php echo htmlspecialchars(json_encode($call)); ?>)" title="<?php echo __("view_details"); ?>">
+                                        <a href="/pages/voip-call-detail.php?id=<?php echo (int)$call['call_id']; ?>" class="comm-btn" style="font-size:11px;padding:4px 8px;background:#f5f5f7;color:#636366;text-decoration:none;" title="<?php echo __("view_details"); ?>">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                                        </button>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -474,85 +474,16 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- ═══ Quick Dialer Modal ═══ -->
-<div id="dialerModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="hideDialer()"></div>
-    <div class="modal-content modal-sm">
-        <div class="modal-header">
-            <h3>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                <?php echo __('Quick Dial'); ?>
-            </h3>
-            <button type="button" class="btn-close" onclick="hideDialer()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label"><?php echo __("phone_number"); ?></label>
-                <input type="tel" id="dialNumber" class="form-control" placeholder="+1 858 358 5260" autofocus
-                    style="font-size:16px;letter-spacing:0.5px;"
-                    onkeydown="if(event.key==='Enter'){event.preventDefault();dialNumber();}">
-                <small class="text-muted" style="font-size:11px;"><?php echo __('Enter a phone number with country code (e.g. +1 for US)'); ?></small>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideDialer()"><?php echo __("cancel"); ?></button>
-            <button class="btn btn-primary" onclick="dialNumber()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                Call
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ═══ Call Detail Modal ═══ -->
-<div id="callDetailModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="hideCallDetail()"></div>
-    <div class="modal-content" style="max-width:540px;">
-        <div class="modal-header">
-            <h3><?php echo __("call_details"); ?></h3>
-            <button type="button" class="btn-close" onclick="hideCallDetail()">&times;</button>
-        </div>
-        <div class="modal-body" id="callDetailBody">
-            <!-- Filled by JS -->
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="hideCallDetail()"><?php echo __("close"); ?></button>
-        </div>
-    </div>
-</div>
-
-<!-- ═══ Recording Player ═══ -->
-<div id="recordingPlayer" style="display:none;position:fixed;bottom:80px;right:24px;background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-xl);border:1px solid var(--color-border);padding:16px;z-index:9999;width:320px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <strong style="font-size:13px;"><?php echo __("call_recording"); ?></strong>
-        <button onclick="closeRecordingPlayer()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;">&times;</button>
-    </div>
-    <audio id="recordingAudio" controls style="width:100%;" preload="none"></audio>
-</div>
-
 <script>
-// ─── Dialer ───
-function showDialer() {
-    document.getElementById('dialerModal').style.display = 'flex';
-    setTimeout(function() { document.getElementById('dialNumber').focus(); }, 100);
-}
-function hideDialer() {
-    document.getElementById('dialerModal').style.display = 'none';
-    document.getElementById('dialNumber').value = '';
-}
-function dialNumber() {
-    var num = document.getElementById('dialNumber').value.trim();
-    if (!num) { showNotification('Enter a phone number', 'error'); return; }
-    hideDialer();
-    VoIPPhone.call(num, 0);
-}
+// ─── Dialer (now standalone page) ───
+function showDialer() { window.location.href = '/pages/voip-dial.php'; }
 
 // ─── Filters (user, status, search) ───
 function filterCalls() {
     var userSel = document.getElementById('filterUser');
     var statusSel = document.getElementById('filterStatus');
     var searchInput = document.getElementById('callSearch');
-    
+
     var uid = userSel ? userSel.value : '';
     var status = statusSel ? statusSel.value : '';
     var search = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -574,60 +505,10 @@ function filterCalls() {
     });
 }
 
-// ─── Call Detail Modal ───
+// ─── Call Detail (now standalone page) ───
 function showCallDetail(call) {
-    var body = document.getElementById('callDetailBody');
-    var dur = call.duration_seconds || 0;
-    var durStr = dur >= 3600 
-        ? Math.floor(dur/3600) + ':' + String(Math.floor((dur%3600)/60)).padStart(2,'0') + ':' + String(dur%60).padStart(2,'0')
-        : Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0');
-    
-    var html = '<div style="display:grid;grid-template-columns:140px 1fr;gap:8px 16px;font-size:13px;">';
-    html += '<div class=\"text-muted\">' + __('direction') + '</div><div><span class="badge ' + (call.direction === 'Inbound' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800') + '">' + escapeHtml(call.direction) + '</span></div>';
-    html += '<div class=\"text-muted\">' + __('from') + '</div><div style="font-family:monospace;">' + escapeHtml(call.from_number || '-') + '</div>';
-    html += '<div class=\"text-muted\">' + __('to') + '</div><div style="font-family:monospace;">' + escapeHtml(call.to_number || '-') + '</div>';
-    html += '<div class=\"text-muted\">' + __('status') + '</div><div>' + escapeHtml(call.status || '-') + '</div>';
-    html += '<div class=\"text-muted\">' + __('duration') + '</div><div><strong>' + durStr + '</strong></div>';
-    html += '<div class=\"text-muted\">' + __('outcome') + '</div><div>' + escapeHtml(call.outcome || '-') + '</div>';
-    html += '<div class=\"text-muted\">' + __('notes') + '</div><div>' + escapeHtml(call.notes || 'No notes') + '</div>';
-    if (call.twilio_call_sid) {
-        html += '<div class="text-muted">Twilio SID</div><div style="font-family:monospace;font-size:11px;word-break:break-all;">' + escapeHtml(call.twilio_call_sid) + '</div>';
-    }
-    html += '<div class=\"text-muted\">' + __('started') + '</div><div>' + escapeHtml(call.started_at || call.created_at || '-') + '</div>';
-    if (call.ended_at) {
-        html += '<div class=\"text-muted\">' + __('ended') + '</div><div>' + escapeHtml(call.ended_at) + '</div>';
-    }
-    if (call.contact_person || call.company_name) {
-        html += '<div class=\"text-muted\">' + __('lead') + '</div><div>' + escapeHtml(call.contact_person || '') + (call.company_name ? ' (' + escapeHtml(call.company_name) + ')' : '') + '</div>';
-    }
-    if (call.user_name) {
-        html += '<div class=\"text-muted\">' + __('agent') + '</div><div>' + escapeHtml(call.user_name) + '</div>';
-    }
-    if (call.recording_url) {
-        html += '<div class=\"text-muted\">' + __('recording') + '</div><div><button class="btn btn-sm btn-info" onclick="playRecording(\'' + escapeHtml(call.recording_url) + '\')">' + __('play_recording') + '</button></div>';
-    }
-    html += '</div>';
-    
-    body.innerHTML = html;
-    document.getElementById('callDetailModal').style.display = 'flex';
-}
-function hideCallDetail() {
-    document.getElementById('callDetailModal').style.display = 'none';
-}
-
-// ─── Recording Player ───
-function playRecording(url) {
-    var player = document.getElementById('recordingPlayer');
-    var audio = document.getElementById('recordingAudio');
-    audio.src = url;
-    player.style.display = 'block';
-    audio.play().catch(function() {});
-}
-function closeRecordingPlayer() {
-    var audio = document.getElementById('recordingAudio');
-    audio.pause();
-    audio.src = '';
-    document.getElementById('recordingPlayer').style.display = 'none';
+    var id = (call && call.call_id) || (typeof arguments[0] === 'number' ? arguments[0] : null);
+    if (id) window.location.href = '/pages/voip-call-detail.php?id=' + id;
 }
 
 // ─── VoIP Ready Badge ───
