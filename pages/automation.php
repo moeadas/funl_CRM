@@ -15,9 +15,6 @@ $pageTitle = __('Automation');
 $js = ['automation'];
 
 require_once __DIR__ . '/../includes/header.php';
-
-$db = Database::getInstance();
-$users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId])->fetchAll();
 ?>
 
 
@@ -25,7 +22,7 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 <div class="automation-page">
     <div class="page-header">
         <h1 class="page-title"><?php echo __('Automation'); ?></h1>
-        <button class="btn btn-primary" onclick="openRuleModal()">+ <?php echo __('New Rule'); ?></button>
+        <a href="/pages/automation-rule.php" class="btn btn-primary">+ <?php echo __('New Rule'); ?></a>
     </div>
 
     <div class="rules-list" id="rules-list">
@@ -44,69 +41,10 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
     </div>
 </div>
 
-<!-- Rule Modal -->
-<div class="modal-overlay" id="rule-modal">
-    <div class="modal">
-        <div class="modal-header">
-            <h2 id="rule-modal-title"><?php echo __('New Automation Rule'); ?></h2>
-            <button class="modal-close" onclick="closeRuleModal()">&times;</button>
-        </div>
-        <form id="rule-form" onsubmit="saveRule(event)">
-            <div class="modal-body">
-                <input type="hidden" id="rule-id" value="">
-                
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Rule Name'); ?> *</label>
-                    <input type="text" id="rule-name" class="form-control" required placeholder="<?php echo __('e.g. Auto-assign Dubai leads'); ?>">
-                </div>
-
-                <!-- WHEN -->
-                <div class="rule-builder-step">
-                    <div class="step-label when"><?php echo __('When this happens...'); ?></div>
-                    <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label"><?php echo __('Trigger'); ?></label>
-                        <select id="rule-trigger" class="form-control">
-                            <option value="lead_created"><?php echo __('New lead is created'); ?></option>
-                            <option value="lead_status_changed"><?php echo __('Lead status changes'); ?></option>
-                            <option value="deal_stage_changed"><?php echo __('Deal moves to stage'); ?></option>
-                            <option value="task_overdue"><?php echo __('Task becomes overdue'); ?></option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="arrow-down">↓</div>
-
-                <!-- THEN -->
-                <div class="rule-builder-step">
-                    <div class="step-label then"><?php echo __('Then do this...'); ?></div>
-                    <div class="form-group">
-                        <label class="form-label"><?php echo __('Action'); ?></label>
-                        <select id="rule-action" class="form-control" onchange="updateActionOptions()">
-                            <option value="assign_user"><?php echo __('Assign to user'); ?></option>
-                            <option value="create_task"><?php echo __('Create a task'); ?></option>
-                            <option value="send_email"><?php echo __('Send email'); ?></option>
-                            <option value="move_deal"><?php echo __('Move deal to stage'); ?></option>
-                            <option value="notify_user"><?php echo __('Send notification'); ?></option>
-                        </select>
-                    </div>
-                    <div id="action-options">
-                        <!-- Dynamic action options -->
-                    </div>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeRuleModal()"><?php echo __('Cancel'); ?></button>
-                <button type="submit" class="btn btn-primary" id="rule-save-btn"><?php echo __('Create Rule'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
 const CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/automation.php';
-const USERS = <?= json_encode($users) ?>;
 
 let rules = [];
 
@@ -200,161 +138,12 @@ function formatTime(ts) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Modal
-function openRuleModal() {
-    document.getElementById('rule-form').reset();
-    document.getElementById('rule-id').value = '';
-    document.getElementById('rule-modal-title').textContent = window.__('New Automation Rule');
-    document.getElementById('rule-save-btn').textContent = window.__('Create Rule');
-    updateActionOptions();
-    document.getElementById('rule-modal').classList.add('active');
-}
-
-function closeRuleModal() {
-    document.getElementById('rule-modal').classList.remove('active');
-}
-
 function editRule(ruleId) {
-    const rule = rules.find(r => r.rule_id == ruleId);
-    if (!rule) return;
-    
-    document.getElementById('rule-id').value = rule.rule_id;
-    document.getElementById('rule-name').value = rule.rule_name || '';
-    document.getElementById('rule-trigger').value = rule.trigger_type || 'lead_created';
-    document.getElementById('rule-action').value = rule.action_type || 'assign_user';
-    document.getElementById('rule-modal-title').textContent = window.__('Edit Rule');
-    document.getElementById('rule-save-btn').textContent = window.__('Save Changes');
-    
-    updateActionOptions();
-    document.getElementById('rule-modal').classList.add('active');
+    window.location.href = '/pages/automation-rule.php?id=' + ruleId;
 }
 
 function updateActionOptions() {
-    const action = document.getElementById('rule-action').value;
-    const container = document.getElementById('action-options');
-    
-    const userOptions = USERS.map(u => `<option value="${u.user_id}">${escapeHtml(u.full_name)}</option>`).join('');
-    
-    switch (action) {
-        case 'assign_user':
-            container.innerHTML = `
-                <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">${window.__('Assign to')}</label>
-                    <select id="action-user-id" class="form-control">${userOptions}</select>
-                </div>`;
-            break;
-        case 'create_task':
-            container.innerHTML = `
-                <div class="form-group">
-                    <label class="form-label">${window.__('Task Title')}</label>
-                    <input type="text" id="action-task-title" class="form-control" value="Follow up">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">${window.__('Due in (days)')}</label>
-                        <input type="number" id="action-due-days" class="form-control" value="2" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">${window.__('Priority')}</label>
-                        <select id="action-priority" class="form-control">
-                            <option value="low">${window.__('Low')}</option>
-                            <option value="medium" selected>${window.__('Medium')}</option>
-                            <option value="high">${window.__('High')}</option>
-                        </select>
-                    </div>
-                </div>`;
-            break;
-        case 'send_email':
-            container.innerHTML = `
-                <div class="form-group">
-                    <label class="form-label">${window.__('To')}</label>
-                    <input type="email" id="action-email-to" class="form-control" placeholder="admin@company.com">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">${window.__('Subject')}</label>
-                    <input type="text" id="action-email-subject" class="form-control" value="New lead notification">
-                </div>`;
-            break;
-        case 'move_deal':
-            container.innerHTML = `
-                <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">${window.__('Move to stage')}</label>
-                    <select id="action-target-stage" class="form-control">
-                        <option value="prospecting">${window.__('Prospecting')}</option>
-                        <option value="qualification">${window.__('Qualification')}</option>
-                        <option value="proposal">${window.__('Proposal')}</option>
-                        <option value="negotiation">${window.__('Negotiation')}</option>
-                        <option value="closed_won">${window.__('Closed Won')}</option>
-                        <option value="closed_lost">${window.__('Closed Lost')}</option>
-                    </select>
-                </div>`;
-            break;
-        case 'notify_user':
-            container.innerHTML = `
-                <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">${window.__('Message')}</label>
-                    <input type="text" id="action-message" class="form-control" value="Action required!">
-                </div>`;
-            break;
-    }
-}
-
-function saveRule(e) {
-    e.preventDefault();
-    const ruleId = document.getElementById('rule-id').value;
-    const action = ruleId ? 'update' : 'create';
-    
-    const actionType = document.getElementById('rule-action').value;
-    let actionConfig = {};
-    
-    switch (actionType) {
-        case 'assign_user':
-            actionConfig = { user_id: parseInt(document.getElementById('action-user-id')?.value) || 0 };
-            break;
-        case 'create_task':
-            actionConfig = {
-                title: document.getElementById('action-task-title')?.value || 'Follow up',
-                due_days: parseInt(document.getElementById('action-due-days')?.value) || 2,
-                priority: document.getElementById('action-priority')?.value || 'medium',
-            };
-            break;
-        case 'send_email':
-            actionConfig = {
-                to: document.getElementById('action-email-to')?.value || '',
-                subject: document.getElementById('action-email-subject')?.value || '',
-            };
-            break;
-        case 'move_deal':
-            actionConfig = { stage: document.getElementById('action-target-stage')?.value || 'prospecting' };
-            break;
-        case 'notify_user':
-            actionConfig = { message: document.getElementById('action-message')?.value || '' };
-            break;
-    }
-    
-    const data = {
-        csrf_token: CSRF_TOKEN,
-        rule_name: document.getElementById('rule-name').value,
-        trigger_type: document.getElementById('rule-trigger').value,
-        action_type: actionType,
-        action_config: actionConfig,
-    };
-    if (ruleId) data.rule_id = ruleId;
-    
-    fetch(`${API}?action=${action}`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    }).then(r => r.json()).then(resp => {
-        if (resp.success) {
-            closeRuleModal();
-            loadRules();
-            showNotification(ruleId ? window.__('Rule updated') : window.__('Rule created'), 'success');
-        } else {
-            showNotification(resp.message || window.__('Failed to save'), 'error');
-        }
-    });
+    /* Moved to automation-rule.php — no longer used on this page */
 }
 
 function toggleRule(ruleId, el) {
@@ -397,10 +186,5 @@ function escapeHtml(str) {
     div.textContent = str;
     return div.innerHTML;
 }
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRuleModal(); });
-document.querySelector('.modal-overlay').addEventListener('click', e => { 
-    if (e.target === e.currentTarget) closeRuleModal(); 
-});
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
