@@ -109,13 +109,13 @@ include '../includes/header.php';
         <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;"><?php echo __('Company documents, sales materials, and training resources.'); ?></p>
     </div>
     <?php if ($isAdmin): ?>
-    <button type="button" class="btn btn-primary" onclick="openUploadModal()">
+    <a href="/pages/document-upload.php" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         <?php echo __('Upload Document'); ?>
-    </button>
+    </a>
     <?php endif; ?>
 </div>
 
@@ -216,59 +216,6 @@ include '../includes/header.php';
             </div>
         <?php endforeach; ?>
     </div>
-<?php endif; ?>
-
-<!-- Upload Modal -->
-<?php if ($isAdmin): ?>
-<div id="uploadModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="closeUploadModal()"></div>
-    <div class="modal-content" style="max-width:500px;">
-        <div class="modal-header">
-            <h3 class="modal-title"><?php echo __('Upload Document'); ?></h3>
-            <button type="button" class="btn-close" onclick="closeUploadModal()">&times;</button>
-        </div>
-        
-        <form method="POST" enctype="multipart/form-data" class="modal-body">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-            <input type="hidden" name="action" value="upload_document">
-            
-            <div class="form-group">
-                <label class="form-label"><?php echo __('Document File'); ?> *</label>
-                <input type="file" name="document_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp" required>
-                <div class="form-hint"><?php echo __('Max file size: 10MB. Allowed: PDF, DOC, XLS, PPT, TXT, Images'); ?></div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label"><?php echo __('Title'); ?> *</label>
-                <input type="text" name="title" class="form-control" placeholder="e.g., Company Profile 2026" required>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label"><?php echo __('Description'); ?></label>
-                <textarea name="description" class="form-control" rows="2" placeholder="<?php echo __('Brief description...'); ?>"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label"><?php echo __('Category'); ?></label>
-                <select name="category" class="form-control">
-                    <?php foreach ($categories as $key => $label): ?>
-                        <option value="<?php echo $key; ?>"><?php echo htmlspecialchars(__($label)); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <div class="form-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
-                <button type="button" class="btn btn-outline" onclick="closeUploadModal()"><?php echo __('Cancel'); ?></button>
-                <button type="submit" class="btn btn-primary"><?php echo __('Upload'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function openUploadModal() { document.getElementById('uploadModal').style.display = 'flex'; }
-function closeUploadModal() { document.getElementById('uploadModal').style.display = 'none'; }
-</script>
 <?php endif; ?>
 
 <?php include '../includes/footer.php'; ?>

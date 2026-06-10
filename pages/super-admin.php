@@ -306,7 +306,7 @@ include '../includes/header.php';
         <h1 class="page-title"><?php echo __('Platform Administration'); ?></h1>
         <p style="font-size:13px;color:var(--color-text-secondary);margin-top:4px;"><?php echo __('Manage all tenants, subscriptions, and users.'); ?></p>
     </div>
-    <button type="button" class="btn btn-primary" onclick="openCreateCompanyModal()">
+    <a href="/pages/super-admin-company-new.php" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <?php echo __('New Company'); ?>
     </button>
@@ -570,7 +570,7 @@ include '../includes/header.php';
                     <td><?php echo $company['lead_count']; ?></td>
                     <td><?php echo date('M j, Y', strtotime($company['created_at'])); ?></td>
                     <td style="text-align:right;">
-                        <button type="button" class="btn btn-sm btn-outline" onclick="openAddUserModal(<?php echo $company['company_id']; ?>, '<?php echo htmlspecialchars($company['company_name']); ?>')">
+                        <a href="/pages/super-admin-user-new.php?company_id=<?php echo $company['company_id']; ?>" class="btn btn-sm btn-outline">
                             <?php echo __('Add User'); ?>
                         </button>
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Suspend this company? Users will lose access.');">
@@ -593,134 +593,6 @@ include '../includes/header.php';
         </table>
     </div>
 </div>
-
-<!-- Create Company Modal -->
-<div id="createCompanyModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="closeCreateCompanyModal()"></div>
-    <div class="modal-content" style="max-width:600px;">
-        <div class="modal-header">
-            <h3 class="modal-title"><?php echo __('Create New Company'); ?></h3>
-            <button type="button" class="btn-close" onclick="closeCreateCompanyModal()">&times;</button>
-        </div>
-        <form method="POST" class="modal-body">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-            <input type="hidden" name="action" value="create_company">
-            
-            <h4 style="margin-bottom:16px;"><?php echo __('Company Info'); ?></h4>
-            <div class="grid grid-2" style="gap:16px;">
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Company Name'); ?> *</label>
-                    <input type="text" name="company_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Company Email'); ?> *</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Phone'); ?></label>
-                    <input type="tel" name="phone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Plan'); ?> *</label>
-                    <select name="plan" class="form-control">
-                        <?php foreach ($plans as $plan): ?>
-                            <option value="<?php echo $plan['plan_key']; ?>">
-                                <?php echo htmlspecialchars($plan['plan_name']); ?> - $<?php echo number_format($plan['monthly_price'], 0); ?>/mo
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            
-            <h4 style="margin:24px 0 16px;"><?php echo __('Admin User'); ?></h4>
-            <div class="grid grid-2" style="gap:16px;">
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Admin Name'); ?> *</label>
-                    <input type="text" name="admin_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Admin Email'); ?> *</label>
-                    <input type="email" name="admin_email" class="form-control" required>
-                </div>
-                <div class="form-group" style="grid-column:1/-1;">
-                    <label class="form-label"><?php echo __('Password'); ?> *</label>
-                    <input type="password" name="admin_password" class="form-control" required>
-                </div>
-            </div>
-            
-            <div class="form-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;">
-                <button type="button" class="btn btn-outline" onclick="closeCreateCompanyModal()"><?php echo __('Cancel'); ?></button>
-                <button type="submit" class="btn btn-primary"><?php echo __('Create Company'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Add User to Company Modal -->
-<div id="addUserModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" onclick="closeAddUserModal()"></div>
-    <div class="modal-content" style="max-width:500px;">
-        <div class="modal-header">
-            <h3 class="modal-title"><?php echo __('Add User to'); ?> <span id="modalCompanyName"></span></h3>
-            <button type="button" class="btn-close" onclick="closeAddUserModal()">&times;</button>
-        </div>
-        <form method="POST" class="modal-body">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-            <input type="hidden" name="action" value="create_user_for_company">
-            <input type="hidden" name="company_id" id="modalCompanyId">
-            
-            <div class="grid grid-2" style="gap:16px;">
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Username'); ?> *</label>
-                    <input type="text" name="username" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Email'); ?> *</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Full Name'); ?> *</label>
-                    <input type="text" name="full_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('Role'); ?> *</label>
-                    <select name="role" class="form-control">
-                        <option value="Admin"><?php echo __('Admin'); ?></option>
-                        <option value="Sales Manager"><?php echo __('Sales Manager'); ?></option>
-                        <option value="Sales Rep" selected><?php echo __('Sales Rep'); ?></option>
-                        <option value="Viewer"><?php echo __('Viewer'); ?></option>
-                    </select>
-                </div>
-                <div class="form-group" style="grid-column:1/-1;">
-                    <label class="form-label"><?php echo __('Password'); ?> *</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-            </div>
-            
-            <div class="form-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;">
-                <button type="button" class="btn btn-outline" onclick="closeAddUserModal()"><?php echo __('Cancel'); ?></button>
-                <button type="submit" class="btn btn-primary"><?php echo __('Add User'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function openCreateCompanyModal() {
-    document.getElementById('createCompanyModal').style.display = 'flex';
-}
-function closeCreateCompanyModal() {
-    document.getElementById('createCompanyModal').style.display = 'none';
-}
-function openAddUserModal(companyId, companyName) {
-    document.getElementById('modalCompanyId').value = companyId;
-    document.getElementById('modalCompanyName').textContent = companyName;
-    document.getElementById('addUserModal').style.display = 'flex';
-}
-function closeAddUserModal() {
-    document.getElementById('addUserModal').style.display = 'none';
-}
-</script>
 
 
 <script>

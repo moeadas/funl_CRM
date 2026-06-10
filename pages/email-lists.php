@@ -29,10 +29,10 @@ include '../includes/header.php';
         <h1><?php echo __('email_audiences'); ?></h1>
         <p class="text-muted"><?php echo __('email_lists_subtitle'); ?></p>
     </div>
-    <button class="btn btn-primary" onclick="showCreateModal()">
+    <a href="/pages/email-list-new.php" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <?php echo __('new_list'); ?>
-    </button>
+    </a>
 </div>
 
 <div class="stats-grid mb-2">
@@ -84,8 +84,8 @@ include '../includes/header.php';
                         <td><?php echo timeAgo($l['created_at']); ?></td>
                         <td>
                             <div class="action-btns">
-                                <button class="btn btn-sm btn-outline" onclick="showPopulateModal(<?php echo $l['list_id']; ?>, '<?php echo htmlspecialchars($l['name'], ENT_QUOTES); ?>')"><?php echo __('add_leads'); ?></button>
-                                <button class="btn btn-sm btn-outline btn-danger-outline" onclick="deleteList(<?php echo $l['list_id']; ?>)"><?php echo __('delete'); ?></button>
+                                <a href="/pages/email-list-populate.php?list_id=<?php echo (int)$l['list_id']; ?>" class="btn btn-sm btn-outline"><?php echo __('add_leads'); ?></a>
+                                <a href="#" data-confirm-delete="<?php echo (int)$l['list_id']; ?>" class="btn btn-sm btn-outline btn-danger-outline"><?php echo __('delete'); ?></a>
                             </div>
                         </td>
                     </tr>
@@ -95,156 +95,24 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Create List Modal -->
-<div id="createListModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><?php echo __('new_email_list'); ?></h2>
-            <button type="button" class="modal-close" onclick="hideModal('createListModal')">&times;</button>
-        </div>
-        <form id="newListForm">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('list_name'); ?> *</label>
-                    <input type="text" name="name" class="form-control" required placeholder="<?php echo __('e_g_list_name'); ?>">
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('description'); ?></label>
-                    <textarea name="description" class="form-control" rows="2" placeholder="<?php echo __('optional_description'); ?>"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="hideModal('createListModal')"><?php echo __('cancel'); ?></button>
-                <button type="submit" class="btn btn-primary"><?php echo __('create_list'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Populate List Modal -->
-<div id="populateModal" class="modal" style="display:none;">
-    <div class="modal-content modal-lg">
-        <div class="modal-header">
-            <h2><?php echo __('add_leads_to'); ?> <span id="populateListName"></span></h2>
-            <button type="button" class="modal-close" onclick="hideModal('populateModal')">&times;</button>
-        </div>
-        <form id="populateForm">
-            <input type="hidden" name="list_id" id="populateListId">
-            <div class="modal-body">
-                <p class="text-muted"><?php echo __('populate_list_desc'); ?></p>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label"><?php echo __('lead_status'); ?></label>
-                        <select name="status" class="form-control">
-                            <option value=""><?php echo __('all_status'); ?></option>
-                            <option value="New Lead"><?php echo __('new_lead'); ?></option>
-                            <option value="Contacted"><?php echo __('contacted'); ?></option>
-                            <option value="Interested"><?php echo __('interested'); ?></option>
-                            <option value="Won"><?php echo __('won'); ?></option>
-                            <option value="On Hold"><?php echo __('on_hold'); ?></option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><?php echo __('country'); ?></label>
-                        <input type="text" name="country" class="form-control" placeholder="<?php echo __('e_g_countries'); ?>">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label"><?php echo __('lead_type'); ?></label>
-                        <select name="lead_type" class="form-control">
-                            <option value=""><?php echo __('all_types'); ?></option>
-                            <option value="Stable"><?php echo __('Stable'); ?></option>
-                            <option value="Owner"><?php echo __('Owner'); ?></option>
-                            <option value="Breeder"><?php echo __('Breeder'); ?></option>
-                            <option value="Trainer"><?php echo __('Trainer'); ?></option>
-                            <option value="Veterinarian"><?php echo __('Veterinarian'); ?></option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><?php echo __('priority'); ?></label>
-                        <select name="priority" class="form-control">
-                            <option value=""><?php echo __('all_priorities'); ?></option>
-                            <option value="Urgent"><?php echo __('urgent'); ?></option>
-                            <option value="High"><?php echo __('high'); ?></option>
-                            <option value="Medium"><?php echo __('medium'); ?></option>
-                            <option value="Low"><?php echo __('low'); ?></option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('country_contains'); ?></label>
-                    <input type="text" name="country_contains" class="form-control" placeholder="<?php echo __('e_g_united_states'); ?>">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="hideModal('populateModal')"><?php echo __('cancel'); ?></button>
-                <button type="submit" class="btn btn-primary"><?php echo __('add_matching_leads'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 const CSRF = '<?php echo $csrfToken; ?>';
 
-function showCreateModal() { document.getElementById('createListModal').style.display = 'flex'; }
-function showPopulateModal(id, name) {
-    document.getElementById('populateListId').value = id;
-    document.getElementById('populateListName').textContent = name;
-    document.getElementById('populateModal').style.display = 'flex';
-}
-function hideModal(id) { document.getElementById(id).style.display = 'none'; }
-
-document.querySelectorAll('.modal').forEach(m => {
-    m.addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
-});
-
-document.getElementById('newListForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    const data = { csrf_token: CSRF };
-    fd.forEach((v, k) => data[k] = v);
-
-    fetch('/api/email.php?action=list_save', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-    }).then(r => r.json()).then(d => {
-        if (d.success) location.reload();
-        else showNotification(d.message, 'error');
+document.querySelectorAll('a[data-confirm-delete]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var id = this.getAttribute('data-confirm-delete');
+        showConfirm('<?php echo htmlspecialchars(__('Delete this list? Leads will not be removed.'), ENT_QUOTES); ?>', function() {
+            fetch('/api/email.php?action=list_delete', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ list_id: id, csrf_token: CSRF })
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+                else showNotification(d.message, 'error');
+            });
+        });
     });
 });
-
-document.getElementById('populateForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    const listId = fd.get('list_id');
-    const filters = {};
-    fd.forEach((v, k) => { if (k !== 'list_id' && v) filters[k] = v; });
-
-    fetch('/api/email.php?action=list_populate', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ list_id: parseInt(listId), filters: filters, csrf_token: CSRF })
-    }).then(r => r.json()).then(d => {
-        if (d.success) {
-            showNotification(d.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showNotification(d.message, 'error');
-        }
-    });
-});
-
-function deleteList(id) {
-    
-    fetch('/api/email.php?action=list_delete', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ list_id: id, csrf_token: CSRF })
-    }).then(r => r.json()).then(d => {
-        if (d.success) location.reload();
-        else showNotification(d.message, 'error');
-    });
-}
 </script>
 
 <?php include '../includes/footer.php'; ?>

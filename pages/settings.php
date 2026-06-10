@@ -439,7 +439,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="card">
                 <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
                     <h3 class="card-title"><?php echo htmlspecialchars(__('Lead Custom Fields')); ?></h3>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openCustomFieldModal()">+ <?php echo htmlspecialchars(__('Add Field')); ?></button>
+                    <a href="/pages/custom-field-new.php?entity=lead" class="btn btn-primary btn-sm">+ <?php echo htmlspecialchars(__('Add Field')); ?></a>
                 </div>
                 <div class="card-body">
                     <div class="table-container">
@@ -504,49 +504,6 @@ include __DIR__ . '/../includes/header.php';
     </form>
 </div>
 
-<!-- Custom Field Modal Dialog -->
-<div class="modal-overlay" id="fieldModalOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;opacity:0;transition:opacity 0.2s ease;">
-    <div class="modal" style="background:white;padding:28px;border-radius:16px;max-width:480px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,0.15);transform:scale(0.95);transition:transform 0.2s ease;">
-        <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;color:#1f2937;" id="fieldModalTitle"><?php echo htmlspecialchars(__('Add Custom Field')); ?></h3>
-        <form id="customFieldForm" onsubmit="saveCustomField(event)">
-            <input type="hidden" id="fieldId" name="field_id">
-            <div class="form-group" style="margin-bottom:14px;">
-                <label class="form-label"><?php echo htmlspecialchars(__('Field Label *')); ?></label>
-                <input type="text" id="fieldLabel" class="form-control" placeholder="e.g. Horse Age" required oninput="generateFieldName(this.value)">
-            </div>
-            <div class="form-group" style="margin-bottom:14px;">
-                <label class="form-label"><?php echo htmlspecialchars(__('Field Code Name * (Alphanumeric/Underscore)')); ?></label>
-                <input type="text" id="fieldName" class="form-control" placeholder="e.g. horse_age" required pattern="^[a-zA-Z0-9_]+$">
-            </div>
-            <div class="form-group" style="margin-bottom:14px;">
-                <label class="form-label"><?php echo htmlspecialchars(__('Field Type')); ?></label>
-                <select id="fieldType" class="form-control">
-                    <option value="text"><?php echo htmlspecialchars(__('Text Input')); ?></option>
-                    <option value="textarea"><?php echo htmlspecialchars(__('Textarea (Multiline)')); ?></option>
-                    <option value="number"><?php echo htmlspecialchars(__('Number')); ?></option>
-                    <option value="select"><?php echo htmlspecialchars(__('Dropdown List')); ?></option>
-                    <option value="date"><?php echo htmlspecialchars(__('Date')); ?></option>
-                </select>
-            </div>
-            <div class="form-group" style="margin-bottom:14px;">
-                <label class="form-label"><?php echo htmlspecialchars(__('Required Field')); ?></label>
-                <select id="fieldRequired" class="form-control">
-                    <option value="0"><?php echo htmlspecialchars(__('Optional')); ?></option>
-                    <option value="1"><?php echo htmlspecialchars(__('Required')); ?></option>
-                </select>
-            </div>
-            <div class="form-group" style="margin-bottom:20px;">
-                <label class="form-label"><?php echo htmlspecialchars(__('Sort Order (Lower shows first)')); ?></label>
-                <input type="number" id="fieldSort" class="form-control" value="0">
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:12px;">
-                <button type="button" class="btn btn-outline" onclick="closeCustomFieldModal()"><?php echo htmlspecialchars(__('Cancel')); ?></button>
-                <button type="submit" class="btn btn-primary"><?php echo htmlspecialchars(__('Save Field')); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 function switchTab(tabId) {
     // Update tab header links by data-tab attribute
@@ -599,7 +556,7 @@ function loadCustomFields() {
                         <td>${field.is_active == 1 ? `<span class="badge badge-success">${__('Active')}</span>` : `<span class="badge badge-error">${__('Inactive')}</span>`}</td>
                         <td>
                             <div style="display:flex;gap:6px;">
-                                <button type="button" class="btn btn-xs btn-outline" onclick="editCustomField(${JSON.stringify(field).replace(/"/g, '&quot;')})">${__('Edit')}</button>
+                                <a href="/pages/custom-field-new.php?entity=lead&id=${field.field_id}" class="btn btn-xs btn-outline">${__('Edit')}</a>
                                 <button type="button" class="btn btn-xs btn-outline btn-error" onclick="deleteCustomField(${field.field_id}, '${escapeHtml(field.field_label)}')">${__('Delete')}</button>
                             </div>
                         </td>
@@ -615,60 +572,6 @@ function loadCustomFields() {
 }
 
 // Dialog helper
-const overlay = document.getElementById('fieldModalOverlay');
-const modal = overlay.querySelector('.modal');
-
-function openCustomFieldModal() {
-    document.getElementById('fieldModalTitle').textContent = __('Add Custom Field');
-    document.getElementById('fieldId').value = '';
-    document.getElementById('fieldLabel').value = '';
-    document.getElementById('fieldName').value = '';
-    document.getElementById('fieldName').disabled = false;
-    document.getElementById('fieldType').value = 'text';
-    document.getElementById('fieldRequired').value = '0';
-    document.getElementById('fieldSort').value = '0';
-    
-    overlay.style.display = 'flex';
-    setTimeout(() => {
-        overlay.style.opacity = '1';
-        modal.style.transform = 'scale(1)';
-    }, 10);
-}
-
-function closeCustomFieldModal() {
-    overlay.style.opacity = '0';
-    modal.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        overlay.style.display = 'none';
-    }, 200);
-}
-
-function generateFieldName(val) {
-    if (document.getElementById('fieldId').value !== '') return; // Don't auto-modify on edit
-    const slug = val.toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '') // remove special
-        .replace(/\s+/g, '_') // spaces to underscores
-        .substring(0, 50);
-    document.getElementById('fieldName').value = slug;
-}
-
-function editCustomField(field) {
-    document.getElementById('fieldModalTitle').textContent = __('Edit Custom Field');
-    document.getElementById('fieldId').value = field.field_id;
-    document.getElementById('fieldLabel').value = field.field_label;
-    document.getElementById('fieldName').value = field.field_name;
-    document.getElementById('fieldName').disabled = true; // Code name is key, don't edit
-    document.getElementById('fieldType').value = field.field_type;
-    document.getElementById('fieldRequired').value = field.is_required;
-    document.getElementById('fieldSort').value = field.sort_order;
-    
-    overlay.style.display = 'flex';
-    setTimeout(() => {
-        overlay.style.opacity = '1';
-        modal.style.transform = 'scale(1)';
-    }, 10);
-}
-
 function saveCustomField(e) {
     e.preventDefault();
     const id = document.getElementById('fieldId').value;
