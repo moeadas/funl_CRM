@@ -229,9 +229,23 @@ let currentSortDir = localStorage.getItem('leadsSortDir') || 'DESC';
 document.addEventListener('DOMContentLoaded', function() {
     toggleView(currentView, false);
     initSortHeaders();
+    initRowClicks();
     updateSortIndicators();
     loadLeads();
 });
+
+function initRowClicks() {
+    document.addEventListener('click', function(e) {
+        var row = e.target.closest && e.target.closest('tr.clickable-row');
+        if (!row) return;
+        // Don't navigate if click was inside a .no-row-click cell
+        if (e.target.closest('.no-row-click')) return;
+        // Don't navigate if click was on a link/button/input
+        if (e.target.closest('a, button, input, select, textarea, label')) return;
+        var href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+    });
+}
 
 function initSortHeaders() {
     var headers = document.querySelectorAll('.th-sortable');
@@ -363,8 +377,8 @@ function renderLeadsList(leads) {
     var startNum = ((currentPage - 1) * 25) + 1;
     tbody.innerHTML = leads.map(function(lead, idx) {
         var rowNum = startNum + idx;
-        var row = '<tr class="clickable-row" onclick="if(!event.target.type||event.target.type!==\'checkbox\')window.location=\'/pages/lead-detail.php?id=' + lead.lead_id + '\'">';
-        if (!isSalesRep) row += '<td onclick="event.stopPropagation()"><input type="checkbox" class="lead-checkbox" value="' + lead.lead_id + '" onchange="updateBulkState()"></td>';
+        var row = '<tr class="clickable-row" data-href="/pages/lead-detail.php?id=' + lead.lead_id + '">';
+        if (!isSalesRep) row += '<td class="no-row-click"><input type="checkbox" class="lead-checkbox" value="' + lead.lead_id + '" onchange="updateBulkState()"></td>';
         row += '<td style="text-align:center;color:var(--color-text-tertiary);font-size:13px;font-weight:500;">' + rowNum + '</td>' +
             '<td><strong>' + escapeHtml(lead.company_name || lead.contact_person || __('Unnamed')) + '</strong><br><small class="text-muted">' + escapeHtml(__(lead.lead_type)) + '</small></td>' +
             '<td>' + escapeHtml(lead.contact_person || '-') + '<br><small class="text-muted">' + escapeHtml(lead.email || '-') + '</small></td>' +
@@ -374,7 +388,7 @@ function renderLeadsList(leads) {
         if (!isSalesRep) row += '<td>' + escapeHtml(lead.assigned_name || __('Unassigned')) + '</td>';
         row += '<td><small class="text-muted">' + formatDate(lead.created_at) + '</small></td>' +
             '<td><small class="text-muted">' + formatDate(lead.updated_at) + '</small></td>' +
-            '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;justify-content:center">' +
+            '<td class="no-row-click"><div style="display:flex;gap:6px;justify-content:center">' +
             '<a href="/pages/lead-form.php?id=' + lead.lead_id + '" class="btn btn-sm btn-outline" title="' + escapeHtml(__('Edit')) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>' +
             '<button onclick="moveLeadToContact(' + lead.lead_id + ', event)" title="' + escapeHtml(__('Convert to Contact')) + '" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;color:#15803d;white-space:nowrap">→ ' + escapeHtml(__('Contact')) + '</button>' +
             '</div></td>' +

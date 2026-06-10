@@ -26,10 +26,10 @@ include '../includes/header.php';
         <h1><?php echo __('email_templates'); ?></h1>
         <p class="text-muted"><?php echo __('email_templates_subtitle'); ?></p>
     </div>
-    <button class="btn btn-primary" onclick="createTemplate()">
+    <a href="email-template-new.php" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <?php echo __('new_template'); ?>
-    </button>
+    </a>
 </div>
 
 <?php if (empty($templates)): ?>
@@ -66,81 +66,16 @@ include '../includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Create Template Modal -->
-<div id="createTemplateModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><?php echo __('new_template'); ?></h2>
-            <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
-        </div>
-        <form id="newTemplateForm">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('template_name'); ?> *</label>
-                    <input type="text" name="name" class="form-control" required placeholder="<?php echo __('e_g_monthly_newsletter'); ?>">
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('default_subject'); ?></label>
-                    <input type="text" name="subject" class="form-control" placeholder="<?php echo __('e_g_monthly_update'); ?>">
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><?php echo __('category'); ?></label>
-                    <select name="category" class="form-control">
-                        <option value="Marketing"><?php echo __('Marketing'); ?></option>
-                        <option value="Newsletter"><?php echo __('Newsletter'); ?></option>
-                        <option value="Announcement"><?php echo __('Announcement'); ?></option>
-                        <option value="Follow-up"><?php echo __('Follow-up'); ?></option>
-                        <option value="Welcome"><?php echo __('Welcome'); ?></option>
-                        <option value="Custom" selected><?php echo __('Custom'); ?></option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeModal()"><?php echo __('cancel'); ?></button>
-                <button type="submit" class="btn btn-primary"><?php echo __('create_open_builder'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
-function createTemplate() {
-    document.getElementById('createTemplateModal').style.display = 'flex';
-}
-function closeModal() {
-    document.getElementById('createTemplateModal').style.display = 'none';
-}
-document.getElementById('createTemplateModal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-});
-
-document.getElementById('newTemplateForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    const data = { csrf_token: '<?php echo $csrfToken; ?>' };
-    fd.forEach((v, k) => data[k] = v);
-
-    console.log('Submitting template with data:', data);
-    fetch('/api/email.php?action=template_save', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-    }).then(r => { console.log('Template save response status:', r.status); return r.json(); }).then(d => { console.log('Template save response:', d);
-        if (d.success) {
-            window.location.href = 'email-builder.php?mode=template&id=' + d.data.template_id;
-        } else {
-            showNotification(d.message, 'error');
-        }
-    });
-});
-
 function deleteTemplate(id) {
-    
-    fetch('/api/email.php?action=template_delete', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ template_id: id, csrf_token: '<?php echo $csrfToken; ?>' })
-    }).then(r => { console.log('Template save response status:', r.status); return r.json(); }).then(d => { console.log('Template save response:', d);
-        if (d.success) location.reload();
-        else showNotification(d.message, 'error');
+    showConfirm('<?php echo htmlspecialchars(__('are_you_sure_delete_template'), ENT_QUOTES); ?>', function() {
+        fetch('/api/email.php?action=template_delete', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ template_id: id, csrf_token: '<?php echo $csrfToken; ?>' })
+        }).then(r => r.json()).then(d => {
+            if (d.success) location.reload();
+            else showNotification(d.message, 'error');
+        });
     });
 }
 </script>
