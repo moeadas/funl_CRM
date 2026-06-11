@@ -17,12 +17,30 @@ $userData = null;
 if ($isEdit) {
     try {
         $db = Database::getInstance();
-        $userData = $db->query(
-            "SELECT * FROM users WHERE user_id = ? AND company_id = ?",
-            [$userId, $_SESSION['company_id']]
-        )->fetch();
+        $currentUser = getCurrentUser();
+        $isSuperAdmin = isSuperAdmin();
+
+        if ($isSuperAdmin) {
+            // Super admin can edit any user, including those without a company
+            $userData = $db->query(
+                "SELECT * FROM users WHERE user_id = ?",
+                [$userId]
+            )->fetch();
+        } else {
+            // Admin/Manager can only edit users in their own company
+            $companyId = $_SESSION['company_id'] ?? null;
+            if ($companyId === null) {
+                $_SESSION['error'] = "No company context found. Please log in again.";
+                header('Location: users.php');
+                exit;
+            }
+            $userData = $db->query(
+                "SELECT * FROM users WHERE user_id = ? AND (company_id = ? OR company_id IS NULL)",
+                [$userId, $companyId]
+            )->fetch();
+        }
         if (!$userData) {
-            $_SESSION['error'] = "User not found";
+            $_SESSION['error'] = "User not found or you don't have permission to edit this user";
             header('Location: users.php');
             exit;
         }
