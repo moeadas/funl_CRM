@@ -16,6 +16,23 @@ $db = Database::getInstance();
 $userId = getCurrentUser()['user_id'] ?? 0;
 $companyId = $_SESSION["company_id"] ?? null;
 
+// If company_id is missing from session (stale session), look it up from DB
+if (!$companyId && !empty($userId)) {
+    try {
+        $stmt = $db->prepare("SELECT company_id FROM users WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $dbCompanyId = $stmt->fetchColumn();
+        if ($dbCompanyId) {
+            $companyId = (int)$dbCompanyId;
+            $_SESSION['company_id'] = $companyId;
+        }
+    } catch (Exception $e) { /* ignore — will fail gracefully below */ }
+}
+
+if (!$companyId) {
+    jsonError('No company is associated with your account. Please contact your administrator.', 400);
+}
+
 // ────────────────────────────────────────────────────────────────
 // CONTACTS
 // ────────────────────────────────────────────────────────────────
