@@ -23,47 +23,61 @@ $crmFields = [
 ];
 ?><div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/pages/webforms.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo __('Back to Web Forms'); ?></a>
+        <a href="/pages/webforms.php" class="btn btn-outline" style="padding:8px 14px;display:inline-flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            <?php echo __('Back to Web Forms'); ?>
+        </a>
         <h1><?php echo $formId ? __('Edit Web Form') : __('New Web Form'); ?></h1>
     </div>
-    <div style="display:flex; gap:10px;">
+    <div class="header-actions">
         <?php if ($formId): ?>
-            <button type="button" class="btn btn-danger" onclick="deleteForm()"><?php echo __('Delete Form'); ?></button>
+            <button type="button" class="btn btn-outline" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;display:inline-flex;align-items:center;gap:6px;" onclick="deleteForm()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                <?php echo __('Delete Form'); ?>
+            </button>
         <?php endif; ?>
-        <button type="button" class="btn btn-primary" onclick="saveForm()"><?php echo __('Save Form'); ?></button>
+        <button type="button" class="btn btn-primary" onclick="saveForm()" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <?php echo __('Save Form'); ?>
+        </button>
     </div>
 </div>
 
 <div style="max-width:1000px;">
     <div class="card">
-        <h3 class="card-title"><?php echo __('Form Profile'); ?></h3>
-        <div class="row-2">
-            <div class="form-group">
-                <label class="form-label"><?php echo __('Form Name'); ?> *</label>
-                <input type="text" id="formName" class="form-control" placeholder="<?php echo __('e.g. Contact Us Form'); ?>" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label"><?php echo __('Status'); ?></label>
-                <select id="formStatus" class="form-control">
-                    <option value="active"><?php echo __('Active'); ?></option>
-                    <option value="inactive"><?php echo __('Inactive'); ?></option>
-                </select>
-            </div>
+        <div class="card-header" style="padding:18px 24px;">
+            <h3 class="card-title" style="margin:0;"><?php echo __('Form Profile'); ?></h3>
         </div>
-        <div style="margin-top:16px;">
-            <label class="form-label"><?php echo __('Description / Helper Text'); ?></label>
-            <input type="text" id="formDescription" class="form-control" placeholder="<?php echo __('What this form is for, or instructions for users'); ?>">
+        <div class="card-body" style="padding:24px;">
+            <div class="row-2">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label"><?php echo __('Form Name'); ?> *</label>
+                    <input type="text" id="formName" class="form-control" placeholder="<?php echo __('e.g. Contact Us Form'); ?>" required style="padding:10px 14px;">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label"><?php echo __('Status'); ?></label>
+                    <select id="formStatus" class="form-control" style="padding:10px 14px;">
+                        <option value="active"><?php echo __('Active'); ?></option>
+                        <option value="inactive"><?php echo __('Inactive'); ?></option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:16px;margin-bottom:0;">
+                <label class="form-label"><?php echo __('Description / Helper Text'); ?></label>
+                <input type="text" id="formDescription" class="form-control" placeholder="<?php echo __('What this form is for, or instructions for users'); ?>" style="padding:10px 14px;">
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div class="card" style="margin-top:16px;">
+        <div class="card-header" style="padding:18px 24px;display:flex; justify-content:space-between; align-items:center;">
             <h3 class="card-title" style="margin:0;"><?php echo __('Form Fields & Field Mapping'); ?></h3>
             <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" onclick="addFieldRow()">+ <?php echo __('Add Field'); ?></button>
         </div>
-        
-        <div id="fieldsContainer">
-            <!-- Dynamic fields go here -->
+        <div class="card-body" style="padding:24px;">
+            <div id="fieldsContainer">
+                <!-- Dynamic fields go here -->
+            </div>
         </div>
     </div>
 </div>

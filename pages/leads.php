@@ -208,6 +208,8 @@ include __DIR__ . '/../includes/header.php';
 
 
 <script>
+const CSRF_TOKEN = "<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>";
+
 // Escape HTML to prevent XSS
 function escapeHtml(text) {
     if (text == null) return '';
