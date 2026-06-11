@@ -608,18 +608,43 @@ function moveLeadToContact($db, $data, $currentUser) {
     if (!hasRole('Sales Manager') && !hasRole('Admin')) {
         jsonError('Permission denied', 403);
     }
-    
+
     $leadId = intval($data['lead_id'] ?? 0);
     if (!$leadId) jsonError('Lead ID required', 400);
-    
+
+    $isSuperAdmin = !empty($currentUser['is_super_admin']);
     $companyId = $currentUser['company_id'] ?? null;
-    if (!$companyId) jsonError('Company not found', 400);
-    
-    // Get the lead
-    $stmt = $db->prepare("SELECT * FROM leads WHERE lead_id = ? AND company_id = ?");
-    $stmt->execute([$leadId, $companyId]);
+
+    // For Super Admin: look up the lead without company filter
+    // For Admin/Manager: require company_id; if missing from session, look it up from DB
+    if ($isSuperAdmin) {
+        $stmt = $db->prepare("SELECT * FROM leads WHERE lead_id = ?");
+        $stmt->execute([$leadId]);
+    } else {
+        if (!$companyId) {
+            // Fall back: look up the user's company from the DB (in case session is stale)
+            try {
+                $userStmt = $db->prepare("SELECT company_id FROM users WHERE user_id = ?");
+                $userStmt->execute([$currentUser['user_id']]);
+                $userCompany = $userStmt->fetchColumn();
+                if ($userCompany) {
+                    $companyId = (int)$userCompany;
+                    // Update the session so this doesn't happen again
+                    $_SESSION['company_id'] = $companyId;
+                }
+            } catch (Exception $e) { /* ignore */ }
+        }
+        if (!$companyId) {
+            jsonError('No company is associated with your account. Please contact your administrator.', 400);
+        }
+        $stmt = $db->prepare("SELECT * FROM leads WHERE lead_id = ? AND company_id = ?");
+        $stmt->execute([$leadId, $companyId]);
+    }
     $lead = $stmt->fetch();
     if (!$lead) jsonError('Lead not found', 404);
+
+    // Use the lead's company_id (handles super-admin case and ensures consistency)
+    $companyId = $lead['company_id'];
     
     // Create contact from lead data
     $stmt = $db->prepare("
@@ -658,12 +683,18 @@ function moveLeadToContact($db, $data, $currentUser) {
     ]);
     
     $contactId = $db->getConnection()->lastInsertId();
-    
+
+    // Update lead status to 'Won' (and mark the lead as converted)
+    try {
+        $updateStmt = $db->prepare("UPDATE leads SET lead_status = 'Won', updated_at = NOW() WHERE lead_id = ?");
+        $updateStmt->execute([$leadId]);
+    } catch (Exception $e) { /* non-fatal — lead can still be marked later */ }
+
     // Log activity
     $leadName = $lead['contact_person'] ?: $lead['company_name'] ?: 'Lead #' . $leadId;
-    logActivity($currentUser['user_id'], 'Convert to Contact', 'Lead', $leadId, 
+    logActivity($currentUser['user_id'], 'Convert to Contact', 'Lead', $leadId,
         "Converted lead '$leadName' to contact ID $contactId");
-    
+
     jsonSuccess('Lead moved to contacts successfully', ['contact_id' => $contactId]);
 }
 ?>
