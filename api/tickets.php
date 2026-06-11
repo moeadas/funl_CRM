@@ -10,6 +10,22 @@ $db = Database::getInstance();
 $userId = getCurrentUser()['user_id'] ?? 0;
 $companyId = $_SESSION["company_id"] ?? null;
 
+// Auto-recover company_id if session is stale
+if (!$companyId && !empty($userId)) {
+    try {
+        $stmt = $db->prepare("SELECT company_id FROM users WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $dbCompanyId = $stmt->fetchColumn();
+        if ($dbCompanyId) {
+            $companyId = (int)$dbCompanyId;
+            $_SESSION['company_id'] = $companyId;
+        }
+    } catch (Exception $e) { /* ignore */ }
+}
+if (!$companyId) {
+    jsonError('No company is associated with your account. Please contact your administrator.', 400);
+}
+
 if ($action === 'list' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $status = $_GET['status'] ?? '';
     $where = ["t.company_id = ?"]; $params = [$companyId];
