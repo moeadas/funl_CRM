@@ -20,6 +20,62 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 $currentUser = getCurrentUser();
 
+// ────────────────────────────────────────────────────────────────
+// UTM & Source helpers
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * Capture UTM parameters from the lead payload, with fallbacks.
+ * Priority: explicit fields in $data → hidden form fields (same names) → empty
+ */
+function captureUtmFromRequest($data, $currentUser = null) {
+    $keys = ['utm_source', 'utm_campaign', 'utm_medium', 'utm_content', 'utm_term', 'landing_page', 'referrer'];
+    $out = [];
+    foreach ($keys as $k) {
+        $v = $data[$k] ?? null;
+        if (is_string($v)) $v = trim($v);
+        $out[$k] = ($v === '' || $v === null) ? null : substr($v, 0, 1000);
+    }
+    return $out;
+}
+
+/**
+ * Record a lead source value for the company's autocomplete library.
+ * Increments use_count if already exists, else inserts new row.
+ */
+function trackLeadSource($db, $companyId, $sourceValue) {
+    $sourceValue = trim((string)$sourceValue);
+    if ($sourceValue === '' || !$companyId) return;
+    if (mb_strlen($sourceValue) > 255) $sourceValue = mb_substr($sourceValue, 0, 255);
+    try {
+        $db->query("
+            INSERT INTO company_lead_sources (company_id, source_value, use_count, first_used_at, last_used_at)
+            VALUES (?, ?, 1, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE use_count = use_count + 1, last_used_at = NOW()
+        ", [$companyId, $sourceValue]);
+    } catch (Exception $e) {
+        // Non-fatal
+    }
+}
+
+/**
+ * Get the company's library of lead sources, ordered by frequency.
+ */
+function getCompanyLeadSources($db, $companyId, $search = '', $limit = 30) {
+    if (!$companyId) return [];
+    $sql = "SELECT source_value, use_count, last_used_at FROM company_lead_sources WHERE company_id = ?";
+    $params = [$companyId];
+    if ($search !== '') {
+        $sql .= " AND source_value LIKE ?";
+        $params[] = '%' . $search . '%';
+    }
+    $sql .= " ORDER BY use_count DESC, last_used_at DESC LIMIT ?";
+    $params[] = (int)$limit;
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 try {
     switch ($method) {
         case 'GET':
@@ -48,8 +104,49 @@ function handleGetRequest($db, $action, $currentUser) {
         case 'detail': getLeadDetail($db, $currentUser); break;
         case 'stats':  getLeadStats($db, $currentUser); break;
         case 'search': searchLeads($db, $currentUser); break;
+        case 'sources': getLeadSourcesAutocomplete($db, $currentUser); break;
         default:       getLeadsList($db, $currentUser);
     }
+}
+
+function getLeadSourcesAutocomplete($db, $currentUser) {
+    $search = trim($_GET['q'] ?? '');
+    $companyId = $currentUser['company_id'] ?? null;
+
+    // Common starter suggestions (used when company has none yet)
+    $seedDefaults = [
+        'Website', 'Website - Contact Form', 'Website - Chat Widget',
+        'Referral', 'Cold Call', 'Cold Email', 'Email Campaign',
+        'Social Media', 'Facebook', 'Instagram', 'LinkedIn', 'Twitter/X',
+        'Google Ads', 'Google Organic', 'Bing Ads',
+        'YouTube', 'TikTok', 'Trade Show', 'Conference', 'Webinar',
+        'Partner', 'Affiliate', 'Direct', 'Other'
+    ];
+
+    $company = getCompanyLeadSources($db, $companyId, $search, 50);
+    $companyValues = array_column($company, 'source_value');
+
+    // Merge: company sources first (by frequency), then seed defaults
+    $merged = array_values(array_unique(array_merge($companyValues, $seedDefaults)));
+
+    // Filter by search
+    if ($search !== '') {
+        $merged = array_values(array_filter($merged, function($s) use ($search) {
+            return stripos($s, $search) !== false;
+        }));
+    }
+
+    // Build response: include use_count for company sources
+    $companyMap = array_column($company, 'use_count', 'source_value');
+    $out = array_map(function($s) use ($companyMap) {
+        return [
+            'value' => $s,
+            'use_count' => $companyMap[$s] ?? 0,
+            'is_seed' => !isset($companyMap[$s]),
+        ];
+    }, array_slice($merged, 0, 30));
+
+    echo json_encode(['success' => true, 'data' => $out]);
 }
 
 /**
@@ -365,13 +462,17 @@ function createLead($db, $data, $currentUser) {
     $assignedTo = emptyToNull($data['assigned_to'] ?? null);
     if ($assignedTo === null) $assignedTo = $currentUser['user_id'];
 
+    // Capture UTM values (auto-populate from URL/referrer if not provided)
+    $utm = captureUtmFromRequest($data, $currentUser);
+
     $stmt = $db->prepare("
         INSERT INTO leads (
             company_id, lead_type, company_name, contact_person, title_position, region, country, city,
             address, phone, mobile, email, website, facebook_url, instagram_url, linkedin_url,
             twitter_url, youtube_url, industry, company_size, annual_revenue, notes,
-            lead_status, lead_source, priority, assigned_to, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            lead_status, lead_source, priority, assigned_to, created_by,
+            utm_source, utm_campaign, utm_medium, utm_content, utm_term, landing_page, referrer
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $currentUser['company_id'] ?? null,
@@ -387,10 +488,24 @@ function createLead($db, $data, $currentUser) {
         emptyToNull($data['notes'] ?? null), $data['lead_status'] ?? 'New Lead',
         $data['lead_source'] ?? 'Other', $data['priority'] ?? 'Medium',
         $assignedTo, $currentUser['user_id'],
+        $utm['utm_source'], $utm['utm_campaign'], $utm['utm_medium'],
+        $utm['utm_content'], $utm['utm_term'], $utm['landing_page'], $utm['referrer'],
     ]);
 
     $leadName = $data['contact_person'] ?? $data['company_name'] ?? 'New Lead';
     $leadId = $db->getConnection()->lastInsertId();
+
+    // Track this source value for the company (autocomplete library)
+    $sourceForTracking = $data['lead_source'] ?? null;
+    if (!$sourceForTracking && $utm['utm_source']) {
+        // If source wasn't set but we have utm_source, build a friendly one
+        $sourceForTracking = $utm['utm_source'];
+        // Also update the lead to record the derived source
+        $db->query("UPDATE leads SET lead_source = ? WHERE lead_id = ?", [$sourceForTracking, $leadId]);
+    }
+    if ($sourceForTracking) {
+        trackLeadSource($db, $currentUser['company_id'] ?? null, $sourceForTracking);
+    }
 
     // Save custom field values
     saveCustomFieldValues($leadId, $data);
@@ -429,6 +544,10 @@ function updateLead($db, $data, $currentUser) {
     $newAssignedTo = emptyToNull($data['assigned_to'] ?? null);
 
     $companyId = $currentUser['company_id'] ?? null;
+
+    // Capture UTM values
+    $utm = captureUtmFromRequest($data, $currentUser);
+
     if ($companyId) {
         $stmt = $db->prepare("
             UPDATE leads SET
@@ -436,7 +555,9 @@ function updateLead($db, $data, $currentUser) {
                 region = ?, country = ?, city = ?, address = ?, phone = ?, mobile = ?,
                 email = ?, website = ?, facebook_url = ?, instagram_url = ?, linkedin_url = ?,
                 twitter_url = ?, youtube_url = ?, industry = ?, company_size = ?, annual_revenue = ?, notes = ?, lead_status = ?, lead_source = ?,
-                priority = ?, assigned_to = ?
+                priority = ?, assigned_to = ?,
+                utm_source = ?, utm_campaign = ?, utm_medium = ?, utm_content = ?, utm_term = ?,
+                landing_page = ?, referrer = ?
             WHERE lead_id = ? AND company_id = ?
         ");
     } else {
@@ -446,7 +567,9 @@ function updateLead($db, $data, $currentUser) {
                 region = ?, country = ?, city = ?, address = ?, phone = ?, mobile = ?,
                 email = ?, website = ?, facebook_url = ?, instagram_url = ?, linkedin_url = ?,
                 twitter_url = ?, youtube_url = ?, industry = ?, company_size = ?, annual_revenue = ?, notes = ?, lead_status = ?, lead_source = ?,
-                priority = ?, assigned_to = ?
+                priority = ?, assigned_to = ?,
+                utm_source = ?, utm_campaign = ?, utm_medium = ?, utm_content = ?, utm_term = ?,
+                landing_page = ?, referrer = ?
             WHERE lead_id = ?
         ");
     }
@@ -461,10 +584,18 @@ function updateLead($db, $data, $currentUser) {
         emptyToNull($data['youtube_url'] ?? null), emptyToNull($data['industry'] ?? null),
         emptyToNull($data['company_size'] ?? null), emptyToNull($data['annual_revenue'] ?? null),
         emptyToNull($data['notes'] ?? null), $data['lead_status'] ?? 'New Lead', $data['lead_source'] ?? 'Other',
-        $data['priority'] ?? 'Medium', $newAssignedTo, $data['lead_id'],
+        $data['priority'] ?? 'Medium', $newAssignedTo,
+        $utm['utm_source'], $utm['utm_campaign'], $utm['utm_medium'],
+        $utm['utm_content'], $utm['utm_term'], $utm['landing_page'], $utm['referrer'],
     ];
     if ($companyId) $params[] = $companyId;
     $stmt->execute($params);
+
+    // Track this source value for the company (autocomplete library)
+    $sourceForTracking = $data['lead_source'] ?? null;
+    if ($sourceForTracking) {
+        trackLeadSource($db, $companyId, $sourceForTracking);
+    }
 
     // Save custom field values
     saveCustomFieldValues($data['lead_id'], $data);

@@ -16,6 +16,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
 
+/**
+ * Extract a UTM parameter from the request's referer URL.
+ * Used as a server-side fallback when the JS capture didn't run
+ * (e.g. forms on the user's own site that don't include our script).
+ */
+function extractUtmFromServerVar($key) {
+    $ref = $_SERVER['HTTP_REFERER'] ?? '';
+    if (!$ref) return null;
+    $parts = parse_url($ref);
+    if (empty($parts['query'])) return null;
+    parse_str($parts['query'], $params);
+    return !empty($params[$key]) ? $params[$key] : null;
+}
+
+/**
+ * Track a lead source value for the company.
+ */
+function trackLeadSource($db, $companyId, $sourceValue) {
+    $sourceValue = trim((string)$sourceValue);
+    if ($sourceValue === '' || !$companyId) return;
+    if (mb_strlen($sourceValue) > 255) $sourceValue = mb_substr($sourceValue, 0, 255);
+    try {
+        $db->query("
+            INSERT INTO company_lead_sources (company_id, source_value, use_count, first_used_at, last_used_at)
+            VALUES (?, ?, 1, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE use_count = use_count + 1, last_used_at = NOW()
+        ", [$companyId, $sourceValue]);
+    } catch (Exception $e) {
+        // Non-fatal
+    }
+}
+
 // H-3 fix: rate limit public form submissions to prevent spam/DB flooding.
 // 10 submissions per IP per hour. This endpoint is intentionally public (CORS:*)
 // so we rely on IP-based limiting since there is no user/session.
@@ -135,13 +167,33 @@ $leadData = [
     'website'        => sanitizeInput($website),
     'industry'       => sanitizeInput($industry),
     'notes'          => sanitizeInput($notes),
-    'lead_source'    => 'Website',
+    'lead_source'    => sanitizeInput($input['lead_source'] ?? 'Website'),
     'lead_status'    => 'New Lead',
     'created_by'     => !empty($form['created_by']) ? (int)$form['created_by'] : 1,
+    // UTM tracking (from form payload OR fallback to query string / referrer)
+    'utm_source'     => sanitizeInput($input['utm_source'] ?? extractUtmFromServerVar('utm_source')),
+    'utm_campaign'   => sanitizeInput($input['utm_campaign'] ?? extractUtmFromServerVar('utm_campaign')),
+    'utm_medium'     => sanitizeInput($input['utm_medium'] ?? extractUtmFromServerVar('utm_medium')),
+    'utm_content'    => sanitizeInput($input['utm_content'] ?? extractUtmFromServerVar('utm_content')),
+    'utm_term'       => sanitizeInput($input['utm_term'] ?? extractUtmFromServerVar('utm_term')),
+    'landing_page'   => sanitizeInput($input['landing_page'] ?? ($_SERVER['HTTP_REFERER'] ?? null)),
+    'referrer'       => sanitizeInput($input['referrer'] ?? ($_SERVER['HTTP_REFERER'] ?? null)),
 ];
+
+// If utm_source is present but lead_source wasn't supplied, derive a friendly source
+if (empty($input['lead_source']) && !empty($leadData['utm_source'])) {
+    $derived = $leadData['utm_source'];
+    if (!empty($leadData['utm_campaign'])) $derived .= ' (' . $leadData['utm_campaign'] . ')';
+    $leadData['lead_source'] = $derived;
+}
 
 try {
     $leadId = $db->insert('leads', $leadData);
+
+    // Track the new source for the company
+    if (!empty($leadData['lead_source'])) {
+        trackLeadSource($db, $companyId, $leadData['lead_source']);
+    }
     
     // Log submission in webform_submissions
     $db->insert('webform_submissions', [
