@@ -425,6 +425,18 @@ function sanitizeInput($data) {
 }
 
 /**
+ * Convert an empty value ('', null, '0' for nullable) to NULL.
+ * Used when binding to nullable DB columns.
+ */
+if (!function_exists('emptyToNull')) {
+    function emptyToNull($v) {
+        if ($v === null) return null;
+        if (is_string($v) && trim($v) === '') return null;
+        return $v;
+    }
+}
+
+/**
  * Validate email
  */
 function validateEmail($email) {
