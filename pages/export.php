@@ -1,7 +1,8 @@
 <?php
 /**
- * White Label CRM - Data Export Page
+ * White Label CRM - Data Export & Import Page
  * Export leads, interactions, WhatsApp messages, VoIP calls
+ * Import leads from CSV / JSON
  */
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -10,7 +11,7 @@ requireLogin();
 
 // Only admins and sales managers
 if (!hasRole('Admin') && !hasRole('Sales Manager')) {
-    $_SESSION['error'] = 'You do not have permission to export data.';
+    $_SESSION['error'] = 'You do not have permission to access data import/export.';
     header('Location: /pages/dashboard.php');
     exit;
 }
@@ -36,11 +37,29 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="page-header">
     <div>
-        <h1 class="page-title"><?php echo __('Data Export'); ?></h1>
-        <p class="text-muted"><?php echo __('Export your CRM data including leads, interactions, WhatsApp conversations, and VoIP call history'); ?></p>
+        <h1 class="page-title"><?php echo __('Data Import & Export'); ?></h1>
+        <p class="text-muted"><?php echo __('Move data in and out of your CRM: export your leads, interactions, WhatsApp conversations, and VoIP call history, or import leads from a spreadsheet.'); ?></p>
     </div>
 </div>
 
+<!-- Tabs -->
+<div style="display:flex;gap:4px;border-bottom:1px solid var(--color-border);margin-bottom:24px;">
+    <button type="button" class="ie-tab" data-tab="export" style="padding:10px 20px;border:none;background:transparent;font-size:14px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;" onclick="switchTab('export')">
+        <span style="display:inline-flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <?php echo __('Export'); ?>
+        </span>
+    </button>
+    <button type="button" class="ie-tab" data-tab="import" style="padding:10px 20px;border:none;background:transparent;font-size:14px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;" onclick="switchTab('import')">
+        <span style="display:inline-flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <?php echo __('Import'); ?>
+        </span>
+    </button>
+</div>
+
+<!-- Export Tab -->
+<div id="tab-export" class="ie-tab-pane">
 <!-- Export Stats -->
 <div class="grid grid-4 mb-2">
     <div class="stat-card">
@@ -178,5 +197,251 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+</div><!-- /tab-export -->
+
+<!-- Import Tab -->
+<div id="tab-import" class="ie-tab-pane" style="display:none;">
+    <div class="grid grid-2" style="gap:16px;align-items:start;">
+        <!-- Import Form -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <?php echo __('Import Leads from File'); ?>
+                </h3>
+            </div>
+            <div class="card-body">
+                <form id="importForm" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:14px;">
+                    <input type="hidden" id="importCsrf" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                    <div>
+                        <label class="form-label"><?php echo __('File (.csv or .json)'); ?></label>
+                        <input type="file" id="importFile" name="file" accept=".csv,.json" required class="form-control" style="padding:8px;">
+                        <small style="color:var(--color-text-muted);font-size:11px;"><?php echo __('Max 10 MB. CSV must have a header row. JSON must be an array of objects.'); ?></small>
+                    </div>
+
+                    <div>
+                        <label class="form-label"><?php echo __('Duplicate handling'); ?></label>
+                        <select id="importDupe" class="form-control">
+                            <option value="skip"><?php echo __('Skip duplicates (match on email or phone)'); ?></option>
+                            <option value="update"><?php echo __('Update existing leads (match on email or phone)'); ?></option>
+                            <option value="create"><?php echo __('Always create new (allow duplicates)'); ?></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label"><?php echo __('Default Lead Status'); ?></label>
+                        <select id="importStatus" class="form-control">
+                            <option value="New Lead">New Lead</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Interested">Interested</option>
+                            <option value="Schedule Call">Schedule Call</option>
+                            <option value="Call Scheduled">Call Scheduled</option>
+                            <option value="Demo Scheduled">Demo Scheduled</option>
+                            <option value="Proposal Sent">Proposal Sent</option>
+                            <option value="Negotiation">Negotiation</option>
+                            <option value="On Hold">On Hold</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label"><?php echo __('Default Lead Source (optional)'); ?></label>
+                        <input type="text" id="importSource" class="form-control" list="leadSourceSuggestionsImport" placeholder="<?php echo __('e.g. CSV Import, Webform, Manual, etc.'); ?>" value="CSV Import">
+                        <datalist id="leadSourceSuggestionsImport">
+                            <option value="CSV Import">
+                            <option value="Excel Import">
+                            <option value="JSON Import">
+                            <option value="Manual Entry">
+                            <option value="Webform">
+                            <option value="Migration">
+                        </datalist>
+                    </div>
+
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button type="submit" id="importBtn" class="btn btn-primary" style="flex:1;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <?php echo __('Upload &amp; Import'); ?>
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="document.getElementById('importFile').click()"><?php echo __('Choose File'); ?></button>
+                    </div>
+                </form>
+
+                <div id="importProgress" style="display:none;margin-top:18px;padding:14px;background:var(--color-bg-secondary);border-radius:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <div class="spinner" style="width:16px;height:16px;border:2px solid var(--color-border);border-top-color:var(--color-primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
+                        <strong id="importProgressText"><?php echo __('Uploading & parsing...'); ?></strong>
+                    </div>
+                    <div style="background:#e5e7eb;height:8px;border-radius:4px;overflow:hidden;">
+                        <div id="importProgressBar" style="background:var(--color-primary);height:100%;width:0%;transition:width .3s;"></div>
+                    </div>
+                </div>
+
+                <div id="importResult" style="display:none;margin-top:18px;"></div>
+            </div>
+        </div>
+
+        <!-- Import Help -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <?php echo __('How to Format Your File'); ?>
+                </h3>
+            </div>
+            <div class="card-body">
+                <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:14px;">
+                    <?php echo __('The import accepts CSV (with header row) or JSON (array of objects). The header names below are recognized in any case:'); ?>
+                </p>
+
+                <h4 style="font-size:13px;margin:14px 0 8px;"><?php echo __('CSV Example'); ?></h4>
+                <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-size:11px;overflow-x:auto;line-height:1.6;">company_name,contact_person,email,phone,mobile,country,city,lead_source,lead_status,notes
+Acme Corp,John Smith,john@acme.com,+1 555-1234,,USA,New York,Website,New Lead,Follow up
+Globex,Jane Doe,jane@globex.com,,+44 20 7946,UK,London,Referral,Contacted,Met at SaaStr</pre>
+
+                <h4 style="font-size:13px;margin:14px 0 8px;"><?php echo __('JSON Example'); ?></h4>
+                <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-size:11px;overflow-x:auto;line-height:1.6;">[
+  {
+    "company_name": "Acme Corp",
+    "contact_person": "John Smith",
+    "email": "john@acme.com",
+    "phone": "+1 555-1234",
+    "country": "USA",
+    "lead_source": "Website"
+  }
+]</pre>
+
+                <h4 style="font-size:13px;margin:14px 0 8px;"><?php echo __('Recognized Columns / Keys'); ?></h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">company_name</code> <span style="color:#94a3b8;">(required)</span></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">contact_person</code> <span style="color:#94a3b8;">(required)</span></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">email</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">phone</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">mobile</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">country</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">city</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">address</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">website</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">industry</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">lead_source</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">lead_status</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">priority</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">notes</code></div>
+                    <div><code style="background:#f1f5f9;padding:1px 6px;border-radius:3px;">title_position</code></div>
+                </div>
+                <p style="font-size:12px;color:var(--color-text-muted);margin-top:14px;">
+                    <?php echo __('Tip: download your existing leads as CSV first (Export tab) to see the exact column format the import expects.'); ?>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.ie-tab.active { color: var(--color-primary) !important; border-bottom-color: var(--color-primary) !important; }
+</style>
+
+<script>
+function switchTab(name) {
+    document.querySelectorAll('.ie-tab-pane').forEach(function(p) { p.style.display = 'none'; });
+    document.querySelectorAll('.ie-tab').forEach(function(t) { t.classList.remove('active'); });
+    var pane = document.getElementById('tab-' + name);
+    var tab = document.querySelector('.ie-tab[data-tab="' + name + '"]');
+    if (pane) pane.style.display = '';
+    if (tab) tab.classList.add('active');
+    // Persist selection in URL hash so refresh keeps the tab
+    if (history.replaceState) history.replaceState(null, '', '#' + name);
+    else window.location.hash = name;
+}
+// Activate tab from URL hash on load
+(function() {
+    var hash = window.location.hash.replace('#', '');
+    if (hash === 'import' || hash === 'export') switchTab(hash);
+    else document.querySelector('.ie-tab[data-tab="export"]')?.classList.add('active');
+})();
+
+// ── Import handler ──
+document.getElementById('importForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var fileInput = document.getElementById('importFile');
+    if (!fileInput.files || !fileInput.files[0]) {
+        showNotification('Please choose a file first.', 'error');
+        return;
+    }
+    var file = fileInput.files[0];
+    if (file.size > 10 * 1024 * 1024) {
+        showNotification('File too large (max 10 MB).', 'error');
+        return;
+    }
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('csrf_token', document.getElementById('importCsrf').value);
+    fd.append('duplicate_mode', document.getElementById('importDupe').value);
+    fd.append('default_status', document.getElementById('importStatus').value);
+    fd.append('default_source', document.getElementById('importSource').value);
+
+    var progressBox = document.getElementById('importProgress');
+    var progressBar = document.getElementById('importProgressBar');
+    var progressText = document.getElementById('importProgressText');
+    var resultBox = document.getElementById('importResult');
+    var btn = document.getElementById('importBtn');
+
+    progressBox.style.display = '';
+    progressBar.style.width = '5%';
+    progressText.textContent = 'Uploading...';
+    resultBox.style.display = 'none';
+    btn.disabled = true;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/import.php?action=leads');
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            var pct = Math.round((e.loaded / e.total) * 50);
+            progressBar.style.width = pct + '%';
+        }
+    });
+    xhr.addEventListener('load', function() {
+        try {
+            var data = JSON.parse(xhr.responseText);
+            progressBar.style.width = '100%';
+            progressText.textContent = 'Done.';
+            setTimeout(function() { progressBox.style.display = 'none'; }, 800);
+            btn.disabled = false;
+
+            if (data.success) {
+                var msg = '<div style="padding:14px;background:#dcfce7;color:#166534;border-radius:8px;">' +
+                    '<strong>✓ ' + (data.message || 'Import complete') + '</strong><br>' +
+                    '<div style="margin-top:8px;font-size:13px;">' +
+                    'Imported: ' + (data.data?.imported || 0) + '<br>' +
+                    'Updated: ' + (data.data?.updated || 0) + '<br>' +
+                    'Skipped (duplicates): ' + (data.data?.skipped || 0) + '<br>' +
+                    (data.data?.errors?.length ? 'Errors: ' + data.data.errors.length + '<br>' : '') +
+                    '</div></div>';
+                if (data.data?.errors?.length) {
+                    msg += '<details style="margin-top:10px;font-size:12px;color:var(--color-text-secondary);"><summary>View ' + data.data.errors.length + ' error(s)</summary><pre style="margin-top:6px;max-height:200px;overflow:auto;background:#fef2f2;padding:8px;border-radius:4px;">' +
+                        data.data.errors.map(function(e){ return 'Row ' + e.row + ': ' + e.message; }).join('\n') + '</pre></details>';
+                }
+                resultBox.innerHTML = msg;
+                resultBox.style.display = '';
+                showNotification(data.message || 'Import complete', 'success');
+            } else {
+                resultBox.innerHTML = '<div style="padding:14px;background:#fee2e2;color:#dc2626;border-radius:8px;"><strong>✗ Import failed</strong><br>' + (data.message || 'Unknown error') + '</div>';
+                resultBox.style.display = '';
+                showNotification(data.message || 'Import failed', 'error');
+            }
+        } catch (err) {
+            progressBox.style.display = 'none';
+            btn.disabled = false;
+            resultBox.innerHTML = '<div style="padding:14px;background:#fee2e2;color:#dc2626;border-radius:8px;">Server returned invalid response: ' + xhr.responseText.substring(0, 200) + '</div>';
+            resultBox.style.display = '';
+        }
+    });
+    xhr.addEventListener('error', function() {
+        progressBox.style.display = 'none';
+        btn.disabled = false;
+        showNotification('Network error during upload.', 'error');
+    });
+    xhr.send(fd);
+});
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
