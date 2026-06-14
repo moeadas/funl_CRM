@@ -695,6 +695,47 @@ $statusColors = [
             <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Assigned To')); ?></div><div class="sidebar-value"><?php echo htmlspecialchars($lead['assigned_to_name'] ? $lead['assigned_to_name'] : __('Unassigned')); ?></div></div>
             <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Created By')); ?></div><div class="sidebar-value"><?php echo htmlspecialchars($lead['created_by_name'] ? $lead['created_by_name'] : __('Unknown')); ?></div></div>
             <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Lead Source')); ?></div><div class="sidebar-value"><?php echo htmlspecialchars($lead['lead_source'] ? __($lead['lead_source']) : __('N/A')); ?></div></div>
+            <?php
+            $hasUtm = !empty($lead['utm_source']) || !empty($lead['utm_campaign']) || !empty($lead['utm_medium']) || !empty($lead['utm_content']) || !empty($lead['utm_term']);
+            if ($hasUtm): ?>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border);">
+                <div class="sidebar-label" style="margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <strong><?php echo htmlspecialchars(__('UTM Tracking')); ?></strong>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <?php
+                    $utmBadges = [
+                        'utm_source'   => ['Source',   '#0ea5e9'],
+                        'utm_campaign' => ['Campaign', '#8b5cf6'],
+                        'utm_medium'   => ['Medium',   '#10b981'],
+                        'utm_content'  => ['Content',  '#f59e0b'],
+                        'utm_term'     => ['Term',     '#ec4899'],
+                    ];
+                    foreach ($utmBadges as $field => $meta):
+                        if (!empty($lead[$field])):
+                            [$label, $color] = $meta;
+                    ?>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                        <span style="display:inline-block;min-width:60px;padding:2px 6px;background:<?= $color ?>1a;color:<?= $color ?>;border-radius:4px;font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;text-align:center;"><?= htmlspecialchars($label) ?></span>
+                        <span style="color:var(--color-text);font-weight:500;word-break:break-all;"><?= htmlspecialchars($lead[$field]) ?></span>
+                    </div>
+                    <?php endif; endforeach; ?>
+                </div>
+                <?php if (!empty($lead['landing_page'])): ?>
+                <div style="margin-top:8px;font-size:11px;color:var(--color-text-tertiary);word-break:break-all;">
+                    <strong style="color:var(--color-text-secondary);"><?= htmlspecialchars(__('Landing')) ?>:</strong>
+                    <a href="<?= htmlspecialchars($lead['landing_page']) ?>" target="_blank" rel="noopener" style="color:var(--color-primary);text-decoration:none;border-bottom:1px dotted var(--color-primary);"><?= htmlspecialchars(mb_strimwidth($lead['landing_page'], 0, 70, '…')) ?></a>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($lead['referrer'])): ?>
+                <div style="margin-top:4px;font-size:11px;color:var(--color-text-tertiary);word-break:break-all;">
+                    <strong style="color:var(--color-text-secondary);"><?= htmlspecialchars(__('Referrer')) ?>:</strong>
+                    <span><?= htmlspecialchars(mb_strimwidth($lead['referrer'], 0, 70, '…')) ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
             <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Created')); ?></div><div class="sidebar-value"><?php echo date('M d, Y', strtotime($lead['created_at'])); ?></div></div>
             <div class="sidebar-item"><div class="sidebar-label"><?php echo htmlspecialchars(__('Updated')); ?></div><div class="sidebar-value"><?php echo date('M d, Y', strtotime($lead['updated_at'])); ?></div></div>
         </div>

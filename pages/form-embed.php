@@ -85,6 +85,17 @@ $fontFamily = 'system-ui, -apple-system, sans-serif';
         
         <div class="error-message" id="error-message"></div>
         
+        <!-- UTM hidden fields — auto-populated by script below from page URL -->
+        <input type="hidden" name="utm_source" id="utm_source" value="">
+        <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+        <input type="hidden" name="utm_medium" id="utm_medium" value="">
+        <input type="hidden" name="utm_content" id="utm_content" value="">
+        <input type="hidden" name="utm_term" id="utm_term" value="">
+        <input type="hidden" name="landing_page" id="landing_page" value="">
+        <input type="hidden" name="referrer" id="referrer" value="">
+        <!-- Honeypot — bots fill it, real users don't see it -->
+        <input type="text" name="website_url" id="website_url" value="" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;" tabindex="-1" autocomplete="off" aria-hidden="true">
+        
         <form id="lead-form" onsubmit="submitForm(event)">
             <?php foreach ($fields as $field): ?>
                 <div class="form-group">
@@ -117,7 +128,45 @@ $fontFamily = 'system-ui, -apple-system, sans-serif';
     <script>
         const FORM_ID = <?php echo json_encode($formId) ?>;
         const API_URL = '/api/form-submit.php';
-        
+
+        // ────────────────────────────────────────────────────────────────
+        // UTM auto-capture
+        // Works in two ways:
+        //   1. If loaded as iframe: read URL from window.top (the host page)
+        //   2. If loaded directly: read from window.location
+        // UTM params can also come from:
+        //   - URL query string (?utm_source=...)
+        //   - localStorage (set by the standalone funl_utm.js snippet)
+        //   - sessionStorage (same)
+        // ────────────────────────────────────────────────────────────────
+        (function captureUtm() {
+            // Collect URL from the topmost window we can reach
+            var urlObj = null;
+            try { urlObj = new URL(window.top.location.href); } catch (e) { /* cross-origin */ }
+            if (!urlObj) {
+                try { urlObj = new URL(window.location.href); } catch (e) { return; }
+            }
+            var params = urlObj.searchParams;
+            var keys = ['utm_source', 'utm_campaign', 'utm_medium', 'utm_content', 'utm_term'];
+            keys.forEach(function(k) {
+                var fromUrl = params.get(k);
+                var fromStorage = null;
+                try {
+                    fromStorage = localStorage.getItem('funl_' + k) || sessionStorage.getItem('funl_' + k);
+                } catch (e) { /* storage may be blocked */ }
+                var value = fromUrl || fromStorage || '';
+                var el = document.getElementById(k);
+                if (el) el.value = value;
+            });
+            // Landing page & referrer
+            var landingEl = document.getElementById('landing_page');
+            if (landingEl) landingEl.value = urlObj.href;
+            var refEl = document.getElementById('referrer');
+            if (refEl) {
+                try { refEl.value = document.referrer || (window.top !== window ? window.top.document.referrer : '') || ''; } catch (e) { refEl.value = document.referrer || ''; }
+            }
+        })();
+
         function submitForm(e) {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
@@ -135,7 +184,7 @@ $fontFamily = 'system-ui, -apple-system, sans-serif';
             fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ form_id: FORM_ID, data: data })
+                body: JSON.stringify({ form_id: FORM_ID, data: data, utm_source: data.utm_source, utm_campaign: data.utm_campaign, utm_medium: data.utm_medium, utm_content: data.utm_content, utm_term: data.utm_term, landing_page: data.landing_page, referrer: data.referrer, lead_source: data.utm_source ? (data.utm_source + (data.utm_campaign ? ' (' + data.utm_campaign + ')' : '')) : 'Website' })
             })
             .then(r => r.json())
             .then(resp => {

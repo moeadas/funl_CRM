@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if ($companyId) {
                 try {
                     $db->beginTransaction();
-                    
+
                     // Delete in dependency order (child tables first)
                     $tables = [
                         'activity_log',
@@ -238,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         'users',
                         'companies',
                     ];
-                    
+
                     foreach ($tables as $table) {
                         try {
                             $db->query("DELETE FROM $table WHERE company_id = ?", [$companyId]);
@@ -246,13 +246,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             // Some tables may not have company_id column, skip
                         }
                     }
-                    
+
                     $db->commit();
                     $_SESSION['success'] = 'Company and all related data deleted.';
                 } catch (Exception $e) {
                     $db->rollBack();
                     $_SESSION['error'] = 'Failed to delete company: ' . $e->getMessage();
                 }
+            }
+            break;
+
+        case 'delete_all_leads':
+            // Platform-wide: clear all leads from every company.
+            // Extra confirmation: client must type the literal string "DELETE"
+            // in the form field. This is a destructive action and cannot be undone.
+            $confirm = trim($_POST['confirm'] ?? '');
+            if ($confirm !== 'DELETE') {
+                $_SESSION['error'] = 'Confirmation text did not match. Type DELETE (uppercase) to confirm.';
+                break;
+            }
+
+            // Optional scope: 'all' (platform-wide) or 'company_id:N' (single tenant)
+            $scope = $_POST['scope'] ?? 'all';
+            $scopeCompanyId = null;
+            if ($scope !== 'all' && preg_match('/^company:(\d+)$/', $scope, $m)) {
+                $scopeCompanyId = (int)$m[1];
+            }
+
+            try {
+                $db->beginTransaction();
+
+                // Tables related to leads that should be cleared too
+                $leadRelatedTables = [
+                    'interactions',         // FK to leads
+                    'documents',            // FK to leads
+                    'lead_custom_values',   // FK to leads
+                    'webform_submissions',  // FK to leads (lead_id)
+                ];
+
+                if ($scopeCompanyId) {
+                    foreach ($leadRelatedTables as $table) {
+                        try { $db->query("DELETE FROM $table WHERE company_id = ?", [$scopeCompanyId]); } catch (Exception $e) {}
+                    }
+                    $count = $db->query("DELETE FROM leads WHERE company_id = ?", [$scopeCompanyId])->rowCount();
+                    try { $db->query("DELETE FROM company_lead_sources WHERE company_id = ?", [$scopeCompanyId]); } catch (Exception $e) {}
+                } else {
+                    foreach ($leadRelatedTables as $table) {
+                        try { $db->query("DELETE FROM $table"); } catch (Exception $e) {}
+                    }
+                    $count = $db->query("DELETE FROM leads")->rowCount();
+                    try { $db->query("DELETE FROM company_lead_sources"); } catch (Exception $e) {}
+                }
+
+                $db->commit();
+                $_SESSION['success'] = "Cleared $count lead" . ($count === 1 ? '' : 's') . " platform-wide.";
+                error_log("Super admin " . getCurrentUserId() . " cleared all leads (scope=$scope, count=$count)");
+            } catch (Exception $e) {
+                $db->rollBack();
+                $_SESSION['error'] = 'Failed to clear leads: ' . $e->getMessage();
             }
             break;
     }
@@ -339,6 +390,61 @@ include '../includes/header.php';
         <div style="font-size:13px;color:var(--color-text-muted);"><?php echo __('Total Leads'); ?></div>
     </div>
 </div>
+
+<!-- Danger Zone: Clear All Leads -->
+<div class="card" style="border:1px solid #fecaca;background:linear-gradient(135deg,#fff5f5,#fef2f2);margin-bottom:24px;">
+    <div class="card-header" style="background:transparent;border-bottom:1px solid #fecaca;">
+        <h3 class="card-title" style="color:#b91c1c;display:flex;align-items:center;gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <?php echo __('Danger Zone'); ?>
+        </h3>
+        <p style="font-size:12px;color:#7f1d1d;margin:4px 0 0;"><?php echo __('Destructive actions. Cannot be undone. Use with care.'); ?></p>
+    </div>
+    <div class="card-body">
+        <div style="display:flex;align-items:start;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:280px;">
+                <h4 style="margin:0 0 6px;font-size:15px;color:#7f1d1d;"><?php echo __('Clear all leads platform-wide'); ?></h4>
+                <p style="margin:0 0 8px;font-size:13px;color:#7f1d1d;line-height:1.5;">
+                    <?php echo __('Removes every lead from every company, plus their interactions, documents, custom values, and webform submission history. Use this to start fresh for demos or testing.'); ?>
+                </p>
+                <p style="margin:0;font-size:12px;color:#7f1d1d;line-height:1.5;">
+                    <strong><?php echo __('Currently:'); ?></strong>
+                    <?php echo $stats['total_leads']; ?> <?php echo __('lead(s)'); ?>
+                </p>
+            </div>
+            <form method="POST" action="super-admin.php" id="clearAllLeadsForm" style="display:flex;flex-direction:column;gap:8px;min-width:280px;flex:0 0 auto;" onsubmit="return confirmClearLeads();">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="action" value="delete_all_leads">
+                <input type="hidden" name="scope" value="all">
+                <div>
+                    <label class="form-label" style="color:#7f1d1d;font-size:12px;font-weight:600;"><?php echo __('Type DELETE to confirm'); ?></label>
+                    <input type="text" id="clearLeadsConfirm" class="form-control" placeholder="<?php echo __('Type DELETE (uppercase)'); ?>" autocomplete="off" style="border-color:#fecaca;">
+                </div>
+                <button type="submit" id="clearLeadsBtn" class="btn" style="background:#dc2626;color:#fff;border:none;font-weight:600;" disabled>
+                    🗑️ <?php echo __('Clear all leads'); ?>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var input = document.getElementById('clearLeadsConfirm');
+    var btn = document.getElementById('clearLeadsBtn');
+    if (!input || !btn) return;
+    input.addEventListener('input', function() {
+        btn.disabled = (input.value.trim() !== 'DELETE');
+    });
+})();
+function confirmClearLeads() {
+    var input = document.getElementById('clearLeadsConfirm');
+    if (!input || input.value.trim() !== 'DELETE') {
+        showNotification('Type DELETE (uppercase) to confirm.', 'error');
+        return false;
+    }
+    return window.confirm('Are you absolutely sure? This will permanently delete ALL leads across ALL companies. This action cannot be undone.');
+}
+</script>
 
 <!-- Platform Settings & Super Admins -->
 <div class="grid grid-2" style="gap:16px;margin-bottom:24px;">

@@ -101,6 +101,7 @@ function renderForms(forms) {
                         <td>
                             <div style="display:flex; gap:8px;">
                                 <button class="btn btn-sm btn-outline" onclick="copyEmbedCode(${f.form_id})" title="${window.__('Copy Iframe HTML Embed Code')}">🔗 ${window.__('Embed Code')}</button>
+                                <button class="btn btn-sm btn-outline" onclick="copyUtmSnippet()" title="${window.__('Copy the UTM capture snippet to use with your own forms')}">🧷 ${window.__('UTM Snippet')}</button>
                                 <a href="/pages/webform-form.php?id=${f.form_id}" class="btn btn-sm btn-outline" style="text-decoration:none;">✏️ Edit</a>
                                 <button class="btn btn-sm btn-danger-outline" onclick="deleteForm(${f.form_id})">🗑️ Delete</button>
                             </div>
@@ -114,13 +115,23 @@ function renderForms(forms) {
 function copyEmbedCode(formId) {
     const embedUrl = `${window.location.origin}/pages/form-embed.php?id=${formId}`;
     const iframeCode = `<iframe src="${embedUrl}" width="100%" height="600" style="border:none; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08);"></iframe>`;
-    
+
     navigator.clipboard.writeText(iframeCode)
         .then(() => {
-            showNotification('HTML Embed Code copied to clipboard!', 'success');
-        })
+            showNotification('HTML Embed Code copied to clipboard!', 'success');        })
         .catch(() => {
             showNotification('Failed to copy embed code. Copy manually: ' + iframeCode, 'error');
+        });
+}
+
+function copyUtmSnippet() {
+    const snippet = `<script src="${window.location.origin}/assets/js/funl_utm.js"><\/script>`;
+    navigator.clipboard.writeText(snippet)
+        .then(() => {
+            showNotification('UTM Snippet copied! Paste it before </body> on any page with a form.', 'success');
+        })
+        .catch(() => {
+            showNotification('Copy manually: ' + snippet, 'error');
         });
 }
 

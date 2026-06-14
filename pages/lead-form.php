@@ -157,15 +157,65 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label class="form-label"><?php echo htmlspecialchars(__('Lead Source')); ?></label>
-                    <select id="leadSource" class="form-control">
-                        <option value="Website"><?php echo htmlspecialchars(__('Website')); ?></option>
-                        <option value="Referral"><?php echo htmlspecialchars(__('Referral')); ?></option>
-                        <option value="Social Media"><?php echo htmlspecialchars(__('Social Media')); ?></option>
-                        <option value="Email Campaign"><?php echo htmlspecialchars(__('Email Campaign')); ?></option>
-                        <option value="Cold Call"><?php echo htmlspecialchars(__('Cold Call')); ?></option>
-                        <option value="Trade Show"><?php echo htmlspecialchars(__('Trade Show')); ?></option>
-                        <option value="Other"><?php echo htmlspecialchars(__('Other')); ?></option>
-                    </select>
+                    <input type="text" id="leadSource" class="form-control" list="leadSourceSuggestions" placeholder="<?php echo htmlspecialchars(__('Type or pick a source (e.g. TikTok Q2, Webinar, etc.)')); ?>" autocomplete="off" style="width:100%;">
+                    <datalist id="leadSourceSuggestions">
+                        <option value="Website">
+                        <option value="Website - Contact Form">
+                        <option value="Website - Chat Widget">
+                        <option value="Referral">
+                        <option value="Cold Call">
+                        <option value="Cold Email">
+                        <option value="Email Campaign">
+                        <option value="Social Media">
+                        <option value="Facebook">
+                        <option value="Instagram">
+                        <option value="LinkedIn">
+                        <option value="Twitter/X">
+                        <option value="Google Ads">
+                        <option value="Google Organic">
+                        <option value="Bing Ads">
+                        <option value="YouTube">
+                        <option value="TikTok">
+                        <option value="Trade Show">
+                        <option value="Conference">
+                        <option value="Webinar">
+                        <option value="Partner">
+                        <option value="Affiliate">
+                        <option value="Direct">
+                        <option value="Other">
+                    </datalist>
+                    <small class="text-muted" style="font-size:11px;"><?php echo htmlspecialchars(__('Type anything — new sources are remembered for autocomplete.')); ?></small>
+                </div>
+            </div>
+
+            <!-- UTM tracking (auto-captured from webform submissions) -->
+            <div style="margin-top:18px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <strong style="font-size:13px;"><?php echo htmlspecialchars(__('UTM Tracking')); ?></strong>
+                    <span style="font-size:11px;color:var(--color-text-tertiary);">— <?php echo htmlspecialchars(__('Auto-captured from webform submissions and the page URL')); ?></span>
+                </div>
+                <div class="form-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-size:12px;"><?php echo htmlspecialchars(__('UTM Source')); ?></label>
+                        <input type="text" id="utmSource" name="utm_source" class="form-control" placeholder="tiktok, google, newsletter" style="font-size:13px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-size:12px;"><?php echo htmlspecialchars(__('UTM Campaign')); ?></label>
+                        <input type="text" id="utmCampaign" name="utm_campaign" class="form-control" placeholder="summer_sale_2026" style="font-size:13px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-size:12px;"><?php echo htmlspecialchars(__('UTM Medium')); ?></label>
+                        <input type="text" id="utmMedium" name="utm_medium" class="form-control" placeholder="cpc, email, social" style="font-size:13px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-size:12px;"><?php echo htmlspecialchars(__('UTM Content')); ?></label>
+                        <input type="text" id="utmContent" name="utm_content" class="form-control" placeholder="hero_banner_v2" style="font-size:13px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-size:12px;"><?php echo htmlspecialchars(__('UTM Term')); ?></label>
+                        <input type="text" id="utmTerm" name="utm_term" class="form-control" placeholder="running+shoes" style="font-size:13px;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -224,7 +274,57 @@ document.addEventListener('DOMContentLoaded', function() {
     loadUsers().then(function() {
         if (LEAD_ID) loadLead();
     });
+    captureUtmFromUrl();
+    loadLeadSourceSuggestions();
 });
+
+/**
+ * Auto-fill UTM fields from the current page URL (?utm_source=... etc).
+ * This way leads created from a webform session will carry UTMs even
+ * if the user later edits the lead manually.
+ */
+function captureUtmFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    var keys = ['utm_source', 'utm_campaign', 'utm_medium', 'utm_content', 'utm_term'];
+    keys.forEach(function(k) {
+        var v = params.get(k);
+        if (v) {
+            var el = document.getElementById(k);
+            if (el && !el.value) el.value = v;
+        }
+    });
+    // Also capture landing page + referrer from document
+    var landingEl = document.getElementById('landingPage');
+    if (landingEl && !landingEl.value) landingEl.value = window.location.href;
+}
+
+/**
+ * Load the company's lead source library to populate the datalist.
+ * Adds new entries from the DB on top of the hard-coded seed options.
+ */
+function loadLeadSourceSuggestions() {
+    fetch('/api/leads.php?action=sources', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success || !Array.isArray(data.data)) return;
+        var dl = document.getElementById('leadSourceSuggestions');
+        if (!dl) return;
+        // Mark company-used sources with (×N) hint
+        data.data.forEach(function(item) {
+            var val = item.value;
+            // Avoid duplicates with the existing hard-coded options
+            var exists = Array.prototype.some.call(dl.options, function(o) { return o.value === val; });
+            if (exists) return;
+            var opt = document.createElement('option');
+            opt.value = val;
+            if (item.use_count > 1) {
+                opt.label = '\u00d7' + item.use_count;
+            }
+            dl.appendChild(opt);
+        });
+    })
+    .catch(function() { /* non-fatal — hard-coded seeds are still there */ });
+}
 
 function loadUsers() {
     return fetch('/api/users.php?action=list', { credentials: 'same-origin' })
@@ -255,6 +355,12 @@ function loadLead() {
                     }
                 }
             });
+            // UTM fields
+            ['utm_source','utm_campaign','utm_medium','utm_content','utm_term','landing_page','referrer'].forEach(function(k) {
+                var id = k.replace(/_([a-z])/g, function(_, c) { return c.toUpperCase(); });
+                var el = document.getElementById(id);
+                if (el && l[k]) el.value = l[k];
+            });
             if (l.assigned_to) document.getElementById('assignedTo').value = l.assigned_to;
         }
     });
@@ -281,7 +387,13 @@ function saveLead() {
         lead_status: document.getElementById('leadStatus').value,
         priority: document.getElementById('priority').value,
         notes: document.getElementById('notes').value,
-        assigned_to: document.getElementById('assignedTo').value || null
+        assigned_to: document.getElementById('assignedTo').value || null,
+        // UTM fields
+        utm_source: document.getElementById('utmSource')?.value || null,
+        utm_campaign: document.getElementById('utmCampaign')?.value || null,
+        utm_medium: document.getElementById('utmMedium')?.value || null,
+        utm_content: document.getElementById('utmContent')?.value || null,
+        utm_term: document.getElementById('utmTerm')?.value || null,
     };
     
     if (LEAD_ID) {
