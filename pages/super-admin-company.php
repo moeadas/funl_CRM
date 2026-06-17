@@ -30,6 +30,19 @@ if (!$company) {
     exit;
 }
 
+// Load current super admin (used for invite emails + activity log)
+$currentUser = getCurrentUser();
+
+// Load platform settings (site_name, support email) for invite emails
+$platformSettings = [];
+try {
+    $rows = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id = 0 AND setting_key IN ('site_name','platform_support_email','platform_super_admin_email','marketing_url')")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $platformSettings = $rows ?: [];
+} catch (Exception $e) { /* ignore — fallback to defaults */ }
+
+// Load users for this company (needed by POST handlers like add_user for limit checks)
+$users = $db->query("SELECT * FROM users WHERE company_id = ? ORDER BY created_at ASC", [$companyId])->fetchAll(PDO::FETCH_ASSOC);
+
 // Handle POST actions
 $csrfToken = generateCSRFToken();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -39,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     $action = $_POST['action'] ?? '';
+
+    try {
     
     switch ($action) {
         case 'update_plan':
@@ -50,6 +65,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->query("UPDATE companies SET plan_id = ?, plan_name = ?, plan_user_limit = ?, plan_price_monthly = ?, subscription_status = ?, current_period_end = ?, updated_at = NOW() WHERE company_id = ?",
                     [$plan['plan_key'], $plan['plan_name'], $plan['user_limit'], $plan['monthly_price'], $newStatus, $periodEnd, $companyId]);
                 $_SESSION['success'] = "Plan updated to {$plan['plan_name']} ({$newStatus})";
+            } else {
+                $_SESSION['error'] = "Plan '{$newPlanKey}' not found.";
+            }
+            break;
+        case 'add_user':
+            $fullName = trim($_POST['full_name'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $role = $_POST['role'] ?? 'Sales Rep';
+            $password = $_POST['password'] ?? '';
+            $sendInvite = !empty($_POST['send_invite']);
+
+            $errors = [];
+            if ($fullName === '') $errors[] = 'Full name is required';
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required';
+            if (!in_array($role, ['Admin', 'Sales Manager', 'Sales Rep'])) $errors[] = 'Invalid role';
+            if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters';
+
+            // Check plan user limit
+            $limit = (int)($company['plan_user_limit'] ?? 0);
+            if ($limit > 0 && count($users) >= $limit) {
+                $errors[] = "User limit reached ({$limit} on this plan). Upgrade or remove a user first.";
+            }
+
+            // Check email uniqueness across the platform
+            $existing = $db->query("SELECT user_id FROM users WHERE email = ?", [$email])->fetchColumn();
+            if ($existing) $errors[] = 'A user with that email already exists';
+
+            if (!empty($errors)) {
+                $_SESSION['error'] = implode('. ', $errors);
+                $_SESSION['form_data'] = ['full_name' => $fullName, 'email' => $email, 'role' => $role];
+            } else {
+                try {
+                    $userId = $db->insert('users', [
+                        'company_id'  => $companyId,
+                        'username'    => $email,
+                        'email'       => $email,
+                        'full_name'   => $fullName,
+                        'role'        => $role,
+                        'status'      => 'Active',
+                        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                        'created_at'  => date('Y-m-d H:i:s'),
+                        'email_verified' => 1, // Super admin created = pre-verified
+                    ]);
+
+                    if ($userId) {
+                        $_SESSION['success'] = "User '{$fullName}' ({$email}) created as {$role}.";
+
+                        // Optionally send invite email with credentials
+                        if ($sendInvite) {
+                            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                            $inviteLink = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'app.funl.online') . '/login.php';
+                            $siteName = $platformSettings['site_name'] ?? 'FunL CRM';
+                            $fromEmail = $platformSettings['platform_support_email'] ?? 'noreply@funl.online';
+                            $subject = "You've been added to {$company['company_name']} on {$siteName}";
+                            $body = "Hi {$fullName},\n\n{$currentUser['full_name']} has created an account for you at {$siteName}.\n\nLogin: {$email}\nPassword: {$password}\nLogin at: {$inviteLink}\n\nPlease change your password after first login.\n\nThanks,\nThe {$siteName} Team";
+                            @mail($email, $subject, $body, 'From: ' . $fromEmail);
+                            $_SESSION['success'] .= ' Invite email sent.';
+                        }
+
+                        logActivity($currentUser['user_id'], 'Created User', 'User', $userId, "Super admin created user: {$fullName} ({$email})");
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['error'] = 'Failed to create user: ' . $e->getMessage();
+                }
+            }
+            break;
+        case 'delete_user':
+            $userId = (int)($_POST['user_id'] ?? 0);
+            if ($userId) {
+                $target = $db->query("SELECT full_name, email, is_super_admin FROM users WHERE user_id = ? AND company_id = ?", [$userId, $companyId])->fetch(PDO::FETCH_ASSOC);
+                if (!$target) {
+                    $_SESSION['error'] = 'User not found in this company.';
+                } elseif ($target['is_super_admin'] && $target['user_id'] == ($currentUser['user_id'] ?? 0)) {
+                    $_SESSION['error'] = "You cannot remove your own super admin account.";
+                } else {
+                    $db->query("DELETE FROM users WHERE user_id = ? AND company_id = ?", [$userId, $companyId]);
+                    $_SESSION['success'] = "User '{$target['full_name']}' removed from this company.";
+                    logActivity($currentUser['user_id'], 'Deleted User', 'User', $userId, "Super admin removed user: {$target['full_name']} ({$target['email']}) from company #{$companyId}");
+                }
+            }
+            break;
+        case 'reset_user_password':
+            $userId = (int)($_POST['user_id'] ?? 0);
+            $newPassword = $_POST['new_password'] ?? '';
+            if ($userId && strlen($newPassword) >= 8) {
+                $target = $db->query("SELECT full_name, email FROM users WHERE user_id = ? AND company_id = ?", [$userId, $companyId])->fetch(PDO::FETCH_ASSOC);
+                if ($target) {
+                    $db->query("UPDATE users SET password_hash = ? WHERE user_id = ?", [password_hash($newPassword, PASSWORD_DEFAULT), $userId]);
+                    $_SESSION['success'] = "Password reset for '{$target['full_name']}'. New password: {$newPassword}";
+                }
+            } else {
+                $_SESSION['error'] = 'Password must be at least 8 characters.';
             }
             break;
         case 'extend_trial':
@@ -70,12 +177,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['success'] = 'Company reactivated';
             break;
     }
+    } catch (Throwable $e) {
+        error_log('super-admin-company.php action=' . $action . ' error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+        $_SESSION['error'] = 'Server error: ' . $e->getMessage();
+    }
     header('Location: super-admin-company.php?id=' . $companyId);
     exit;
 }
-
-// Load users for this company
-$users = $db->query("SELECT * FROM users WHERE company_id = ? ORDER BY created_at ASC", [$companyId])->fetchAll(PDO::FETCH_ASSOC);
 
 // Load recent transactions
 $transactions = $db->query("
@@ -304,7 +412,65 @@ tr:last-child td { border: none; }
 
             <!-- Users -->
             <div class="section">
-                <h2>Users (<?= count($users) ?>)</h2>
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+                    <h2 style="margin:0;">Users (<?= count($users) ?><?= $limit > 0 ? ' / ' . $limit : '' ?>)</h2>
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('addUserForm').style.display = document.getElementById('addUserForm').style.display === 'none' ? 'block' : 'none';">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add User
+                    </button>
+                </div>
+
+                <?php
+                $formData = $_SESSION['form_data'] ?? [];
+                unset($_SESSION['form_data']);
+                $inviteAvailable = function_exists('mail') || function_exists('error_log');
+                ?>
+
+                <!-- Add User Form (collapsible) -->
+                <div id="addUserForm" style="display:none;background:#f8fafc;border:1px solid var(--color-border);border-radius:8px;padding:16px;margin-bottom:18px;">
+                    <h3 style="margin:0 0 12px;font-size:14px;color:var(--color-text);">New User for <?= htmlspecialchars($company['company_name']) ?></h3>
+                    <form method="POST" autocomplete="off">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                        <input type="hidden" name="action" value="add_user">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="form-group">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" name="full_name" class="form-control" required minlength="2" maxlength="100" value="<?= htmlspecialchars($formData['full_name'] ?? '') ?>">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control" required value="<?= htmlspecialchars($formData['email'] ?? '') ?>">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Role *</label>
+                                <select name="role" class="form-control" required>
+                                    <option value="Sales Rep" <?= ($formData['role'] ?? '') === 'Sales Rep' ? 'selected' : '' ?>>Sales Rep</option>
+                                    <option value="Sales Manager" <?= ($formData['role'] ?? '') === 'Sales Manager' ? 'selected' : '' ?>>Sales Manager</option>
+                                    <option value="Admin" <?= ($formData['role'] ?? '') === 'Admin' ? 'selected' : '' ?>>Admin</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password *</label>
+                                <div style="display:flex;gap:6px;">
+                                    <input type="text" name="password" id="newUserPassword" class="form-control" required minlength="8" maxlength="128" style="font-family:monospace;">
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('newUserPassword').value = generatePassword(16);" title="Generate strong password">🎲</button>
+                                </div>
+                                <small style="color:var(--color-text-muted);font-size:11px;">Min 8 characters. User should change on first login.</small>
+                            </div>
+                        </div>
+                        <div style="margin-top:8px;">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                                <input type="checkbox" name="send_invite" value="1" checked>
+                                Send welcome email with login credentials
+                            </label>
+                        </div>
+                        <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
+                            <button type="button" class="btn btn-outline" onclick="document.getElementById('addUserForm').style.display = 'none';">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create User</button>
+                        </div>
+                    </form>
+                </div>
+
                 <table>
                     <thead>
                         <tr>
@@ -313,9 +479,13 @@ tr:last-child td { border: none; }
                             <th>Role</th>
                             <th>Status</th>
                             <th>Last Login</th>
+                            <th style="text-align:right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <?php if (empty($users)): ?>
+                        <tr><td colspan="6" style="text-align:center;color:var(--color-text-muted);padding:30px;">No users yet. Click "Add User" above to create one.</td></tr>
+                        <?php else: ?>
                         <?php foreach ($users as $u): ?>
                         <tr>
                             <td><?= htmlspecialchars($u['full_name'] ?? $u['username']) ?>
@@ -327,10 +497,44 @@ tr:last-child td { border: none; }
                             <td><?= htmlspecialchars($u['role'] ?? 'Sales Rep') ?></td>
                             <td><span class="badge badge-<?= ($u['status'] === 'Active') ? 'active' : 'cancelled' ?>"><?= htmlspecialchars($u['status']) ?></span></td>
                             <td><?= !empty($u['last_login']) ? date('M j, Y', strtotime($u['last_login'])) : '<span style="color:#999;">Never</span>' ?></td>
+                            <td style="text-align:right;white-space:nowrap;">
+                                <button type="button" class="btn btn-sm btn-outline" onclick="showResetPw(<?= (int)$u['user_id'] ?>, '<?= htmlspecialchars(addslashes($u['full_name'] ?? $u['username']), ENT_QUOTES) ?>')">Reset PW</button>
+                                <?php if (empty($u['is_super_admin']) || $u['user_id'] != ($currentUser['user_id'] ?? 0)): ?>
+                                <form method="POST" style="display:inline;" onsubmit="return confirm('Remove <?= htmlspecialchars(addslashes($u['full_name'] ?? $u['username']), ENT_QUOTES) ?> from this company? They will lose access immediately.');">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                                    <input type="hidden" name="action" value="delete_user">
+                                    <input type="hidden" name="user_id" value="<?= (int)$u['user_id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-danger-outline">Delete</button>
+                                </form>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
+
+                <!-- Reset Password Modal (inline) -->
+                <div id="resetPwModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:1000;align-items:center;justify-content:center;">
+                    <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+                        <h3 style="margin:0 0 6px;font-size:16px;">Reset Password</h3>
+                        <p style="margin:0 0 14px;color:var(--color-text-secondary);font-size:13px;">Set a new password for <strong id="resetPwName"></strong>.</p>
+                        <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                            <input type="hidden" name="action" value="reset_user_password">
+                            <input type="hidden" name="user_id" id="resetPwUserId" value="">
+                            <div class="form-group">
+                                <label class="form-label">New Password *</label>
+                                <input type="text" name="new_password" required minlength="8" maxlength="128" class="form-control" style="font-family:monospace;">
+                                <small style="color:var(--color-text-muted);font-size:11px;">Min 8 characters. Communicate securely to the user.</small>
+                            </div>
+                            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('resetPwModal').style.display = 'none';">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Reset Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- Transactions -->
@@ -395,3 +599,40 @@ tr:last-child td { border: none; }
 </div>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
+
+<script>
+function generatePassword(len) {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+    var pwd = '';
+    var arr = new Uint32Array(len);
+    if (window.crypto && crypto.getRandomValues) {
+        crypto.getRandomValues(arr);
+        for (var i = 0; i < len; i++) pwd += chars[arr[i] % chars.length];
+    } else {
+        for (var i = 0; i < len; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return pwd;
+}
+
+function showResetPw(userId, userName) {
+    document.getElementById('resetPwUserId').value = userId;
+    document.getElementById('resetPwName').textContent = userName;
+    // Suggest a random password
+    var pwInput = document.querySelector('#resetPwModal input[name="new_password"]');
+    if (pwInput) pwInput.value = generatePassword(14);
+    document.getElementById('resetPwModal').style.display = 'flex';
+}
+
+// Close modal on backdrop click
+document.getElementById('resetPwModal')?.addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var m = document.getElementById('resetPwModal');
+        if (m) m.style.display = 'none';
+    }
+});
+</script>
