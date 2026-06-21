@@ -139,8 +139,16 @@ if ($token) {
             <?php echo __('We sent a verification link to:'); ?>
         </p>
         <p class="verify-email-line"><strong><?php echo htmlspecialchars($userEmail); ?></strong></p>
+        <?php if (isset($_SESSION['verification_email_sent']) && !$_SESSION['verification_email_sent']): ?>
+        <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;color:#92400e;font-size:14px;line-height:1.5;">
+            <strong>⚠ <?php echo __('Email delivery issue'); ?></strong><br>
+            <?php echo __('Our email service may not be fully configured. If you dont receive the email within a few minutes, please contact support.'); ?>
+        </div>
+        <?php endif; ?>
         <p style="color: var(--color-text-muted, #6b7280); margin-bottom: 24px; font-size: 14px;">
             <?php echo __('Click the link in the email to activate your account. The link expires in 24 hours.'); ?>
+            <br><br>
+            <span style="font-size:13px;color:#dc2626;font-weight:500;">Didnt receive the email? Check your spam folder, or click Resend below.</span>
         </p>
         <div class="verify-actions">
             <button type="button" class="btn btn-primary" id="resend-btn"><?php echo __('Resend verification email'); ?></button>

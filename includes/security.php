@@ -180,4 +180,42 @@ return rtrim(strtr(base64_encode(hash('sha256', $value . $salt, true)), '+/', '-
 function verifyUrlHashAdvanced(string $value, string $hash, string $salt = ''): bool {
 return hash_equals($hash, hashForUrlAdvanced($value, $salt));
 }
+
+/**
+ * Check if an email domain is a known disposable/temporary email provider.
+ * Blocks bot signups from throwaway email services.
+ */
+function isDisposableEmail(string $email): bool {
+    $domain = strtolower(substr(strrchr($email, '@'), 1));
+    if (!$domain) return false;
+    $disposable = [
+        'mailinator.com', 'guerrillamail.com', 'tempmail.com', 'throwaway.email',
+        '10minutemail.com', 'trashmail.com', 'fakeinbox.com', 'getnada.com',
+        'yopmail.com', 'temp-mail.org', 'sharklasers.com', 'guerrillamail.net',
+        'guerrillamailblock.com', 'armyspy.com', 'cuvox.de', 'dayrep.com',
+        'dispostable.com', 'grr.la', 'ma1l.bij.pl', 'maildrop.cc', 'mailnesia.com',
+        'mintemail.com', 'plexolan.de', 'spam4.me', 'trbvm.com', 'tmpmail.org',
+        'tmpmail.net', 'boun.cr', 'bouncc.com', 'cock.li', 'dropmail.me',
+        'emailondeck.com', 'fakebox.com', 'harakirimail.com', 'incognitomail.com',
+        'jetable.com', 'keepmyemail.com', 'meltmail.com', 'mfsa.info',
+        'muathe.org', 'my10minutemail.com', 'mytemp.email', 'nobugmail.com',
+        'noclickemail.com', 'oneoffemail.com', 'popcheckz.com', 'privacy.net',
+        'rmqkr.net', 'safetymail.info', 'safetypost.com', 'scratchmyback.com',
+        'shortmail.net', 'sibmail.com', 'sneakemail.com', 'sneakmail.de',
+        'sogetthis.com', 'spamgourmet.com', 'supergreatmail.com', 'te.xgpr.net',
+        'tempinbox.com', 'tempmail.it', 'tempmail2.com', 'tempmaildemo.com',
+        'tempmailer.com', 'temporarily.com', 'trashmail.ad', 'trashmail.io',
+        'trashmail.me', 'tweekme.com', 'wuzup.net', 'yopmail.fr', 'yopmail.net',
+        'anonbox.net', 'byb.us', 'cam4you.cc', 'chammy.info', 'clixser.com',
+        'contbay.com', 'cool.fr', 'courrieltemporaire.com', 'deadaddress.com',
+        'dodgit.com', 'edv.to', 'email-fake.com', 'filzmail.com', 'gishpuppy.com',
+        'incognitomail.net', 'ip4mail.com', 'lawlita.com', 'letmeinonthis.com',
+        'maboard.com', 'mailcatch.com', 'mailme.com', 'mailtempex.com',
+        'moakt.com', 'moyamail.com', 'nepwk.com', 'objectmail.com', 'pookey.com',
+        'proxymail.com', 'rcpt.at', 're-gister.com', 'rhyta.com', 'smellypotato.com',
+        'solidsomething.com', 'spam.la', 'spambob.com', 'spamfree.eu', 'spamherelater.com',
+        'trashymail.com', 'trbvn.com', 'tulis.gq', 'wespeakspam.com', 'xoxox.net',
+    ];
+    return in_array($domain, $disposable);
+}
 applySecurityHeaders();
