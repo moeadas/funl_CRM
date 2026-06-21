@@ -131,11 +131,11 @@ include '../includes/header.php';
                     <label class="form-label"><?php echo __('When should this campaign send?'); ?> *</label>
                     <select name="trigger_type" class="form-control" id="triggerType">
                         <option value="">— <?php echo __('Select a trigger'); ?> —</option>
-                        <option value="new_lead" <?php echo ($campaign['trigger_type'] ?? '') === 'new_lead' ? 'selected' : ''; ?><?php echo __('When a new lead is created'); ?></option>
-                        <option value="lead_status_change" <?php echo ($campaign['trigger_type'] ?? '') === 'lead_status_change' ? 'selected' : ''; ?><?php echo __('When lead status changes to...'); ?></option>
-                        <option value="contact_created" <?php echo ($campaign['trigger_type'] ?? '') === 'contact_created' ? 'selected' : ''; ?><?php echo __('When a new contact is created'); ?></option>
-                        <option value="scheduled" <?php echo ($campaign['trigger_type'] ?? '') === 'scheduled' ? 'selected' : ''; ?><?php echo __('Recurring / Scheduled interval'); ?></option>
-                        <option value="deal_stage_change" <?php echo ($campaign['trigger_type'] ?? '') === 'deal_stage_change' ? 'selected' : ''; ?><?php echo __('When deal moves to stage...'); ?></option>
+                        <option value="new_lead" <?php echo ($campaign['trigger_type'] ?? '') === 'new_lead' ? 'selected' : ''; ?>><?php echo __('When a new lead is created'); ?></option>
+                        <option value="lead_status_change" <?php echo ($campaign['trigger_type'] ?? '') === 'lead_status_change' ? 'selected' : ''; ?>><?php echo __('When lead status changes to...'); ?></option>
+                        <option value="contact_created" <?php echo ($campaign['trigger_type'] ?? '') === 'contact_created' ? 'selected' : ''; ?>><?php echo __('When a new contact is created'); ?></option>
+                        <option value="scheduled" <?php echo ($campaign['trigger_type'] ?? '') === 'scheduled' ? 'selected' : ''; ?>><?php echo __('Recurring / Scheduled interval'); ?></option>
+                        <option value="deal_stage_change" <?php echo ($campaign['trigger_type'] ?? '') === 'deal_stage_change' ? 'selected' : ''; ?>><?php echo __('When deal moves to stage...'); ?></option>
                     </select>
                 </div>
 
