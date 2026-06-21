@@ -12,6 +12,7 @@ $csrfToken = generateCSRFToken();
 
 $db = Database::getInstance();
 $leadId = intval($_GET['lead_id'] ?? 0);
+$contactId = intval($_GET['contact_id'] ?? 0);
 $interactionId = intval($_GET['id'] ?? 0);
 $isEdit = $interactionId > 0;
 
@@ -19,6 +20,12 @@ $isEdit = $interactionId > 0;
 $leadData = null;
 if ($leadId) {
     $leadData = $db->findOne('leads', ['lead_id' => $leadId]);
+}
+
+// Fetch contact data for context
+$contactData = null;
+if ($contactId) {
+    $contactData = $db->query("SELECT * FROM contacts WHERE contact_id = ? AND company_id = ?", [$contactId, $_SESSION['company_id'] ?? null])->fetch(PDO::FETCH_ASSOC);
 }
 
 // Handle form submission
@@ -41,14 +48,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['next_action'] = trim($_POST['next_action'] ?? '');
     $formData['next_action_date'] = !empty($_POST['next_action_date']) ? $_POST['next_action_date'] : null;
     $postedLeadId = intval($_POST['lead_id'] ?? 0);
+    $postedContactId = intval($_POST['contact_id'] ?? 0);
 
-    if (!$postedLeadId) $errors[] = 'Lead is required';
+    if (!$postedLeadId && !$postedContactId) $errors[] = 'Lead or contact is required';
     if (!$formData['subject']) $errors[] = 'Subject is required';
 
     if (empty($errors)) {
         try {
             $data = [
-                'lead_id' => $postedLeadId,
+                'lead_id' => $postedLeadId ?: null,
+                'contact_id' => $postedContactId ?: null,
                 'user_id' => getCurrentUserId(),
                 'interaction_type' => $formData['interaction_type'],
                 'interaction_date' => str_replace('T', ' ', $formData['interaction_date']) . ':00',
@@ -59,10 +68,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'created_at' => date('Y-m-d H:i:s'),
             ];
             $newId = $db->insert('interactions', $data);
-            $db->update('leads', ['updated_at' => date('Y-m-d H:i:s')], ['lead_id' => $postedLeadId]);
-            logActivity(getCurrentUserId(), 'Log Interaction', 'Interaction', $newId, "Logged {$data['interaction_type']} for lead ID {$postedLeadId}");
+            if ($postedLeadId) {
+                $db->update('leads', ['updated_at' => date('Y-m-d H:i:s')], ['lead_id' => $postedLeadId]);
+            }
+            logActivity(getCurrentUserId(), 'Log Interaction', 'Interaction', $newId, "Logged {$data['interaction_type']}");
             $_SESSION['success'] = 'Interaction logged successfully';
-            header('Location: /pages/lead-detail.php?id=' . $postedLeadId);
+            if ($postedContactId) {
+                header('Location: /pages/contact-detail.php?id=' . $postedContactId);
+            } else {
+                header('Location: /pages/lead-detail.php?id=' . $postedLeadId);
+            }
             exit;
         } catch (Exception $e) {
             $errors[] = 'Error: ' . $e->getMessage();
@@ -106,11 +121,26 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
+<?php elseif ($contactData): ?>
+    <div class="card" style="max-width:780px;margin-bottom:16px;background:linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);border-color:#bfdbfe;">
+        <div class="card-body" style="padding:16px 24px;display:flex;align-items:center;gap:12px;">
+            <div style="width:42px;height:42px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;">
+                <?= strtoupper(substr($contactData['first_name'] ?? 'C', 0, 1)) ?>
+            </div>
+            <div>
+                <strong><?= htmlspecialchars($contactData['first_name'] . ' ' . $contactData['last_name']) ?></strong>
+                <?php if ($contactData['email']): ?>
+                    <br><small class="text-muted"><?= htmlspecialchars($contactData['email']) ?></small>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 <?php endif; ?>
 
 <form method="POST" style="max-width:780px;">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
     <input type="hidden" name="lead_id" value="<?= $leadId ?>">
+    <input type="hidden" name="contact_id" value="<?= $contactId ?>">
 
     <div class="card">
         <div class="card-header" style="padding:18px 24px;">
