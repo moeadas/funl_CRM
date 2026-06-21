@@ -97,7 +97,6 @@ if ($action === 'create_contact' && $method === 'POST') {
         'country'        => sanitizeInput($input['country'] ?? ''),
         'notes'          => sanitizeInput($input['notes'] ?? ''),
         'contact_status' => sanitizeInput($input['contact_status'] ?? 'Active'),
-        'lead_source'    => sanitizeInput($input['lead_source'] ?? ''),
         'assigned_to'    => !empty($input['assigned_to']) ? (int)$input['assigned_to'] : null,
         'created_by'     => $userId,
     ]);
@@ -123,9 +122,8 @@ if ($action === 'update_contact' && $method === 'POST') {
     
     $updates = [];
     $updatable = ['first_name','last_name','title','email','phone','mobile','address',
-                   'city','state_province','country','postal_code','birthday','website',
-                   'facebook_url','instagram_url','linkedin_url','twitter_url','notes',
-                   'contact_status','lead_source','assigned_to','account_id'];
+                   'city','country','department','notes',
+                   'contact_status','assigned_to','account_id'];
     foreach ($updatable as $field) {
         if (isset($input[$field])) {
             $updates[$field] = in_array($field, ['assigned_to','account_id']) 
@@ -238,9 +236,8 @@ if ($action === 'create_account' && $method === 'POST') {
         'city'             => sanitizeInput($input['city'] ?? ''),
         'country'          => sanitizeInput($input['country'] ?? ''),
         'annual_revenue'   => !empty($input['annual_revenue']) ? (float)$input['annual_revenue'] : null,
-        'employee_count'   => !empty($input['employee_count']) ? (int)$input['employee_count'] : null,
+        'employees'        => !empty($input['employees']) ? (int)$input['employees'] : (!empty($input['employee_count']) ? (int)$input['employee_count'] : null),
         'description'      => sanitizeInput($input['description'] ?? ''),
-        'lead_source'      => sanitizeInput($input['lead_source'] ?? ''),
         'assigned_to'      => !empty($input['assigned_to']) ? (int)$input['assigned_to'] : null,
         'created_by'       => $userId,
     ]);
@@ -259,13 +256,11 @@ if ($action === 'update_account' && $method === 'POST') {
     
     $updates = [];
     $updatable = ['account_name','account_type','industry','website','phone','address',
-                   'city','state_province','country','postal_code','billing_address',
-                   'tax_id','annual_revenue','employee_count','description',
-                   'facebook_url','instagram_url','linkedin_url','twitter_url',
-                   'status','lead_source','assigned_to','lead_id'];
+                   'city','country','annual_revenue','employees','description',
+                   'status','assigned_to'];
     foreach ($updatable as $field) {
         if (isset($input[$field])) {
-            $updates[$field] = in_array($field, ['assigned_to','lead_id','employee_count']) 
+            $updates[$field] = in_array($field, ['assigned_to','employees']) 
                 ? ($input[$field] ? (int)$input[$field] : null)
                 : (in_array($field, ['annual_revenue']) 
                     ? ($input[$field] ? (float)$input[$field] : null)

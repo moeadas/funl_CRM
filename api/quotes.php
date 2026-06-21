@@ -70,7 +70,6 @@ if ($action === 'create' && $method === 'POST') {
         'currency'     => sanitizeInput($input['currency'] ?? 'USD'),
         'notes'        => sanitizeInput($input['notes'] ?? ''),
         'terms'        => sanitizeInput($input['terms'] ?? ''),
-        'footer_text'  => sanitizeInput($input['footer_text'] ?? ''),
         'created_by'   => $userId,
     ]);
     

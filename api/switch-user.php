@@ -32,6 +32,7 @@ if (!$action) {
     $userId = $data['user_id'] ?? null;
 }
 
+try {
 switch ($action) {
     case 'switch':
         if (!$userId) {
@@ -63,4 +64,7 @@ switch ($action) {
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action. Use "switch" or "switch_back".']);
         break;
+}
+} catch (Throwable $e) {
+    safeJsonError($e, 'An error occurred', 500);
 }
