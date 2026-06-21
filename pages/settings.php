@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'whatsapp_enabled', 'whatsapp_from_number', 'whatsapp_sandbox_mode',
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption',
             'email_from_name', 'email_from_address', 'email_reply_to', 'email_batch_size', 'email_batch_delay',
+            'resend_api_key', 'resend_from_email',
             'tracking_head_code', 'tracking_body_code', 'preloader_code'
         ];
 
@@ -64,7 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($key === 'smtp_password' && $value === '') {
                     continue; // don't overwrite the existing password
                 }
-                if (in_array($key, ['smtp_password', 'twilio_auth_token'])) {
+                if ($key === 'resend_api_key' && $value === '') {
+                    continue; // don't overwrite the existing key
+                }
+                if (in_array($key, ['smtp_password', 'twilio_auth_token', 'resend_api_key'])) {
                     $value = encryptToken($value);
                 }
 
@@ -409,9 +413,42 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Tab: Pixels & Tracking -->
+            <?php if (isSuperAdmin()): ?>
+            <div class="card" style="margin-top:24px;">
+                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Resend API (Transactional Email)')); ?></h3></div>
+                <div class="card-body">
+                    <p style="color:var(--color-text-muted,#6b7280);font-size:14px;margin-bottom:16px;">
+                        <?php echo __('Resend handles verification emails, password resets, and other transactional emails. Get your API key at'); ?>
+                        <a href="https://resend.com/api-keys" target="_blank" rel="noopener">resend.com/api-keys</a>
+                    </p>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label"><?php echo htmlspecialchars(__('Resend API Key')); ?></label>
+                            <?php
+                                $resendKey = $settings['resend_api_key'] ?? '';
+                                $resendMasked = $resendKey ? "API key is configured" : "";
+                            ?>
+                            <input type="password" name="resend_api_key" class="form-control" value="" placeholder="<?php echo $resendMasked ? htmlspecialchars($resendMasked) : 're_...'; ?>">
+                            <?php if ($resendKey): ?>
+                                <p style="font-size:12px;color:#10b981;margin-top:4px;">✓ <?php echo __('API key is set'); ?></p>
+                            <?php else: ?>
+                                <p style="font-size:12px;color:#dc2626;margin-top:4px;">⚠ <?php echo __('No API key set — verification emails will not be sent'); ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><?php echo htmlspecialchars(__('Resend From Email')); ?></label>
+                            <input type="text" name="resend_from_email" class="form-control" value="<?php echo htmlspecialchars($settings['resend_from_email'] ?? ''); ?>" placeholder="FunL CRM <noreply@funl.online>">
+                            <p style="font-size:12px;color:var(--color-text-muted,#6b7280);margin-top:4px;"><?php echo __('Format: Your Name <noreply@yourdomain.com>'); ?></p>
+                        </div>
+                    </div>
+                    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;margin-top:8px;font-size:13px;color:#0369a1;">
+                        <strong>💡 <?php echo __('How it works'); ?>:</strong> <?php echo __('The API key is encrypted and stored securely. Leave the field blank to keep the current key. Only super admins can view or change this setting.'); ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
         <div class="tab-pane" id="pane-tracking">
             <div class="card">
                 <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Tracking Codes & Pixels')); ?></h3></div>
