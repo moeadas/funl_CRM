@@ -120,10 +120,11 @@ try {
     $sent = sendVerificationEmail($userEmail, $fullName, $token);
 
     if (!$sent) {
-        // Even if delivery failed, don't leak that the user exists.
+        // Email service not configured or delivery failed.
+        // Be honest so the user knows to contact support.
         echo json_encode([
-            'success' => true,
-            'message' => 'If your account exists, a new verification email has been sent.'
+            'success' => false,
+            'message' => 'Our email service is not fully configured. Please contact support to verify your account.'
         ]);
         exit;
     }

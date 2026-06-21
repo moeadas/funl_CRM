@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $attempts = json_decode(file_get_contents($rateFile), true) ?: [];
         }
         $attempts = array_filter($attempts, fn($t) => $t > $hour);
-        if (count($attempts) >= 5) {
+        if (count($attempts) >= 3) {
             $error = 'Too many signups from your IP. Please try again in an hour.';
         } else {
             $attempts[] = $now;
@@ -69,6 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $error = __('All fields are required.');
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = __('Please enter a valid email address.');
+        } elseif (function_exists('isDisposableEmail') && isDisposableEmail($email)) {
+            $error = __('Please use a permanent email address. Temporary email services are not allowed.');
         } elseif (strlen($password) < 8) {
             $error = __('Password must be at least 8 characters.');
         } elseif (function_exists('validatePasswordStrength')) {
@@ -157,10 +159,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                          VALUES (?, ?, ?, ?)",
                         [$userId, $email, $verifyToken, $expires]
                     );
-                    sendVerificationEmail($email, $fullName, $verifyToken);
+                    $emailSent = sendVerificationEmail($email, $fullName, $verifyToken);
                     
                     // Set email as NOT verified (must verify before full access)
                     $db->query("UPDATE users SET email_verified = 0 WHERE user_id = ?", [$userId]);
+                    
+                    // Track if email was actually delivered
+                    $_SESSION['verification_email_sent'] = ($emailSent !== false);
 
                     // Set session but mark as unverified
                     $_SESSION['user_id'] = $userId;

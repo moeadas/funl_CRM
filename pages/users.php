@@ -37,6 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 logActivity(getCurrentUserId(), 'Toggle User Status', 'User', $userId, "Changed status to: $newStatus");
                 $_SESSION['success'] = "User status updated successfully";
                 break;
+                
+            case 'verify_email':
+                if (isSuperAdmin()) {
+                    $db->query("UPDATE users SET email_verified = 1 WHERE user_id = ?", [$userId]);
+                    $db->query("UPDATE email_verifications SET verified_at = NOW() WHERE user_id = ? AND verified_at IS NULL", [$userId]);
+                    $u = $db->query("SELECT email, full_name FROM users WHERE user_id = ?", [$userId])->fetch();
+                    logActivity(getCurrentUserId(), 'Manual Email Verify', 'User', $userId, "Manually verified {$u['email']}");
+                    $_SESSION['success'] = "Email manually verified for {$u['full_name']}";
+                } else {
+                    $_SESSION['error'] = "Only super admins can manually verify emails";
+                }
+                break;
         }
         
         header('Location: users.php');
@@ -166,7 +178,7 @@ $csrf_token = generateCSRFToken();
                                 </td>
                                 <td><?php echo htmlspecialchars($user['email']); ?></td>
                                 <td><span class="badge bg-gray-100 text-gray-800"><?php echo htmlspecialchars($user['role']); ?></span></td>
-                                <td><span class="badge badge-<?php echo $user['status'] === 'Active' ? 'success' : 'danger'; ?>"><?php echo htmlspecialchars($user['status']); ?></span></td>
+                                <td><span class="badge badge-<?php echo $user['status'] === 'Active' ? 'success' : 'danger'; ?>"><?php echo htmlspecialchars($user['status']); ?></span><?php if (empty($user['email_verified'])): ?> <span class="badge badge-warning" title="Email not verified">⚠️</span><?php endif; ?></td>
                                 <td>
                                     <?php if (intval($user['wa_notify_enabled'] ?? 0) === 1 && !empty($user['whatsapp_number'])): ?>
                                         <span class="badge badge-success" title="WhatsApp: <?php echo htmlspecialchars($user['whatsapp_number']); ?>"><?php echo __('On'); ?></span>
@@ -207,6 +219,16 @@ $csrf_token = generateCSRFToken();
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                                 </button>
                                             </form>
+                                            <?php if (isSuperAdmin() && empty($user['email_verified'])): ?>
+                                            <form method="POST" class="d-inline" onsubmit="return confirm('Manually verify this user\'s email?');">
+                                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                                <input type="hidden" name="action" value="verify_email">
+                                                <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
+                                                <button type="submit" class="btn btn-sm btn-success" title="<?php echo __('Manually verify email'); ?>">
+                                                    ✉✓
+                                                </button>
+                                            </form>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>

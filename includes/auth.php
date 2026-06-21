@@ -44,6 +44,8 @@ function requireLogin() {
         header('Location: /login.php');
         exit;
     }
+    // Require email verification (skip for super admins)
+    requireEmailVerified();
     // H-8: enforce password change for flagged users (skips super admins)
     requireNoPasswordChange();
     // B-6: enforce active subscription (block tenants whose trial expired
