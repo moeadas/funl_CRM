@@ -588,7 +588,13 @@ function updateLead($db, $data, $currentUser) {
         $utm['utm_source'], $utm['utm_campaign'], $utm['utm_medium'],
         $utm['utm_content'], $utm['utm_term'], $utm['landing_page'], $utm['referrer'],
     ];
-    if ($companyId) $params[] = $companyId;
+    // Append lead_id (WHERE clause) and company_id if applicable
+    if ($companyId) {
+        $params[] = $data['lead_id'];
+        $params[] = $companyId;
+    } else {
+        $params[] = $data['lead_id'];
+    }
     $stmt->execute($params);
 
     // Track this source value for the company (autocomplete library)

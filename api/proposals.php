@@ -3,6 +3,7 @@
  * FUNL CRM — Proposals API
  */
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 startSecureSession();
 requireLogin();
 
@@ -29,6 +30,7 @@ function getNextEstimateNumber($pdo, $companyId) {
 // ══════════════════════════════════════════════════════════════
 //  LIST proposals
 // ══════════════════════════════════════════════════════════════
+try {
 if ($action === 'list') {
     $companyId = getCurrentCompanyId();
     $search = trim($_GET['search'] ?? '');
@@ -201,3 +203,6 @@ if ($action === 'delete' && $method === 'POST') {
 }
 
 echo json_encode(['success' => false, 'message' => 'Invalid action']);
+} catch (Throwable $e) {
+    safeJsonError($e, 'An error occurred', 500);
+}

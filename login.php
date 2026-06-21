@@ -90,6 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit" class="btn btn-primary btn-block btn-lg">
                     <?php echo __('Sign In'); ?>
                 </button>
+
+                <div style="text-align:center;margin-top:12px;">
+                    <a href="/forgot-password.php" style="font-size:13px;color:var(--color-text-secondary);">Forgot password?</a>
+                </div>
             </form>
 
             <div class="login-footer">

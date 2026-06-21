@@ -48,7 +48,7 @@ try {
             if ($method !== 'POST') jsonError('POST required');
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) $input = $_POST;
-            
+            requireCSRF();
             $stmt = $db->prepare("
                 INSERT INTO email_templates (company_id, name, subject, content_json, content_html, created_by, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, NOW())
@@ -68,7 +68,7 @@ try {
             if ($method !== 'POST' && $method !== 'PUT') jsonError('POST/PUT required');
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) $input = $_POST;
-            
+            requireCSRF();
             $id = intval($input['template_id'] ?? 0);
             if (!$id) jsonError('Template ID required');
             
@@ -95,7 +95,7 @@ try {
             if ($method !== 'POST') jsonError('POST required');
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) $input = $_POST;
-            
+            requireCSRF();
             $id = intval($input['template_id'] ?? 0);
             if (!$id) jsonError('Template ID required');
             
@@ -115,6 +115,7 @@ try {
             break;
 
         case 'delete':
+            requireCSRF();
             $id = intval($_GET['id'] ?? 0);
             if (!$id) jsonError('Template ID required');
             $stmt = $db->prepare("DELETE FROM email_templates WHERE template_id = ? AND company_id = ?");
