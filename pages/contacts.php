@@ -150,7 +150,7 @@ function renderContacts() {
             `<span class="tag" style="background:${t.tag_color}20;color:${t.tag_color}">${escapeHtml(t.tag_name)}</span>`
         ).join('') : '';
         const statusClass = 'status-' + (c.contact_status || 'active').toLowerCase().replace(' ', '-');
-        return `<tr onclick="window.location.href='/pages/contact-form.php?id=${c.contact_id}'" style="cursor:pointer">
+        return `<tr onclick="window.location.href='/pages/contact-detail.php?id=${c.contact_id}'" style="cursor:pointer">
             <td>
                 <div class="contact-name-cell">${escapeHtml(c.first_name)} ${escapeHtml(c.last_name)}</div>
                 ${c.title ? `<div style="font-size:12px;color:#9ca3af">${escapeHtml(c.title)}</div>` : ''}

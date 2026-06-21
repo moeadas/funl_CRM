@@ -117,6 +117,77 @@ include '../includes/header.php';
             </div>
         </div>
 
+        <!-- Automated Trigger Section -->
+        <div class="card mt-2">
+            <div class="card-header" style="padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
+                <h3 class="card-title" style="margin:0;"><?php echo __('Automation Trigger'); ?></h3>
+                <label style="font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" name="is_automated" value="1" id="isAutomated" <?php echo !empty($campaign['is_automated']) ? 'checked' : ''; ?> onchange="toggleAutomation()">
+                    <?php echo __('Enable automated sending'); ?>
+                </label>
+            </div>
+            <div class="card-body" id="automationConfig" style="padding:24px;display:<?php echo !empty($campaign['is_automated']) ? 'block' : 'none'; ?>">
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label"><?php echo __('When should this campaign send?'); ?> *</label>
+                    <select name="trigger_type" class="form-control" id="triggerType">
+                        <option value="">— <?php echo __('Select a trigger'); ?> —</option>
+                        <option value="new_lead" <?php echo ($campaign['trigger_type'] ?? '') === 'new_lead' ? 'selected' : ''; ?><?php echo __('When a new lead is created'); ?></option>
+                        <option value="lead_status_change" <?php echo ($campaign['trigger_type'] ?? '') === 'lead_status_change' ? 'selected' : ''; ?><?php echo __('When lead status changes to...'); ?></option>
+                        <option value="contact_created" <?php echo ($campaign['trigger_type'] ?? '') === 'contact_created' ? 'selected' : ''; ?><?php echo __('When a new contact is created'); ?></option>
+                        <option value="scheduled" <?php echo ($campaign['trigger_type'] ?? '') === 'scheduled' ? 'selected' : ''; ?><?php echo __('Recurring / Scheduled interval'); ?></option>
+                        <option value="deal_stage_change" <?php echo ($campaign['trigger_type'] ?? '') === 'deal_stage_change' ? 'selected' : ''; ?><?php echo __('When deal moves to stage...'); ?></option>
+                    </select>
+                </div>
+
+                <!-- Conditional fields based on trigger type -->
+                <div id="triggerConfigFields" style="margin-top:12px;">
+                    <!-- For lead_status_change -->
+                    <div class="form-group trigger-config trigger-status" style="display:none;margin-bottom:12px;">
+                        <label class="form-label"><?php echo __('Send when lead status becomes'); ?></label>
+                        <select name="trigger_status" class="form-control">
+                            <option value="Contacted">Contacted</option>
+                            <option value="Interested">Interested</option>
+                            <option value="Demo Scheduled">Demo Scheduled</option>
+                            <option value="Proposal Sent">Proposal Sent</option>
+                            <option value="Negotiation">Negotiation</option>
+                            <option value="Won">Won</option>
+                        </select>
+                    </div>
+
+                    <!-- For scheduled/recurring -->
+                    <div class="form-group trigger-config trigger-scheduled" style="display:none;margin-bottom:12px;">
+                        <label class="form-label"><?php echo __('Send every'); ?></label>
+                        <select name="trigger_interval" class="form-control" style="max-width:200px;display:inline-block;">
+                            <option value="daily"><?php echo __('Day'); ?></option>
+                            <option value="weekly"><?php echo __('Week'); ?></option>
+                            <option value="monthly"><?php echo __('Month'); ?></option>
+                        </select>
+                        <span style="font-size:13px;color:var(--color-text-secondary);margin-left:8px;"><?php echo __('to the selected list'); ?></span>
+                    </div>
+
+                    <!-- For deal_stage_change -->
+                    <div class="form-group trigger-config trigger-deal" style="display:none;margin-bottom:12px;">
+                        <label class="form-label"><?php echo __('Send when deal moves to'); ?></label>
+                        <input type="text" name="trigger_deal_stage" class="form-control" placeholder="e.g. Negotiation, Won" >
+                    </div>
+
+                    <!-- Delay option (for all trigger types) -->
+                    <div class="form-group" style="margin-bottom:0;padding-top:12px;border-top:1px solid var(--color-border-light);">
+                        <label class="form-label"><?php echo __('Delay before sending'); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="number" name="delay_value" class="form-control" style="max-width:100px;" min="0" value="0">
+                            <select name="delay_unit" class="form-control" style="max-width:120px;">
+                                <option value="minutes"><?php echo __('minutes'); ?></option>
+                                <option value="hours"><?php echo __('hours'); ?></option>
+                                <option value="days"><?php echo __('days'); ?></option>
+                            </select>
+                            <span style="font-size:13px;color:var(--color-text-secondary);"><?php echo __('after trigger fires'); ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card mt-2">
             <div class="card-body text-center-block">
                 <button type="submit" class="btn btn-primary btn-block"><?php echo $isEdit ? __('Save Campaign') : __('Create Campaign'); ?></button>
@@ -156,6 +227,20 @@ document.getElementById('campaignForm').addEventListener('submit', function(e) {
             showNotification(d.message, 'error');
         }
     }).catch(() => showNotification('Network error', 'error'));
+});
+
+
+function toggleAutomation() {
+    var cb = document.getElementById("isAutomated");
+    document.getElementById("automationConfig").style.display = cb.checked ? "block" : "none";
+}
+
+document.getElementById("triggerType").addEventListener("change", function() {
+    var val = this.value;
+    document.querySelectorAll(".trigger-config").forEach(function(el) { el.style.display = "none"; });
+    if (val === "lead_status_change") { document.querySelector(".trigger-status").style.display = "block"; }
+    if (val === "scheduled") { document.querySelector(".trigger-scheduled").style.display = "block"; }
+    if (val === "deal_stage_change") { document.querySelector(".trigger-deal").style.display = "block"; }
 });
 
 function sendCampaign() {

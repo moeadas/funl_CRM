@@ -245,6 +245,12 @@ function getLeadsList($db, $currentUser) {
     $where  = ['1=1'];
     $params = [];
 
+    // Hide converted leads (moved to contacts) by default — show them only if user filters by 'Won' status
+    $statusFilter = $_GET['status'] ?? '';
+    if (empty($statusFilter) || $statusFilter !== 'Won') {
+        $where[] = 'l.converted_contact_id IS NULL';
+    }
+
     // Tenant isolation: scope by company_id
     if (!empty($currentUser['company_id'])) {
         $where[]  = 'l.company_id = ?';
@@ -410,6 +416,8 @@ function getLeadStats($db, $currentUser) {
         $where[] = 'company_id = ?';
         $params[] = $companyId;
     }
+    // Exclude converted leads from stats
+    $where[] = 'converted_contact_id IS NULL';
     
     $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
     
@@ -821,10 +829,10 @@ function moveLeadToContact($db, $data, $currentUser) {
     
     $contactId = $db->getConnection()->lastInsertId();
 
-    // Update lead status to 'Won' (and mark the lead as converted)
+    // Mark lead as converted — set converted_contact_id so it's excluded from leads list
     try {
-        $updateStmt = $db->prepare("UPDATE leads SET lead_status = 'Won', updated_at = NOW() WHERE lead_id = ?");
-        $updateStmt->execute([$leadId]);
+        $updateStmt = $db->prepare("UPDATE leads SET lead_status = 'Won', converted_contact_id = ?, updated_at = NOW() WHERE lead_id = ?");
+        $updateStmt->execute([$contactId, $leadId]);
     } catch (Exception $e) { /* non-fatal — lead can still be marked later */ }
 
     // Log activity
