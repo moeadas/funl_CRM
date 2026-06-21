@@ -13,8 +13,21 @@ class ResendEmailService {
     private $enabled;
     
     public function __construct() {
-        $this->apiKey = getenv('RESEND_API_KEY') ?: '';
-        $this->fromEmail = getenv('RESEND_FROM_EMAIL') ?: 'White Label CRM <noreply@yourdomain.com>';
+        // Try database settings first (set via Settings UI), fall back to env var
+        $storedKey = getSetting('resend_api_key', '');
+        if ($storedKey) {
+            // Decrypt the stored key (encryptToken was used when saving)
+            $this->apiKey = function_exists('decryptToken') ? decryptToken($storedKey) : $storedKey;
+        } else {
+            $this->apiKey = getenv('RESEND_API_KEY') ?: '';
+        }
+        $this->fromEmail = getSetting('resend_from_email', '') ?: getenv('RESEND_FROM_EMAIL') ?: '';
+        if (empty($this->fromEmail)) {
+            // Build from app settings
+            $appName = getSetting('app_name', 'White Label CRM');
+            $companyEmail = getSetting('company_email', '');
+            $this->fromEmail = $companyEmail ? "{$appName} <noreply@{$companyEmail}>" : 'White Label CRM <noreply@yourdomain.com>';
+        }
         $this->enabled = !empty($this->apiKey);
     }
     
