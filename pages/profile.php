@@ -167,20 +167,21 @@ include __DIR__ . '/../includes/header.php';
 
 
 
-<div class="profile-container">
-    <div class="page-header">
+<div class="page-header">
+    <div>
         <h1 class="page-title"><?php echo __('my_profile'); ?></h1>
-        <p class="page-subtitle"><?php echo __('profile_subtitle'); ?></p>
+        <p class="text-muted" style="margin-top:4px;"><?php echo __('profile_subtitle'); ?></p>
     </div>
+</div>
 
-    <?php if ($success): ?>
-        <div class="alert alert-success" style="margin-bottom:20px;"><?php echo htmlspecialchars($success); ?></div>
-    <?php endif; ?>
-    <?php if ($error): ?>
-        <div class="alert alert-error" style="margin-bottom:20px;"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
+<?php if ($success): ?>
+    <div class="alert alert-success" style="margin-bottom:20px;"><?php echo htmlspecialchars($success); ?></div>
+<?php endif; ?>
+<?php if ($error): ?>
+    <div class="alert alert-error" style="margin-bottom:20px;"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
 
-    <div class="profile-grid">
+<div class="profile-grid">
         <!-- Main Panel: Profile Details & Password -->
         <div style="display:flex;flex-direction:column;gap:24px;">
             <!-- Profile Card -->
@@ -324,7 +325,6 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
-</div>
 
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

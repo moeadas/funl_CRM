@@ -187,42 +187,42 @@ include __DIR__ . '/../includes/header.php';
 
 
 
-<div class="settings-container">
-    <div class="page-header">
+<div class="page-header">
+    <div>
         <h1 class="page-title"><?php echo htmlspecialchars(__('Settings')); ?></h1>
+        <p class="text-muted" style="margin-top:4px;"><?php echo htmlspecialchars(__('Configure application settings, custom fields, VoIP integrations, and SMTP credentials')); ?></p>
     </div>
-    <p class="settings-subtitle"><?php echo htmlspecialchars(__('Configure application settings, custom fields, VoIP integrations, and SMTP credentials')); ?></p>
-    </div>
+</div>
 
-    <?php if ($success): ?>
-        <div class="alert alert-success" style="margin-bottom:20px;"><?php echo htmlspecialchars(__($success)); ?></div>
+<?php if ($success): ?>
+    <div class="alert alert-success" style="margin-bottom:20px;"><?php echo htmlspecialchars(__($success)); ?></div>
+<?php endif; ?>
+<?php if ($error): ?>
+    <div class="alert alert-error" style="margin-bottom:20px;"><?php echo htmlspecialchars(__($error)); ?></div>
+<?php endif; ?>
+
+<div class="tabs-nav">
+    <div class="tab-link active" data-tab="general" onclick="switchTab('general')"><?php echo htmlspecialchars(__('Company Profile')); ?></div>
+    <div class="tab-link" data-tab="branding" onclick="switchTab('branding')"><?php echo htmlspecialchars(__('App Branding')); ?></div>
+    <div class="tab-link" data-tab="voip" onclick="switchTab('voip')"><?php echo htmlspecialchars(__('VoIP & WhatsApp')); ?></div>
+    <div class="tab-link" data-tab="smtp" onclick="switchTab('smtp')"><?php echo htmlspecialchars(__('SMTP & Email')); ?></div>
+    <div class="tab-link" data-tab="integration" onclick="switchTab('integration')"><?php echo htmlspecialchars(__('Email Integration')); ?></div>
+    <?php if (isSuperAdmin()): ?>
+    <div class="tab-link" data-tab="tracking" onclick="switchTab('tracking')"><?php echo htmlspecialchars(__('Pixels & Tracking')); ?></div>
     <?php endif; ?>
-    <?php if ($error): ?>
-        <div class="alert alert-error" style="margin-bottom:20px;"><?php echo htmlspecialchars(__($error)); ?></div>
-    <?php endif; ?>
+    <div class="tab-link" data-tab="custom_fields" onclick="switchTab('custom_fields')"><?php echo htmlspecialchars(__('Custom Lead Fields')); ?></div>
+    <div class="tab-link" data-tab="subscription" onclick="switchTab('subscription')"><?php echo htmlspecialchars(__('Subscription')); ?></div>
+</div>
 
-    <div class="tabs-nav">
-        <div class="tab-link active" data-tab="general" onclick="switchTab('general')"><?php echo htmlspecialchars(__('Company Profile')); ?></div>
-        <div class="tab-link" data-tab="branding" onclick="switchTab('branding')"><?php echo htmlspecialchars(__('App Branding')); ?></div>
-        <div class="tab-link" data-tab="voip" onclick="switchTab('voip')"><?php echo htmlspecialchars(__('VoIP & WhatsApp')); ?></div>
-        <div class="tab-link" data-tab="smtp" onclick="switchTab('smtp')"><?php echo htmlspecialchars(__('SMTP & Email')); ?></div>
-        <div class="tab-link" data-tab="integration" onclick="switchTab('integration')"><?php echo htmlspecialchars(__('Email Integration')); ?></div>
-        <?php if (isSuperAdmin()): ?>
-        <div class="tab-link" data-tab="tracking" onclick="switchTab('tracking')"><?php echo htmlspecialchars(__('Pixels & Tracking')); ?></div>
-        <?php endif; ?>
-        <div class="tab-link" data-tab="custom_fields" onclick="switchTab('custom_fields')"><?php echo htmlspecialchars(__('Custom Lead Fields')); ?></div>
-        <div class="tab-link" data-tab="subscription" onclick="switchTab('subscription')"><?php echo htmlspecialchars(__('Subscription')); ?></div>
-    </div>
+<form method="POST" enctype="multipart/form-data" id="settingsForm" onsubmit="var p=document.getElementById('company_phone_full');if(p){var inp=document.getElementById('company_phone');if(inp)inp.value=p.value;}">
+    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+    <input type="hidden" name="action" value="save_settings">
 
-    <form method="POST" enctype="multipart/form-data" id="settingsForm" onsubmit="var p=document.getElementById('company_phone_full');if(p){var inp=document.getElementById('company_phone');if(inp)inp.value=p.value;}">
-        <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-        <input type="hidden" name="action" value="save_settings">
-
-        <!-- Tab: General -->
-        <div class="tab-pane active" id="pane-general">
-            <div class="card">
-                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Company Profile Details')); ?></h3></div>
-                <div class="card-body">
+    <!-- Tab: General -->
+    <div class="tab-pane active" id="pane-general">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Company Profile Details')); ?></h3></div>
+            <div class="card-body">
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Company Name *')); ?></label>
@@ -276,10 +276,10 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Tab: Branding -->
-        <div class="tab-pane" id="pane-branding">
-            <div class="card">
-                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('App Logos & Asset Customization')); ?></h3></div>
-                <div class="card-body">
+    <div class="tab-pane" id="pane-branding">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('App Logos & Asset Customization')); ?></h3></div>
+            <div class="card-body">
                     <div class="form-group">
                         <label class="form-label"><?php echo htmlspecialchars(__('Company Logo (Recommended: SVG or PNG, Transparent, max 200x60px)')); ?></label>
                         <input type="file" name="company_logo" class="form-control" accept=".png,.jpg,.jpeg,.svg">
@@ -306,10 +306,10 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Tab: VoIP -->
-        <div class="tab-pane" id="pane-voip">
-            <div class="card">
-                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Twilio Integration settings')); ?></h3></div>
-                <div class="card-body">
+    <div class="tab-pane" id="pane-voip">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Twilio Integration settings')); ?></h3></div>
+            <div class="card-body">
                     <div class="switch-container">
                         <div class="switch-info">
                             <h4><?php echo htmlspecialchars(__('Enable Twilio VoIP Calling')); ?></h4>
@@ -371,10 +371,10 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Tab: SMTP -->
-        <div class="tab-pane" id="pane-smtp">
-            <div class="card">
-                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('SMTP Server & Email Marketing Settings')); ?></h3></div>
-                <div class="card-body">
+    <div class="tab-pane" id="pane-smtp">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('SMTP Server & Email Marketing Settings')); ?></h3></div>
+            <div class="card-body">
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('SMTP Host')); ?></label>
@@ -424,10 +424,10 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <?php if (isSuperAdmin()): ?>
+        <?php if (isSuperAdmin()): ?>
             <div class="card" style="margin-top:24px;">
-                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Resend API (Transactional Email)')); ?></h3></div>
-                <div class="card-body">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Resend API (Transactional Email)')); ?></h3></div>
+            <div class="card-body">
                     <p style="color:var(--color-text-muted,#6b7280);font-size:14px;margin-bottom:16px;">
                         <?php echo __('Resend handles verification emails, password resets, and other transactional emails. Get your API key at'); ?>
                         <a href="https://resend.com/api-keys" target="_blank" rel="noopener">resend.com/api-keys</a>
@@ -460,13 +460,13 @@ include __DIR__ . '/../includes/header.php';
             <?php endif; ?>
         </div>
         <!-- Tab: Email Integration -->
-        <div class="tab-pane" id="pane-integration">
-            <div class="card">
-                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Email Integration (Office 365)')); ?></h3></div>
-                <div class="card-body">
+    <div class="tab-pane" id="pane-integration">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Email Integration (Office 365)')); ?></h3></div>
+            <div class="card-body">
                     <p style="font-size:13px;color:var(--color-text-muted,#6b7280);margin-bottom:16px;"><?php echo __('Connect your Office 365 account to send emails directly from the CRM. Each user connects their own account.'); ?></p>
 
-                    <?php if (isSuperAdmin()): ?>
+                <?php if (isSuperAdmin()): ?>
                     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;margin-bottom:20px;">
                         <h4 style="margin:0 0 8px;font-size:14px;color:#0369a1;">Microsoft Azure App Configuration</h4>
                         <p style="font-size:12px;color:#0369a1;margin:0 0 12px;">Required: Register an app in Azure Active Directory and enter the credentials below. See <a href="https://learn.microsoft.com/en-us/graph/auth-register-app-v2" target="_blank">Azure App Registration Guide</a>.</p>
@@ -526,7 +526,7 @@ include __DIR__ . '/../includes/header.php';
                             </div>
                         </div>
                         <form method="POST" action="/pages/profile.php">
-                            <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                        <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                             <input type="hidden" name="action" value="disconnect_microsoft">
                             <button type="submit" class="btn btn-outline" style="color:#dc2626;border-color:#fecaca;">Disconnect Office 365</button>
                         </form>
@@ -544,16 +544,16 @@ include __DIR__ . '/../includes/header.php';
                             <a href="<?php echo $msAuthUrl; ?>" class="btn btn-primary">Connect Office 365</a>
                         <?php else: ?>
                             <button class="btn btn-primary" disabled style="opacity:0.6;cursor:not-allowed;">Connect Office 365</button>
-                            <?php if (isSuperAdmin()): ?><div style="font-size:12px;color:#dc2626;margin-top:8px;">Client ID not configured. Enter your Azure App credentials in the Azure App Configuration section above and save.</div><?php else: ?><div style="font-size:12px;color:#6b7280;margin-top:8px;">Office 365 integration is available once your platform admin configures the Microsoft Azure app.</div><?php endif; ?>
+                        <?php if (isSuperAdmin()): ?><div style="font-size:12px;color:#dc2626;margin-top:8px;">Client ID not configured. Enter your Azure App credentials in the Azure App Configuration section above and save.</div><?php else: ?><div style="font-size:12px;color:#6b7280;margin-top:8px;">Office 365 integration is available once your platform admin configures the Microsoft Azure app.</div><?php endif; ?>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
         </div><?php if (isSuperAdmin()): ?>
-        <div class="tab-pane" id="pane-tracking">
-            <div class="card">
-                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Tracking Codes & Pixels')); ?></h3></div>
-                <div class="card-body">
+    <div class="tab-pane" id="pane-tracking">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Tracking Codes & Pixels')); ?></h3></div>
+            <div class="card-body">
                     <div class="alert alert-info" style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                         <span><?php echo htmlspecialchars(__('Add custom scripts (Google Tag Manager, Google Analytics, Meta Pixel, etc.) to your CRM website header and body tags. Only enter valid HTML scripts/tags.')); ?></span>
@@ -574,13 +574,13 @@ include __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
         <!-- Custom Fields (Handled dynamically) -->
-        <div class="tab-pane" id="pane-custom_fields">
-            <div class="card">
+    <div class="tab-pane" id="pane-custom_fields">
+        <div class="card">
                 <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
                     <h3 class="card-title"><?php echo htmlspecialchars(__('Lead Custom Fields')); ?></h3>
                     <a href="/pages/custom-field-new.php?entity=lead" class="btn btn-primary btn-sm">+ <?php echo htmlspecialchars(__('Add Field')); ?></a>
                 </div>
-                <div class="card-body">
+            <div class="card-body">
                     <div class="table-container">
                         <table class="table">
                             <thead>
@@ -604,7 +604,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- ── Subscription Tab ──────────────────────────────────────────── -->
-        <div class="tab-pane" id="pane-subscription">
+    <div class="tab-pane" id="pane-subscription">
             <?php
             $companySub = getCompany(getCurrentCompanyId());
             $subBadge = $companySub['subscription_status'] ?? 'trial';
@@ -641,7 +641,6 @@ include __DIR__ . '/../includes/header.php';
             <button type="submit" class="btn btn-primary btn-lg"><?php echo htmlspecialchars(__('Save Settings')); ?></button>
         </div>
     </form>
-</div>
 
 <script>
 function switchTab(tabId) {
