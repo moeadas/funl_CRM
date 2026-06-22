@@ -1,13 +1,12 @@
 <?php
 /**
- * Knowledge Hub - Link-based resource cards
- * Admin/Sales Manager can add/edit/delete link cards
- * All users can view and click to open links in new tab
- * Saves server space by not storing uploaded files
+ * White Label CRM - Knowledge Hub
+ * Link-based resource cards (no file uploads to save server space)
+ * Admin/Sales Manager can add/edit/delete cards
+ * All users can view and click cards to open links in new tab
  */
 require_once '../includes/auth.php';
 require_once '../includes/functions.php';
-require_once '../includes/company-functions.php';
 startSecureSession();
 requireLogin();
 
@@ -18,102 +17,79 @@ $csrf_token = generateCSRFToken();
 
 $db = Database::getInstance();
 
-// Handle actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+// Handle actions (Admin/Sales Manager only)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canManage && isset($_POST['action'])) {
     requireCSRF();
 
     if ($_POST['action'] === 'save_card') {
-        if (!$canManage) {
-            $_SESSION['error'] = 'You do not have permission to manage cards.';
-            header('Location: documents.php');
-            exit;
-        }
-
         $cardId = intval($_POST['card_id'] ?? 0);
         $title = trim(sanitizeInput($_POST['title'] ?? ''));
         $description = trim(sanitizeInput($_POST['description'] ?? ''));
         $category = trim(sanitizeInput($_POST['category'] ?? 'general'));
         $link = trim($_POST['link'] ?? '');
 
-        if (empty($title)) {
-            $_SESSION['error'] = 'Title is required.';
-            header('Location: documents.php');
-            exit;
-        }
+        if ($title && $link) {
+            // Ensure link has protocol
+            if (!preg_match('/^https?:\/\//i', $link)) {
+                $link = 'https://' . $link;
+            }
 
-        if (empty($link)) {
-            $_SESSION['error'] = 'Link URL is required.';
-            header('Location: documents.php');
-            exit;
-        }
-
-        // Ensure link has protocol
-        if (!preg_match('/^https?:\/\//i', $link)) {
-            $link = 'https://' . $link;
-        }
-
-        if ($cardId > 0) {
-            $db->query(
-                "UPDATE company_documents SET title=?, description=?, category=?, file_name=?, file_path=? WHERE document_id=? AND company_id=? AND file_type='link'",
-                [$title, $description, $category, $title, $link, $cardId, $companyId]
-            );
-            $_SESSION['success'] = 'Card updated successfully.';
+            if ($cardId) {
+                $db->query(
+                    "UPDATE company_documents SET title=?, description=?, category=?, file_name=?, file_path=? WHERE document_id=? AND company_id=?",
+                    [$title, $description, $category, $title, $link, $cardId, $companyId]
+                );
+                $_SESSION['success'] = 'Card updated successfully.';
+            } else {
+                $db->insert('company_documents', [
+                    'company_id' => $companyId,
+                    'uploaded_by' => $currentUser['user_id'],
+                    'title' => $title,
+                    'description' => $description,
+                    'file_name' => $title,
+                    'file_path' => $link,
+                    'file_size' => 0,
+                    'file_type' => 'link',
+                    'category' => $category,
+                ]);
+                $_SESSION['success'] = 'Card created successfully.';
+            }
         } else {
-            $db->insert('company_documents', [
-                'company_id' => $companyId,
-                'uploaded_by' => $currentUser['user_id'],
-                'title' => $title,
-                'description' => $description,
-                'file_name' => $title,
-                'file_path' => $link,
-                'file_size' => 0,
-                'file_type' => 'link',
-                'category' => $category,
-            ]);
-            $_SESSION['success'] = 'Card created successfully.';
+            $_SESSION['error'] = 'Title and link are required.';
         }
-
-        header('Location: documents.php');
-        exit;
-
     } elseif ($_POST['action'] === 'delete_card') {
-        if (!$canManage) {
-            $_SESSION['error'] = 'You do not have permission to delete cards.';
-            header('Location: documents.php');
-            exit;
-        }
-
         $cardId = intval($_POST['card_id'] ?? 0);
-        $db->query("DELETE FROM company_documents WHERE document_id=? AND company_id=? AND file_type='link'", [$cardId, $companyId]);
-        $_SESSION['success'] = 'Card deleted successfully.';
-        header('Location: documents.php');
-        exit;
+        $db->query("DELETE FROM company_documents WHERE document_id=? AND company_id=?", [$cardId, $companyId]);
+        $_SESSION['success'] = 'Card deleted.';
     }
+
+    header('Location: documents.php');
+    exit;
 }
 
-// Fetch link cards
+// Fetch cards
 $category = $_GET['category'] ?? 'all';
 if ($category !== 'all') {
     $cards = $db->query(
-        "SELECT d.*, u.full_name as uploaded_by_name
-         FROM company_documents d
-         LEFT JOIN users u ON d.uploaded_by = u.user_id
-         WHERE d.company_id=? AND d.file_type='link' AND d.category=?
+        "SELECT d.*, u.full_name as uploaded_by_name 
+         FROM company_documents d 
+         LEFT JOIN users u ON d.uploaded_by = u.user_id 
+         WHERE d.company_id=? AND d.file_type='link' AND d.category=? 
          ORDER BY d.created_at DESC",
         [$companyId, $category]
     )->fetchAll(PDO::FETCH_ASSOC);
 } else {
     $cards = $db->query(
-        "SELECT d.*, u.full_name as uploaded_by_name
-         FROM company_documents d
-         LEFT JOIN users u ON d.uploaded_by = u.user_id
-         WHERE d.company_id=? AND d.file_type='link'
+        "SELECT d.*, u.full_name as uploaded_by_name 
+         FROM company_documents d 
+         LEFT JOIN users u ON d.uploaded_by = u.user_id 
+         WHERE d.company_id=? AND d.file_type='link' 
          ORDER BY d.created_at DESC",
         [$companyId]
     )->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$categoryLabels = [
+$categories = [
     'general' => 'General',
     'sales' => 'Sales',
     'marketing' => 'Marketing',
@@ -133,7 +109,7 @@ include '../includes/header.php';
     </div>
     <?php if ($canManage): ?>
     <button type="button" class="btn btn-primary" onclick="openCardForm()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:middle;margin-right:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
@@ -144,9 +120,9 @@ include '../includes/header.php';
 
 <!-- Category Filters -->
 <div class="card" style="margin-bottom:16px;">
-    <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;">
         <a href="?category=all" class="btn btn-sm <?php echo $category === 'all' ? 'btn-primary' : 'btn-outline'; ?>"><?php echo __('All'); ?></a>
-        <?php foreach ($categoryLabels as $key => $label): ?>
+        <?php foreach ($categories as $key => $label): ?>
             <a href="?category=<?php echo $key; ?>" class="btn btn-sm <?php echo $category === $key ? 'btn-primary' : 'btn-outline'; ?>">
                 <?php echo htmlspecialchars(__($label)); ?>
             </a>
@@ -158,7 +134,7 @@ include '../includes/header.php';
 <?php if (empty($cards)): ?>
     <div class="card">
         <div class="card-body" style="text-align:center;padding:60px 20px;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5" style="margin-bottom:16px;opacity:0.5;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5" style="margin-bottom:16px;">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
             </svg>
@@ -173,20 +149,20 @@ include '../includes/header.php';
         </div>
     </div>
 <?php else: ?>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:16px;">
+    <div class="grid" style="grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;">
         <?php foreach ($cards as $card): ?>
             <div class="card" style="display:flex;flex-direction:column;">
-                <div class="card-body" style="flex:1;padding-bottom:8px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;">
-                        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-                            <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);display:flex;align-items:center;justify-content:center;color:white;font-size:18px;flex-shrink:0;">
+                <div class="card-body" style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px;">
                                 🔗
                             </div>
-                            <div style="min-width:0;flex:1;">
-                                <h4 style="margin:0;font-size:15px;word-break:break-word;"><?php echo htmlspecialchars($card['title']); ?></h4>
-                                <span style="font-size:11px;color:var(--color-primary);background:color-mix(in srgb, var(--color-primary) 10%, transparent);padding:2px 8px;border-radius:10px;">
-                                    <?php echo htmlspecialchars(__($categoryLabels[$card['category']] ?? 'General')); ?>
-                                </span>
+                            <div>
+                                <h4 style="margin:0;font-size:15px;"><?php echo htmlspecialchars($card['title']); ?></h4>
+                                <p style="margin:2px 0 0;font-size:12px;color:var(--color-text-muted);">
+                                    <?php echo htmlspecialchars(__($categories[$card['category']] ?? 'General')); ?>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -195,14 +171,16 @@ include '../includes/header.php';
                             <?php echo htmlspecialchars($card['description']); ?>
                         </p>
                     <?php endif; ?>
+
                     <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-text-muted);">
                         <span><?php echo __('Added by'); ?> <?php echo htmlspecialchars($card['uploaded_by_name'] ?? 'Admin'); ?></span>
                         <span>&middot;</span>
                         <span><?php echo date('M j, Y', strtotime($card['created_at'])); ?></span>
                     </div>
                 </div>
-                <div class="card-footer" style="display:flex;gap:8px;padding:16px;padding-top:0;border-top:none;">
-                    <a href="<?php echo htmlspecialchars($card['file_path']); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="flex:1;text-align:center;">
+
+                <div class="card-footer" style="display:flex;gap:8px;padding-top:16px;border-top:1px solid var(--color-border-light);">
+                    <a href="<?php echo htmlspecialchars($card['file_path']); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="flex:1;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;">
                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                             <polyline points="15 3 21 3 21 9"/>
@@ -210,8 +188,9 @@ include '../includes/header.php';
                         </svg>
                         <?php echo __('Open Link'); ?>
                     </a>
+
                     <?php if ($canManage): ?>
-                        <button type="button" class="btn btn-sm btn-outline" onclick='editCard(<?php echo json_encode($card); ?>)' title="<?php echo __('Edit'); ?>">
+                        <button type="button" class="btn btn-sm btn-info" onclick='editCard(<?php echo json_encode($card); ?>)' title="<?php echo __('Edit'); ?>">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -236,16 +215,16 @@ include '../includes/header.php';
 <?php endif; ?>
 
 <!-- Card Add/Edit Modal -->
-<div id="cardModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeCardForm()">
-    <div style="background:white;border-radius:12px;padding:24px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
-        <h3 id="cardModalTitle" style="margin:0 0 20px;font-size:18px;"><?php echo __('Add New Card'); ?></h3>
+<div id="cardModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeCardForm()">
+    <div style="background:white;border-radius:12px;padding:24px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <h3 id="cardModalTitle" style="margin:0 0 16px;font-size:18px;"><?php echo __('Add New Card'); ?></h3>
         <form method="POST" action="">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
             <input type="hidden" name="action" value="save_card">
             <input type="hidden" name="card_id" id="cf_card_id" value="0">
             <div class="form-group" style="margin-bottom:16px;">
                 <label class="form-label"><?php echo __('Title'); ?> *</label>
-                <input type="text" name="title" id="cf_title" class="form-control" required placeholder="Sales Playbook 2024">
+                <input type="text" name="title" id="cf_title" class="form-control" required placeholder="Sales Playbook">
             </div>
             <div class="form-group" style="margin-bottom:16px;">
                 <label class="form-label"><?php echo __('Description'); ?></label>
@@ -254,7 +233,7 @@ include '../includes/header.php';
             <div class="form-group" style="margin-bottom:16px;">
                 <label class="form-label"><?php echo __('Category'); ?></label>
                 <select name="category" id="cf_category" class="form-control">
-                    <?php foreach ($categoryLabels as $key => $label): ?>
+                    <?php foreach ($categories as $key => $label): ?>
                         <option value="<?php echo $key; ?>"><?php echo htmlspecialchars(__($label)); ?></option>
                     <?php endforeach; ?>
                 </select>
@@ -262,7 +241,6 @@ include '../includes/header.php';
             <div class="form-group" style="margin-bottom:24px;">
                 <label class="form-label"><?php echo __('Link URL'); ?> *</label>
                 <input type="url" name="link" id="cf_link" class="form-control" required placeholder="https://docs.google.com/...">
-                <p style="font-size:12px;color:var(--color-text-muted);margin-top:4px;">Link to a document, folder, or external resource</p>
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" class="btn btn-outline" onclick="closeCardForm()"><?php echo __('Cancel'); ?></button>
@@ -281,7 +259,6 @@ function openCardForm() {
     document.getElementById('cf_category').value = 'general';
     document.getElementById('cf_link').value = '';
     document.getElementById('cardModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 }
 
 function editCard(card) {
@@ -292,12 +269,10 @@ function editCard(card) {
     document.getElementById('cf_category').value = card.category || 'general';
     document.getElementById('cf_link').value = card.file_path || '';
     document.getElementById('cardModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 }
 
 function closeCardForm() {
     document.getElementById('cardModal').style.display = 'none';
-    document.body.style.overflow = '';
 }
 </script>
 
