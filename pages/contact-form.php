@@ -9,6 +9,7 @@ $currentPage = 'contacts';
 $contactId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
 
+
 $db = Database::getInstance();
 $companyId = $_SESSION["company_id"] ?? null;
 
@@ -17,6 +18,8 @@ $accounts = $db->query("SELECT account_id, account_name FROM accounts WHERE comp
 $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId])->fetchAll();
 $tags = $db->query("SELECT * FROM contact_tags WHERE company_id = ? ORDER BY tag_name", [$companyId])->fetchAll();
 ?><div class="page-header">
+<script src="/assets/js/phone-picker.js?v=2"></script>
+
     <div style="display:flex;align-items:center;gap:16px;">
         <a href="/pages/contacts.php" class="btn btn-outline" style="padding:8px 14px;">← <?php echo htmlspecialchars(__('Back to Contacts')); ?></a>
         <h1><?= $contactId ? htmlspecialchars(__('Edit Contact')) : htmlspecialchars(__('New Contact')) ?></h1>
@@ -161,10 +164,10 @@ function loadContact() {
             document.getElementById('firstName').value = c.first_name || '';
             document.getElementById('lastName').value = c.last_name || '';
             document.getElementById('email').value = c.email || '';
-            document.getElementById('phone').value = c.phone || '';
-            document.getElementById('mobile').value = c.mobile || '';
+            if (c.phone) { var p = parsePhoneForPicker(c.phone); if (p) { document.getElementById('phone').value = p.national; var h = document.getElementById('phone_full'); if (h) h.value = c.phone; var sel = document.querySelector('[data-target="phone"]'); if (sel && p.code) { for (var i=0; i<sel.options.length; i++) { if (sel.options[i].value===p.code) { sel.selectedIndex=i; if (typeof updatePhonePicker==='function') updatePhonePicker(sel); break; } } } } else { document.getElementById('phone').value = c.phone; } }
+            if (c.mobile) { var p2 = parsePhoneForPicker(c.mobile); if (p2) { document.getElementById('mobile').value = p2.national; var h2 = document.getElementById('mobile_full'); if (h2) h2.value = c.mobile; var sel2 = document.querySelector('[data-target="mobile"]'); if (sel2 && p2.code) { for (var i=0; i<sel2.options.length; i++) { if (sel2.options[i].value===p2.code) { sel2.selectedIndex=i; if (typeof updatePhonePicker==='function') updatePhonePicker(sel2); break; } } } } else { document.getElementById('mobile').value = c.mobile; } }
             document.getElementById('title').value = c.title || '';
-            document.getElementById('country').value = c.country || '';
+            var cs = document.getElementById('country'); if (cs && cs.tagName==='SELECT' && c.country) { for (var i=0; i<cs.options.length; i++) { if (cs.options[i].value===c.country || cs.options[i].text.indexOf(c.country)!==-1) { cs.selectedIndex=i; break; } } }
             document.getElementById('city').value = c.city || '';
             document.getElementById('address').value = c.address || '';
             document.getElementById('accountId').value = c.account_id || '';
@@ -235,7 +238,6 @@ function saveContact() {
     .catch(function() { showNotification(__('Network error'), 'error'); });
 }
 </script>
-<script src="/assets/js/phone-picker.js"></script>
 
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

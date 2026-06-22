@@ -2,11 +2,6 @@
 /**
  * Country data with dial codes and flag emojis
  * Used by phone picker and country dropdown components
- * 
- * Usage: 
- *   $countries = getCountriesList(); // returns array of [code, name, dial_code, flag]
- *   echo renderPhonePicker(['id' => 'phone', 'label' => 'Phone', 'value' => '']);
- *   echo renderCountrySelect(['id' => 'country', 'label' => 'Country', 'value' => '']);
  */
 
 if (!function_exists('getCountriesList')) {
@@ -213,7 +208,6 @@ if (!function_exists('getCountryByName')) {
         foreach (getCountriesList() as $c) {
             if (strtolower($c[1]) === $nameLower) return $c;
         }
-        // Fuzzy match - check if name contains the country name
         foreach (getCountriesList() as $c) {
             if (strpos($nameLower, strtolower($c[1])) !== false) return $c;
         }
@@ -230,42 +224,30 @@ if (!function_exists('getCountryByDialCode')) {
     }
 }
 
-/**
- * Try to detect country from a phone number string
- * Returns [countryCode, dialCode, nationalNumber] or null
- */
 if (!function_exists('parsePhoneNumber')) {
     function parsePhoneNumber($phone) {
         $phone = trim($phone);
         if (empty($phone)) return null;
-        
-        // Ensure it starts with +
         if ($phone[0] !== '+') {
-            // Try to find a matching dial code at the start
             $phone = '+' . $phone;
         }
-        
-        // Try all dial codes, longest first
         $countries = getCountriesList();
         usort($countries, function($a, $b) {
             return strlen($b[2]) - strlen($a[2]);
         });
-        
         foreach ($countries as $c) {
-            $dialCode = $c[2];
-            if (strpos($phone, $dialCode) === 0) {
-                $national = substr($phone, strlen($dialCode));
+            if (strpos($phone, $c[2]) === 0) {
+                $national = substr($phone, strlen($c[2]));
                 $national = ltrim($national, " \t\n\r\0\x0B-()");
-                return ['code' => $c[0], 'dial_code' => $dialCode, 'national' => $national, 'flag' => $c[3], 'name' => $c[1]];
+                return ['code' => $c[0], 'dial_code' => $c[2], 'national' => $national, 'flag' => $c[3], 'name' => $c[1]];
             }
         }
-        
         return null;
     }
 }
 
 /**
- * Render a phone picker with country code dropdown and flag
+ * Render a searchable phone picker with country code dropdown and flag
  * Options: id, label, value (existing phone number), required
  */
 if (!function_exists('renderPhonePicker')) {
@@ -275,50 +257,64 @@ if (!function_exists('renderPhonePicker')) {
         $value = $opts['value'] ?? '';
         $required = !empty($opts['required']);
         $countries = getCountriesList();
-        
-        // Try to parse existing phone number
+
         $selectedCode = '';
         $nationalNumber = '';
         $flag = '🌍';
+        $dialCode = '';
         if ($value) {
             $parsed = parsePhoneNumber($value);
             if ($parsed) {
                 $selectedCode = $parsed['code'];
                 $nationalNumber = $parsed['national'];
                 $flag = $parsed['flag'];
+                $dialCode = $parsed['dial_code'];
             } else {
                 $nationalNumber = $value;
             }
         }
-        
-        $html = '<div class="phone-picker" data-id="' . htmlspecialchars($id) . '">';
-        $html .= '<label class="form-label">' . htmlspecialchars($label);
-        if ($required) $html .= ' *';
-        $html .= '</label>';
-        $html .= '<div style="display:flex;gap:0;border:1px solid var(--color-border);border-radius:8px;overflow:hidden;">';
-        // Country code dropdown
-        $html .= '<select class="phone-country-select" data-target="' . htmlspecialchars($id) . '" style="width:70px;flex-shrink:0;border:none;border-right:1px solid var(--color-border);border-radius:0;background:var(--color-bg-secondary);padding:0 4px;font-size:18px;text-align:center;cursor:pointer;" onchange="updatePhoneFlag(this)">';
-        $html .= '<option value="" data-flag="🌍">🌍</option>';
+
+        // Build options HTML
+        $optionsHtml = '<option value="" data-dial="" data-flag="🌍">' . __('Select...') . '</option>';
         foreach ($countries as $c) {
             $sel = ($c[0] === $selectedCode) ? ' selected' : '';
-            $html .= '<option value="' . $c[0] . '" data-dial="' . $c[2] . '" data-flag="' . $c[3] . '"' . $sel . '>' . $c[3] . ' ' . $c[2] . '</option>';
+            $optionsHtml .= '<option value="' . $c[0] . '" data-dial="' . $c[2] . '" data-flag="' . $c[3] . '"' . $sel . '>'
+                . $c[3] . ' ' . htmlspecialchars($c[1]) . ' (' . $c[2] . ')</option>';
         }
+
+        $html = '<div class="phone-picker" data-id="' . htmlspecialchars($id) . '">';
+        if ($label) {
+            $html .= '<label class="form-label">' . htmlspecialchars($label);
+            if ($required) $html .= ' *';
+            $html .= '</label>';
+        }
+        $html .= '<div style="display:flex;gap:0;border:1px solid var(--color-border);border-radius:8px;overflow:hidden;align-items:stretch;">';
+        // Searchable country code button
+        $html .= '<button type="button" class="phone-country-btn" data-target="' . htmlspecialchars($id) . '"'
+            . ' onclick="openPhoneCountrySearch(this)"'
+            . ' style="display:flex;align-items:center;gap:4px;padding:0 8px;border:none;border-right:1px solid var(--color-border);background:var(--color-bg-secondary);cursor:pointer;font-size:14px;white-space:nowrap;min-width:60px;justify-content:center;">'
+            . '<span class="phone-flag">' . $flag . '</span>'
+            . '<span class="phone-dial">' . ($dialCode ?: '+?') . '</span>'
+            . '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>'
+            . '</button>';
+        // Hidden select for the actual value
+        $html .= '<select class="phone-country-select" data-target="' . htmlspecialchars($id) . '" style="display:none;" onchange="updatePhonePicker(this)">';
+        $html .= $optionsHtml;
         $html .= '</select>';
         // Phone input
         $html .= '<input type="tel" id="' . htmlspecialchars($id) . '" class="form-control phone-input" value="' . htmlspecialchars($nationalNumber) . '" placeholder="555-0100" style="border:none;border-radius:0;flex:1;"';
         if ($required) $html .= ' required';
         $html .= '>';
         $html .= '</div>';
-        // Hidden field to store full phone with country code
         $html .= '<input type="hidden" id="' . htmlspecialchars($id) . '_full" name="' . htmlspecialchars($id) . '_full" value="' . htmlspecialchars($value) . '">';
         $html .= '</div>';
-        
+
         return $html;
     }
 }
 
 /**
- * Render a country dropdown select
+ * Render a searchable country dropdown
  * Options: id, label, value (existing country name or code), required
  */
 if (!function_exists('renderCountrySelect')) {
@@ -328,36 +324,40 @@ if (!function_exists('renderCountrySelect')) {
         $value = $opts['value'] ?? '';
         $required = !empty($opts['required']);
         $countries = getCountriesList();
-        
-        // Try to match existing value to a country
+
         $selectedCode = '';
+        $selectedName = '';
+        $selectedFlag = '';
         if ($value) {
-            // Try by code
             $country = getCountryByCode($value);
             if (!$country) {
-                // Try by name
                 $country = getCountryByName($value);
             }
             if ($country) {
                 $selectedCode = $country[0];
+                $selectedName = $country[1];
+                $selectedFlag = $country[3];
             }
         }
-        
+
         $html = '<div class="form-group">';
-        $html .= '<label class="form-label">' . htmlspecialchars($label);
-        if ($required) $html .= ' *';
-        $html .= '</label>';
+        if ($label) {
+            $html .= '<label class="form-label">' . htmlspecialchars($label);
+            if ($required) $html .= ' *';
+            $html .= '</label>';
+        }
         $html .= '<select id="' . htmlspecialchars($id) . '" class="form-control country-select" data-target-flag="' . htmlspecialchars($id) . '_flag"';
         if ($required) $html .= ' required';
         $html .= ' onchange="updateCountryFlag(this)">';
-        $html .= '<option value="">' . htmlspecialchars(__('Select country...')) . '</option>';
+        $html .= '<option value="">' . __('Select country...') . '</option>';
         foreach ($countries as $c) {
             $sel = ($c[0] === $selectedCode) ? ' selected' : '';
-            $html .= '<option value="' . htmlspecialchars($c[1]) . '" data-code="' . $c[0] . '" data-dial="' . $c[2] . '" data-flag="' . $c[3] . '"' . $sel . '>' . $c[3] . ' ' . htmlspecialchars($c[1]) . '</option>';
+            $html .= '<option value="' . htmlspecialchars($c[1]) . '" data-code="' . $c[0] . '" data-dial="' . $c[2] . '" data-flag="' . $c[3] . '"' . $sel . '>'
+                . $c[3] . ' ' . htmlspecialchars($c[1]) . '</option>';
         }
         $html .= '</select>';
         $html .= '</div>';
-        
+
         return $html;
     }
 }

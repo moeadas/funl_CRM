@@ -160,7 +160,10 @@ if (isset($_SESSION['error'])) {
 
 $csrfToken = generateCSRFToken();
 include __DIR__ . '/../includes/header.php';
+
 ?>
+<script src="/assets/js/phone-picker.js?v=2"></script>
+
 
 
 
@@ -322,7 +325,6 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
-<script src="/assets/js/phone-picker.js"></script>
 
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
