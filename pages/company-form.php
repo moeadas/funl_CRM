@@ -2,6 +2,7 @@
 /**
  * White Label CRM - Create Company Form
  */
+require_once "../includes/countries.php";
 require_once '../includes/auth.php';
 require_once '../includes/functions.php';
 require_once '../includes/company-functions.php';
@@ -40,7 +41,7 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <form method="POST" action="/pages/super-admin.php" style="max-width: 800px;">
+    <form method="POST" action="/pages/super-admin.php" style="max-width: 800px;" onsubmit="var p=document.getElementById("phone_full");if(p)document.getElementById("phone").value=p.value;">
         <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
         <input type="hidden" name="action" value="create_company">
 
@@ -58,8 +59,7 @@ include '../includes/header.php';
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label"><?php echo __('Phone'); ?></label>
-                    <input type="tel" name="phone" class="form-control" placeholder="e.g. +1 555-0199">
+                    <?php echo renderPhonePicker(['id' => 'phone', 'label' => __('Phone'), 'value' => '']); ?>
                 </div>
                 <div class="form-group">
                     <label class="form-label"><?php echo __('Plan'); ?> *</label>
@@ -98,5 +98,7 @@ include '../includes/header.php';
         </div>
     </form>
 </div>
+<script src="/assets/js/phone-picker.js"></script>
+
 
 <?php include '../includes/footer.php'; ?>

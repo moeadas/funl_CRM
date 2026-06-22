@@ -2,6 +2,7 @@
 /**
  * White Label CRM - Create Company (super admin) - standalone, no popup
  */
+require_once __DIR__ . "/../includes/countries.php";
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
@@ -42,7 +43,7 @@ include __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <div style="max-width:760px;">
-    <form method="POST" action="/pages/super-admin.php">
+    <form method="POST" action="/pages/super-admin.php" onsubmit="document.getElementById("phone").value = document.getElementById("phone_full").value;">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
         <input type="hidden" name="action" value="create_company">
 
@@ -63,8 +64,7 @@ include __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="row-2" style="margin-top:16px;">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label"><?php echo htmlspecialchars(__('Phone')); ?></label>
-                        <input type="tel" name="phone" class="form-control" style="padding:10px 14px;">
+                        <?php echo renderPhonePicker(['id' => 'phone', 'label' => __('Phone'), 'value' => '']); ?>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label"><?php echo htmlspecialchars(__('Plan')); ?> *</label>
@@ -108,5 +108,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </form>
 </div>
+<script src="/assets/js/phone-picker.js"></script>
+
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

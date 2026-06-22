@@ -4,6 +4,7 @@
  * Premium design, tabbed layout, logo/favicon uploads, twilio/smtp setup, and custom fields CRUD
  */
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . "/../includes/countries.php";
 require_once __DIR__ . '/../includes/functions.php';
 
 startSecureSession();
@@ -210,7 +211,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="tab-link" data-tab="subscription" onclick="switchTab('subscription')"><?php echo htmlspecialchars(__('Subscription')); ?></div>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" id="settingsForm">
+    <form method="POST" enctype="multipart/form-data" id="settingsForm" onsubmit="var p=document.getElementById('company_phone_full');if(p){var inp=document.getElementById('company_phone');if(inp)inp.value=p.value;}">
         <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
         <input type="hidden" name="action" value="save_settings">
 
@@ -233,8 +234,7 @@ include __DIR__ . '/../includes/header.php';
                             <input type="email" name="company_email" class="form-control" value="<?php echo htmlspecialchars($settings['company_email'] ?? ''); ?>" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label"><?php echo htmlspecialchars(__('Support Phone')); ?></label>
-                            <input type="text" name="company_phone" class="form-control" value="<?php echo htmlspecialchars($settings['company_phone'] ?? ''); ?>">
+                            <?php echo renderPhonePicker(['id' => 'company_phone', 'label' => __('Support Phone'), 'value' => $settings['company_phone'] ?? '']); ?>
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Company Website')); ?></label>
@@ -778,5 +778,7 @@ function escapeHtml(text) {
     return text.toString().replace(/[&<>"']/g, m => map[m]);
 }
 </script>
+<script src="/assets/js/phone-picker.js"></script>
+
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
