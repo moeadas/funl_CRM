@@ -256,6 +256,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
 
+        case 'save_plan':
+            $planId = intval($_POST['plan_id'] ?? 0);
+            $planKey = trim($_POST['plan_key'] ?? '');
+            $planName = trim($_POST['plan_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $userLimit = intval($_POST['user_limit'] ?? 1);
+            $monthlyPrice = floatval($_POST['monthly_price'] ?? 0);
+            $yearlyPrice = floatval($_POST['yearly_price'] ?? 0);
+            $extraUserPrice = floatval($_POST['extra_user_price'] ?? 0);
+            $isActive = isset($_POST['is_active']) ? 1 : 0;
+            $sortOrder = intval($_POST['sort_order'] ?? 0);
+            $featuresJson = trim($_POST['features_json'] ?? '');
+            
+            if ($planKey && $planName) {
+                if ($planId) {
+                    $db->query("UPDATE plans SET plan_key=?, plan_name=?, description=?, user_limit=?, monthly_price=?, yearly_price=?, extra_user_price=?, features_json=?, is_active=?, sort_order=? WHERE plan_id=?", 
+                        [$planKey, $planName, $description, $userLimit, $monthlyPrice, $yearlyPrice, $extraUserPrice, $featuresJson, $isActive, $sortOrder, $planId]);
+                    $_SESSION['success'] = "Plan '$planName' updated.";
+                } else {
+                    // Check for duplicate key
+                    $existing = $db->query("SELECT plan_id FROM plans WHERE plan_key = ?", [$planKey])->fetch();
+                    if ($existing) {
+                        $_SESSION['error'] = "Plan key '$planKey' already exists.";
+                    } else {
+                        $db->query("INSERT INTO plans (plan_key, plan_name, description, user_limit, monthly_price, yearly_price, extra_user_price, features_json, is_active, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                            [$planKey, $planName, $description, $userLimit, $monthlyPrice, $yearlyPrice, $extraUserPrice, $featuresJson, $isActive, $sortOrder]);
+                        $_SESSION['success'] = "Plan '$planName' created.";
+                    }
+                }
+            } else {
+                $_SESSION['error'] = 'Plan key and name are required.';
+            }
+            break;
+            
+        case 'delete_plan':
+            $planId = intval($_POST['plan_id'] ?? 0);
+            if ($planId) {
+                // Check if any companies use this plan
+                $count = $db->query("SELECT COUNT(*) FROM companies WHERE plan_id = (SELECT plan_key FROM plans WHERE plan_id = ?)", [$planId])->fetchColumn();
+                if ($count > 0) {
+                    $_SESSION['error'] = "Cannot delete: $count compan" . ($count == 1 ? 'y uses' : 'ies use') . " this plan. Reassign them first.";
+                } else {
+                    $db->query("DELETE FROM plans WHERE plan_id = ?", [$planId]);
+                    $_SESSION['success'] = 'Plan deleted.';
+                }
+            }
+            break;
+            
+        case 'toggle_plan':
+            $planId = intval($_POST['plan_id'] ?? 0);
+            if ($planId) {
+                $db->query("UPDATE plans SET is_active = 1 - is_active WHERE plan_id = ?", [$planId]);
+                $_SESSION['success'] = 'Plan status toggled.';
+            }
+            break;
+            
         case 'delete_all_leads':
             // Platform-wide: clear all leads from every company.
             // Extra confirmation: client must type the literal string "DELETE"
@@ -332,6 +388,8 @@ $companies = $db->query("
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 $plans = getActivePlans();
+// Load ALL plans for the admin management section
+$allPlans = $db->query("SELECT * FROM plans ORDER BY sort_order ASC, plan_id ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 // Load platform-level settings (support email, super admin email, etc.)
 $platformSettings = [];
@@ -619,6 +677,155 @@ function confirmClearLeads() {
     </div>
 </form>
 
+
+<!-- Plans & Pricing Management -->
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <h3 class="card-title"><?php echo __('Plans & Pricing'); ?></h3>
+        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('plan-form-0').style.display='block';this.style.display='none';">
+            <?php echo __('+ Add Plan'); ?>
+        </button>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><?php echo __('Name'); ?></th>
+                    <th><?php echo __('Key'); ?></th>
+                    <th><?php echo __('Users'); ?></th>
+                    <th><?php echo __('Monthly'); ?></th>
+                    <th><?php echo __('Yearly'); ?></th>
+                    <th><?php echo __('Extra User'); ?></th>
+                    <th><?php echo __('Status'); ?></th>
+                    <th><?php echo __('Sort'); ?></th>
+                    <th><?php echo __('Actions'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($allPlans as $p): ?>
+                <tr id="plan-row-<?php echo $p['plan_id']; ?>">
+                    <td>
+                        <strong><?php echo htmlspecialchars($p['plan_name']); ?></strong>
+                        <?php if ($p['description']): ?><br><span style="font-size:12px;color:#9ca3af"><?php echo htmlspecialchars($p['description']); ?></span><?php endif; ?>
+                    </td>
+                    <td><code><?php echo htmlspecialchars($p['plan_key']); ?></code></td>
+                    <td><?php echo intval($p['user_limit']); ?></td>
+                    <td>$<?php echo number_format($p['monthly_price'], 2); ?></td>
+                    <td>$<?php echo number_format($p['yearly_price'], 2); ?></td>
+                    <td>$<?php echo number_format($p['extra_user_price'], 2); ?></td>
+                    <td>
+                        <?php if ($p['is_active']): ?>
+                            <span class="badge badge-success"><?php echo __('Active'); ?></span>
+                        <?php else: ?>
+                            <span class="badge badge-danger"><?php echo __('Inactive'); ?></span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?php echo intval($p['sort_order']); ?></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-sm btn-info" onclick="editPlan(<?php echo htmlspecialchars(json_encode($p)); ?>)"><?php echo __('Edit'); ?></button>
+                            <form method="POST" class="d-inline" onsubmit="return confirm('Toggle plan status?');">
+                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                <input type="hidden" name="action" value="toggle_plan">
+                                <input type="hidden" name="plan_id" value="<?php echo $p['plan_id']; ?>">
+                                <button type="submit" class="btn btn-sm btn-warning"><?php echo $p['is_active'] ? '⏸' : '▶'; ?></button>
+                            </form>
+                            <form method="POST" class="d-inline" onsubmit="return confirm('Delete this plan? Companies using it will need reassignment.');">
+                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                <input type="hidden" name="action" value="delete_plan">
+                                <input type="hidden" name="plan_id" value="<?php echo $p['plan_id']; ?>">
+                                <button type="submit" class="btn btn-sm btn-danger">✕</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Plan Add/Edit Form (hidden by default) -->
+<div class="card" id="plan-form-0" style="display:none;margin-bottom:24px;">
+    <div class="card-header">
+        <h3 class="card-title" id="plan-form-title"><?php echo __('Add New Plan'); ?></h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+            <input type="hidden" name="action" value="save_plan">
+            <input type="hidden" name="plan_id" id="pf_plan_id" value="0">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Plan Name'); ?> *</label>
+                    <input type="text" name="plan_name" id="pf_plan_name" class="form-control" required placeholder="Single User">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Plan Key'); ?> *</label>
+                    <input type="text" name="plan_key" id="pf_plan_key" class="form-control" required placeholder="single" style="text-transform:lowercase">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Description'); ?></label>
+                    <textarea name="description" id="pf_description" class="form-control" rows="2" placeholder="Perfect for solo entrepreneurs"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Max Users'); ?></label>
+                    <input type="number" name="user_limit" id="pf_user_limit" class="form-control" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Monthly Price ($)'); ?></label>
+                    <input type="number" name="monthly_price" id="pf_monthly_price" class="form-control" value="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Yearly Price ($)'); ?></label>
+                    <input type="number" name="yearly_price" id="pf_yearly_price" class="form-control" value="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Extra User Price ($/month)'); ?></label>
+                    <input type="number" name="extra_user_price" id="pf_extra_user_price" class="form-control" value="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?php echo __('Sort Order'); ?></label>
+                    <input type="number" name="sort_order" id="pf_sort_order" class="form-control" value="0" min="0">
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+                <label class="form-label"><?php echo __('Features (JSON, optional)'); ?></label>
+                <textarea name="features_json" id="pf_features_json" class="form-control" rows="3" placeholder='["Unlimited leads","Email campaigns"]'></textarea>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" name="is_active" id="pf_is_active" checked>
+                    <span><?php echo __('Plan is active (visible to new signups)'); ?></span>
+                </label>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button type="submit" class="btn btn-primary"><?php echo __('Save Plan'); ?></button>
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('plan-form-0').style.display='none';"><?php echo __('Cancel'); ?></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editPlan(plan) {
+    var f = document.getElementById('plan-form-0');
+    f.style.display = 'block';
+    document.getElementById('plan-form-title').textContent = 'Edit Plan: ' + plan.plan_name;
+    document.getElementById('pf_plan_id').value = plan.plan_id;
+    document.getElementById('pf_plan_name').value = plan.plan_name;
+    document.getElementById('pf_plan_key').value = plan.plan_key;
+    document.getElementById('pf_description').value = plan.description || '';
+    document.getElementById('pf_user_limit').value = plan.user_limit;
+    document.getElementById('pf_monthly_price').value = plan.monthly_price;
+    document.getElementById('pf_yearly_price').value = plan.yearly_price;
+    document.getElementById('pf_extra_user_price').value = plan.extra_user_price;
+    document.getElementById('pf_sort_order').value = plan.sort_order;
+    document.getElementById('pf_features_json').value = plan.features_json || '';
+    document.getElementById('pf_is_active').checked = plan.is_active == 1;
+    f.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
 
 <!-- Companies Table -->
 <div class="card">
