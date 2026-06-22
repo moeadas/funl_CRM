@@ -17,24 +17,23 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 
-<div class="webforms-page">
-    <div class="page-header">
-        <div>
-            <h1 class="page-title"><?php echo __('Web Forms'); ?></h1>
-            <p class="text-muted"><?php echo __('Create embedded forms that feed directly into your CRM leads pipeline'); ?></p>
-        </div>
-        <div class="header-actions">
-            <a href="/pages/webform-form.php" class="btn btn-primary" style="text-decoration:none;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <?php echo __('New Form'); ?>
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><?php echo __('Web Forms'); ?></h1>
+        <p class="text-muted"><?php echo __('Create embedded forms that feed directly into your CRM leads pipeline'); ?></p>
+    </div>
+    <div class="header-actions">
+        <a href="/pages/webform-form.php" class="btn btn-primary" style="text-decoration:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <?php echo __('New Form'); ?>
             </a>
         </div>
     </div>
+</div>
 
-    <div class="card">
-        <div id="formsList" style="padding:0;">
-            <div class="text-center" style="padding:40px; color:var(--text-secondary, #6b7280);"><?php echo __('Loading...'); ?></div>
-        </div>
+<div class="card">
+    <div id="formsList" style="padding:0;">
+        <div class="text-center" style="padding:40px; color:var(--text-secondary, #6b7280);"><?php echo __('Loading...'); ?></div>
     </div>
 </div>
 
@@ -70,7 +69,7 @@ function renderForms(forms) {
                 </svg>
                 <h3 style="margin:0 0 8px; font-size:18px; color:#1f2937;">${window.__('No web forms yet')}</h3>
                 <p style="margin-bottom:20px;">${window.__('Create your first web form to capture leads directly from your website.')}</p>
-                <a href="/pages/webform-form.php" class="btn btn-primary" style="text-decoration:none;">${window.__('Create Form')}</a>
+            <a href="/pages/webform-form.php" class="btn btn-primary" style="text-decoration:none;">${window.__('Create Form')}</a>
             </div>`;
         return;
     }

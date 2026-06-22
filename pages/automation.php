@@ -17,30 +17,25 @@ $js = ['automation'];
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
+<div class="page-header">
+    <h1 class="page-title"><?php echo __('Automation'); ?></h1>
+    <a href="/pages/automation-rule.php" class="btn btn-primary">+ <?php echo __('New Rule'); ?></a>
+</div>
 
-
-<div class="automation-page">
-    <div class="page-header">
-        <h1 class="page-title"><?php echo __('Automation'); ?></h1>
-        <a href="/pages/automation-rule.php" class="btn btn-primary">+ <?php echo __('New Rule'); ?></a>
-    </div>
-
-    <div class="rules-list" id="rules-list">
-        <div class="empty-state">
-            <h3><?php echo __('No automation rules yet'); ?></h3>
-            <?php echo __('Create rules to automate repetitive tasks.'); ?>
-        </div>
-    </div>
-
-    <!-- Execution Logs -->
-    <div class="logs-section">
-        <div class="logs-title"><?php echo __('Recent Activity'); ?></div>
-        <div id="logs-list">
-            <div class="empty-state" style="padding:20px 0;"><?php echo __('No recent activity.'); ?></div>
-        </div>
+<div class="rules-list" id="rules-list">
+    <div class="empty-state">
+        <h3><?php echo __('No automation rules yet'); ?></h3>
+        <?php echo __('Create rules to automate repetitive tasks.'); ?>
     </div>
 </div>
 
+<!-- Execution Logs -->
+<div class="logs-section">
+    <div class="logs-title"><?php echo __('Recent Activity'); ?></div>
+    <div id="logs-list">
+        <div class="empty-state" style="padding:20px 0;"><?php echo __('No recent activity.'); ?></div>
+    </div>
+</div>
 <script>
 const COMPANY_ID = <?= json_encode($companyId) ?>;
 const CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
@@ -68,7 +63,7 @@ function renderRules() {
     const container = document.getElementById('rules-list');
     if (!rules.length) {
         container.innerHTML = `
-            <div class="empty-state">
+        <div class="empty-state">
                 <h3>${window.__('No automation rules yet')}</h3>
                 ${window.__('Create rules to automate repetitive tasks like assigning leads or creating follow-up tasks.')}
             </div>`;
