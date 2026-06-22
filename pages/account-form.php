@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . "/../includes/countries.php";
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
@@ -62,12 +63,10 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
         <h3 class="card-title"><?php echo htmlspecialchars(__('Contact & Location')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label"><?php echo htmlspecialchars(__('Phone')); ?></label>
-                <input type="tel" id="phone" class="form-control" placeholder="<?php echo htmlspecialchars(__('Phone Number')); ?>">
+                <?php echo renderPhonePicker(['id' => 'phone', 'label' => __('Phone'), 'value' => '']); ?>
             </div>
             <div class="form-group">
-                <label class="form-label"><?php echo htmlspecialchars(__('Country')); ?></label>
-                <input type="text" id="country" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., United States')); ?>">
+                <?php echo renderCountrySelect(['id' => 'country', 'label' => __('Country'), 'value' => '']); ?>
             </div>
             <div class="form-group">
                 <label class="form-label"><?php echo htmlspecialchars(__('City')); ?></label>
@@ -109,6 +108,8 @@ $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? A
 </div>
 
 <script>
+window.COUNTRY_DIAL_CODES = <?php $codes = []; foreach (getCountriesList() as $c) { $codes[] = ["code" => $c[0], "dial" => $c[2]]; } echo json_encode($codes); ?>;
+function parsePhoneForPicker(phone) { if (!phone) return null; phone = String(phone).trim(); if (phone[0] !== "+") phone = "+" + phone; var cs = window.COUNTRY_DIAL_CODES || []; var sorted = cs.slice().sort(function(a,b){return b.dial.length-a.dial.length;}); for (var i=0; i<sorted.length; i++) { if (phone.indexOf(sorted[i].dial)===0) { var n = phone.substring(sorted[i].dial.length).replace(/^[\s\-()]+/, ""); return {code:sorted[i].code, dial_code:sorted[i].dial, national:n}; } } return null; }
 const CSRF_TOKEN = "<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>";
 const ACCOUNT_ID = <?= $accountId ?>;
 
@@ -150,7 +151,7 @@ function saveAccount() {
         account_type: document.getElementById('accountType').value,
         industry: document.getElementById('industry').value.trim(),
         website: document.getElementById('website').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
+        phone: document.getElementById('phone_full')?.value || document.getElementById('phone').value.trim(),
         country: document.getElementById('country').value.trim(),
         city: document.getElementById('city').value.trim(),
         address: document.getElementById('address').value.trim(),
@@ -183,5 +184,7 @@ function saveAccount() {
     .catch(function() { showNotification(__('Network error'), 'error'); });
 }
 </script>
+<script src="/assets/js/phone-picker.js"></script>
+
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

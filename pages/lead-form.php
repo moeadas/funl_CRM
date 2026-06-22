@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/countries.php';
 startSecureSession();
 requireLogin();
 
@@ -131,11 +132,11 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label class="form-label"><?php echo htmlspecialchars(__('Phone')); ?></label>
-                    <input type="tel" id="phone" class="form-control" placeholder="+1 555-0100">
+                    <?php echo renderPhonePicker(['id' => 'phone', 'label' => '', 'value' => '']); ?>
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label class="form-label"><?php echo htmlspecialchars(__('Mobile')); ?></label>
-                    <input type="tel" id="mobile" class="form-control" placeholder="+1 555-0100">
+                    <?php echo renderPhonePicker(['id' => 'mobile', 'label' => '', 'value' => '']); ?>
                 </div>
             </div>
         </div>
@@ -148,8 +149,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card-body" style="padding: 24px;">
             <div class="row-3">
                 <div class="form-group" style="margin-bottom:0;">
-                    <label class="form-label"><?php echo htmlspecialchars(__('Country')); ?></label>
-                    <input type="text" id="countryInput" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., United States')); ?>" autocomplete="off">
+                    <?php echo renderCountrySelect(['id' => 'countryInput', 'label' => __('Country'), 'value' => '']); ?>
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label class="form-label"><?php echo htmlspecialchars(__('City')); ?></label>
@@ -268,6 +268,27 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
 const CSRF_TOKEN = "<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>";
 const LEAD_ID = <?= $leadId ?>;
+
+// Country dial codes for phone picker
+window.COUNTRY_DIAL_CODES = <?php $codes = []; foreach (getCountriesList() as $c) { $codes[] = ["code" => $c[0], "dial" => $c[2]]; } echo json_encode($codes); ?>;
+
+// Parse a phone number string for the phone picker
+// Returns {code, dial_code, national} or null
+function parsePhoneForPicker(phone) {
+    if (!phone) return null;
+    phone = String(phone).trim();
+    if (phone[0] !== '+') phone = '+' + phone;
+    var countries = window.COUNTRY_DIAL_CODES || [];
+    // Try longest dial codes first
+    var sorted = countries.slice().sort(function(a, b) { return b.dial.length - a.dial.length; });
+    for (var i = 0; i < sorted.length; i++) {
+        if (phone.indexOf(sorted[i].dial) === 0) {
+            var national = phone.substring(sorted[i].dial.length).replace(/^[\s\-()]+/, '');
+            return { code: sorted[i].code, dial_code: sorted[i].dial, national: national };
+        }
+    }
+    return null;
+}
 let currentUsers = [];
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -351,10 +372,44 @@ function loadLead() {
                 if (el) {
                     var key = f.replace(/([A-Z])/g,'_$1').toLowerCase();
                     if (l[key] !== null && l[key] !== undefined) {
-                        el.value = l[key];
+                        if (f === 'phone' || f === 'mobile') {
+                            // Phone picker: parse country code and national number
+                            var parsed = parsePhoneForPicker(l[key]);
+                            if (parsed) {
+                                el.value = parsed.national;
+                                var hiddenEl = document.getElementById(f + '_full');
+                                if (hiddenEl) hiddenEl.value = l[key];
+                                // Set the country code dropdown
+                                var countrySelect = el.closest('.phone-picker')?.querySelector('.phone-country-select');
+                                if (countrySelect && parsed.code) {
+                                    for (var i = 0; i < countrySelect.options.length; i++) {
+                                        if (countrySelect.options[i].value === parsed.code) {
+                                            countrySelect.selectedIndex = i;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } else {
+                                el.value = l[key];
+                            }
+                        } else {
+                            el.value = l[key];
+                        }
                     }
                 }
             });
+            // Sync country dropdown from country name
+            if (l.country) {
+                var countrySel = document.getElementById('countryInput');
+                if (countrySel && countrySel.tagName === 'SELECT') {
+                    for (var i = 0; i < countrySel.options.length; i++) {
+                        if (countrySel.options[i].text.indexOf(l.country) !== -1 || countrySel.options[i].value === l.country) {
+                            countrySel.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
             // UTM fields
             ['utm_source','utm_campaign','utm_medium','utm_content','utm_term','landing_page','referrer'].forEach(function(k) {
                 var id = k.replace(/_([a-z])/g, function(_, c) { return c.toUpperCase(); });
@@ -379,8 +434,8 @@ function saveLead() {
         contact_person: document.getElementById('contactPerson').value,
         title_position: document.getElementById('titlePosition').value,
         email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        mobile: document.getElementById('mobile').value,
+        phone: document.getElementById('phone_full')?.value || document.getElementById('phone').value,
+        mobile: document.getElementById('mobile_full')?.value || document.getElementById('mobile').value,
         country: document.getElementById('countryInput').value,
         city: document.getElementById('city').value,
         lead_source: document.getElementById('leadSource').value,
@@ -503,5 +558,7 @@ function escapeHtml(str) {
     });
 }
 </script>
+<script src="/assets/js/phone-picker.js"></script>
+
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

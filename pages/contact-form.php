@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . "/../includes/countries.php";
 require_once __DIR__ . '/../includes/auth.php';
 startSecureSession();
 requireLogin();
@@ -44,14 +45,12 @@ $tags = $db->query("SELECT * FROM contact_tags WHERE company_id = ? ORDER BY tag
                 <input type="email" id="email" class="form-control" placeholder="<?php echo htmlspecialchars(__('john@example.com')); ?>">
             </div>
             <div class="form-group">
-                <label class="form-label"><?php echo htmlspecialchars(__('Phone')); ?></label>
-                <input type="tel" id="phone" class="form-control" placeholder="<?php echo htmlspecialchars(__('Phone Number')); ?>">
+                <?php echo renderPhonePicker(['id' => 'phone', 'label' => __('Phone'), 'value' => '']); ?>
             </div>
         </div>
         <div class="row-2" style="margin-top:16px;">
             <div class="form-group">
-                <label class="form-label"><?php echo htmlspecialchars(__('Mobile')); ?></label>
-                <input type="tel" id="mobile" class="form-control" placeholder="<?php echo htmlspecialchars(__('Phone Number')); ?>">
+                <?php echo renderPhonePicker(['id' => 'mobile', 'label' => __('Mobile'), 'value' => '']); ?>
             </div>
             <div class="form-group">
                 <label class="form-label"><?php echo htmlspecialchars(__('Job Title / Position')); ?></label>
@@ -64,8 +63,7 @@ $tags = $db->query("SELECT * FROM contact_tags WHERE company_id = ? ORDER BY tag
         <h3 class="card-title"><?php echo htmlspecialchars(__('Address & Location')); ?></h3>
         <div class="row-3">
             <div class="form-group">
-                <label class="form-label"><?php echo htmlspecialchars(__('Country')); ?></label>
-                <input type="text" id="country" class="form-control" placeholder="<?php echo htmlspecialchars(__('e.g., United States')); ?>">
+                <?php echo renderCountrySelect(['id' => 'country', 'label' => __('Country'), 'value' => '']); ?>
             </div>
             <div class="form-group">
                 <label class="form-label"><?php echo htmlspecialchars(__('City')); ?></label>
@@ -134,6 +132,9 @@ $tags = $db->query("SELECT * FROM contact_tags WHERE company_id = ? ORDER BY tag
 const CSRF_TOKEN = "<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>";
 const CONTACT_ID = <?= $contactId ?>;
 
+window.COUNTRY_DIAL_CODES = <?php $codes = []; foreach (getCountriesList() as $c) { $codes[] = ["code" => $c[0], "dial" => $c[2]]; } echo json_encode($codes); ?>;
+function parsePhoneForPicker(phone) { if (!phone) return null; phone = String(phone).trim(); if (phone[0] !== "+") phone = "+" + phone; var cs = window.COUNTRY_DIAL_CODES || []; var sorted = cs.slice().sort(function(a,b){return b.dial.length-a.dial.length;}); for (var i=0; i<sorted.length; i++) { if (phone.indexOf(sorted[i].dial)===0) { var n = phone.substring(sorted[i].dial.length).replace(/^[\s\-()]+/, ""); return {code:sorted[i].code, dial_code:sorted[i].dial, national:n}; } } return null; }
+
 document.addEventListener('DOMContentLoaded', function() {
     if (CONTACT_ID) loadContact();
 });
@@ -198,8 +199,8 @@ function saveContact() {
         first_name: firstName,
         last_name: lastName,
         email: document.getElementById('email').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        mobile: document.getElementById('mobile').value.trim(),
+        phone: document.getElementById('phone_full')?.value || document.getElementById('phone').value.trim(),
+        mobile: document.getElementById('mobile_full')?.value || document.getElementById('mobile').value.trim(),
         title: document.getElementById('title').value.trim(),
         country: document.getElementById('country').value.trim(),
         city: document.getElementById('city').value.trim(),
@@ -234,5 +235,7 @@ function saveContact() {
     .catch(function() { showNotification(__('Network error'), 'error'); });
 }
 </script>
+<script src="/assets/js/phone-picker.js"></script>
+
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

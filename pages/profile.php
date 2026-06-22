@@ -5,6 +5,7 @@
  */
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . "/../includes/countries.php";
 
 startSecureSession();
 requireLogin();
@@ -40,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($action === 'update_profile') {
         $fullName = sanitizeInput($_POST['full_name'] ?? '');
-        $phone = sanitizeInput($_POST['phone'] ?? '');
+        $phone = sanitizeInput($_POST['phone_full'] ?? $_POST['phone'] ?? '');
         $email = sanitizeInput($_POST['email'] ?? '');
         $language = sanitizeInput($_POST['language'] ?? 'en');
         
@@ -183,7 +184,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="card">
                 <div class="card-header"><h3 class="card-title"><?php echo __('profile_information'); ?></h3></div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" onsubmit="var p=document.getElementById('phone_full');if(p){document.getElementById('phone').value=p.value;}">
                         <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                         <input type="hidden" name="action" value="update_profile">
                         
@@ -197,8 +198,7 @@ include __DIR__ . '/../includes/header.php';
                                 <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label"><?php echo __('phone_number'); ?></label>
-                                <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>">
+                                <?php echo renderPhonePicker(['id' => 'phone', 'label' => __('phone_number'), 'value' => $user['phone'] ?? '']); ?>
                             </div>
                             <div class="form-group">
                                 <label class="form-label"><?php echo __('username_readonly'); ?></label>
@@ -322,5 +322,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+<script src="/assets/js/phone-picker.js"></script>
+
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
