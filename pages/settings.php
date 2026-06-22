@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption',
             'email_from_name', 'email_from_address', 'email_reply_to', 'email_batch_size', 'email_batch_delay',
             'resend_api_key', 'resend_from_email',
+            'ms_client_id', 'ms_tenant_id', 'ms_client_secret',
             'tracking_head_code', 'tracking_body_code', 'preloader_code'
         ];
 
@@ -68,7 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($key === 'resend_api_key' && $value === '') {
                     continue; // don't overwrite the existing key
                 }
-                if (in_array($key, ['smtp_password', 'twilio_auth_token', 'resend_api_key'])) {
+                if ($key === 'ms_client_secret' && $value === '') {
+                    continue; // don't overwrite the existing secret
+                }
+                if (in_array($key, ['smtp_password', 'twilio_auth_token', 'resend_api_key', 'ms_client_secret'])) {
                     $value = encryptToken($value);
                 }
 
@@ -198,7 +202,10 @@ include __DIR__ . '/../includes/header.php';
         <div class="tab-link" data-tab="branding" onclick="switchTab('branding')"><?php echo htmlspecialchars(__('App Branding')); ?></div>
         <div class="tab-link" data-tab="voip" onclick="switchTab('voip')"><?php echo htmlspecialchars(__('VoIP & WhatsApp')); ?></div>
         <div class="tab-link" data-tab="smtp" onclick="switchTab('smtp')"><?php echo htmlspecialchars(__('SMTP & Email')); ?></div>
+        <div class="tab-link" data-tab="integration" onclick="switchTab('integration')"><?php echo htmlspecialchars(__('Email Integration')); ?></div>
+        <?php if (isSuperAdmin()): ?>
         <div class="tab-link" data-tab="tracking" onclick="switchTab('tracking')"><?php echo htmlspecialchars(__('Pixels & Tracking')); ?></div>
+        <?php endif; ?>
         <div class="tab-link" data-tab="custom_fields" onclick="switchTab('custom_fields')"><?php echo htmlspecialchars(__('Custom Lead Fields')); ?></div>
         <div class="tab-link" data-tab="subscription" onclick="switchTab('subscription')"><?php echo htmlspecialchars(__('Subscription')); ?></div>
     </div>
@@ -222,7 +229,7 @@ include __DIR__ . '/../includes/header.php';
                             <input type="text" name="app_name" class="form-control" value="<?php echo htmlspecialchars($settings['app_name'] ?? 'White Label CRM'); ?>">
                         </div>
                         <div class="form-group">
-                            <label class="form-label"><?php echo htmlspecialchars(__('Support Email *')); ?></label>
+                            <label class="form-label"><?php echo htmlspecialchars(__('Company Email *')); ?></label>
                             <input type="email" name="company_email" class="form-control" value="<?php echo htmlspecialchars($settings['company_email'] ?? ''); ?>" required>
                         </div>
                         <div class="form-group">
@@ -372,11 +379,11 @@ include __DIR__ . '/../includes/header.php';
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('SMTP Port')); ?></label>
-                            <input type="number" name="smtp_port" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_port'] ?? '587'); ?>" placeholder="587">
+                            <input type="number" name="smtp_port" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_port'] ?? ''); ?>" placeholder="587">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('SMTP Username')); ?></label>
-                            <input type="text" name="smtp_username" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_username'] ?? ''); ?>" placeholder="postmaster@mg.funl.online">
+                            <input type="text" name="smtp_username" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_username'] ?? ''); ?>" placeholder="smtp@example.com">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('SMTP Password')); ?></label>
@@ -385,30 +392,30 @@ include __DIR__ . '/../includes/header.php';
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('SMTP Encryption')); ?></label>
                             <select name="smtp_encryption" class="form-control">
-                                <option value="tls" <?php echo ($settings['smtp_encryption'] ?? 'tls') === 'tls' ? 'selected' : ''; ?>><?php echo htmlspecialchars(__('TLS (Recommended)')); ?></option>
+                                <option value="tls" <?php echo ($settings['smtp_encryption'] ?? '') === 'tls' ? 'selected' : ''; ?>><?php echo htmlspecialchars(__('TLS (Recommended)')); ?></option>
                                 <option value="ssl" <?php echo ($settings['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : ''; ?>><?php echo htmlspecialchars(__('SSL')); ?></option>
                                 <option value="none" <?php echo ($settings['smtp_encryption'] ?? '') === 'none' ? 'selected' : ''; ?>><?php echo htmlspecialchars(__('None')); ?></option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Default From Name')); ?></label>
-                            <input type="text" name="email_from_name" class="form-control" value="<?php echo htmlspecialchars($settings['email_from_name'] ?? ''); ?>" placeholder="FunL Team">
+                            <input type="text" name="email_from_name" class="form-control" value="<?php echo htmlspecialchars($settings['email_from_name'] ?? ''); ?>" placeholder="Your Company Name">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Default From Email')); ?></label>
-                            <input type="email" name="email_from_address" class="form-control" value="<?php echo htmlspecialchars($settings['email_from_address'] ?? ''); ?>" placeholder="info@funl.online">
+                            <input type="email" name="email_from_address" class="form-control" value="<?php echo htmlspecialchars($settings['email_from_address'] ?? ''); ?>" placeholder="noreply@yourdomain.com">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Default Reply-To Email')); ?></label>
-                            <input type="email" name="email_reply_to" class="form-control" value="<?php echo htmlspecialchars($settings['email_reply_to'] ?? ''); ?>" placeholder="info@funl.online">
+                            <input type="email" name="email_reply_to" class="form-control" value="<?php echo htmlspecialchars($settings['email_reply_to'] ?? ''); ?>" placeholder="reply@yourdomain.com">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Marketing Batch Size')); ?></label>
-                            <input type="number" name="email_batch_size" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_size'] ?? '50'); ?>">
+                            <input type="number" name="email_batch_size" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_size'] ?? ''); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Delay Between Batches (seconds)')); ?></label>
-                            <input type="number" name="email_batch_delay" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_delay'] ?? '2'); ?>">
+                            <input type="number" name="email_batch_delay" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_delay'] ?? ''); ?>">
                         </div>
                     </div>
                 </div>
@@ -449,6 +456,97 @@ include __DIR__ . '/../includes/header.php';
             </div>
             <?php endif; ?>
         </div>
+        <!-- Tab: Email Integration -->
+        <div class="tab-pane" id="pane-integration">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Email Integration (Office 365)')); ?></h3></div>
+                <div class="card-body">
+                    <p style="font-size:13px;color:var(--color-text-muted,#6b7280);margin-bottom:16px;"><?php echo __('Connect your Office 365 account to send emails directly from the CRM. Each user connects their own account.'); ?></p>
+
+                    <?php if (isSuperAdmin()): ?>
+                    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;margin-bottom:20px;">
+                        <h4 style="margin:0 0 8px;font-size:14px;color:#0369a1;">Microsoft Azure App Configuration</h4>
+                        <p style="font-size:12px;color:#0369a1;margin:0 0 12px;">Required: Register an app in Azure Active Directory and enter the credentials below. See <a href="https://learn.microsoft.com/en-us/graph/auth-register-app-v2" target="_blank">Azure App Registration Guide</a>.</p>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Client ID</label>
+                                <input type="text" name="ms_client_id" class="form-control" value="<?php echo htmlspecialchars($settings['ms_client_id'] ?? ''); ?>" placeholder="Azure App Client ID">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tenant ID</label>
+                                <input type="text" name="ms_tenant_id" class="form-control" value="<?php echo htmlspecialchars($settings['ms_tenant_id'] ?? ''); ?>" placeholder="common (or your tenant GUID)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Client Secret</label>
+                                <input type="password" name="ms_client_secret" class="form-control" value="" placeholder="<?php echo !empty($settings['ms_client_secret']) ? 'Secret is set' : 'Azure App Client Secret'; ?>">
+                            </div>
+                        </div>
+                        <p style="font-size:11px;color:#6b7280;margin-top:8px;">Redirect URI must be set to: <code><?php echo htmlspecialchars(getenv('APP_URL') ?: 'https://app.funl.online'); ?>/api/microsoft-callback.php</code></p>
+                    </div>
+                    <hr style="margin:20px 0;border:none;border-top:1px solid #e5e7eb;">
+                    <?php endif; ?>
+
+                    <?php
+                    $currentUser = getCurrentUser();
+                    $msConnected = !empty($currentUser['ms_connected_email']);
+                    $csrfToken = generateCSRFToken();
+
+                    // Build OAuth URL using DB settings if available
+                    $msClientId = $settings['ms_client_id'] ?? '' ?: (defined('MS_CLIENT_ID') ? MS_CLIENT_ID : '');
+                    $msTenantId = $settings['ms_tenant_id'] ?? '' ?: (defined('MS_TENANT_ID') ? MS_TENANT_ID : 'common');
+                    $msRedirectUri = (getenv('APP_URL') ?: 'https://app.funl.online') . '/api/microsoft-callback.php';
+
+                    $msAuthUrl = '';
+                    if ($msClientId) {
+                        $state = bin2hex(random_bytes(16));
+                        $_SESSION['ms_oauth_state'] = $state;
+                        $msAuthUrl = 'https://login.microsoftonline.com/' . $msTenantId . '/oauth2/v2.0/authorize?' . http_build_query([
+                            'client_id'     => $msClientId,
+                            'response_type' => 'code',
+                            'redirect_uri'  => $msRedirectUri,
+                            'response_mode' => 'query',
+                            'scope'         => 'https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access',
+                            'state'         => $state,
+                        ]);
+                    }
+                    ?>
+
+                    <h4 style="margin:0 0 12px;font-size:15px;">Your Office 365 Connection</h4>
+                    <?php if ($msConnected): ?>
+                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-bottom:16px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:40px;height:40px;border-radius:8px;background:#0078d4;display:flex;align-items:center;justify-content:center;color:white;font-size:20px;">&#127760;</div>
+                                <div>
+                                    <h4 style="margin:0;font-size:14px;">Office 365 Connected</h4>
+                                    <p style="margin:2px 0 0;font-size:13px;color:#6b7280;"><?php echo htmlspecialchars($currentUser['ms_connected_email']); ?></p>
+                                </div>
+                            </div>
+                        </div>
+                        <form method="POST" action="/pages/profile.php">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                            <input type="hidden" name="action" value="disconnect_microsoft">
+                            <button type="submit" class="btn btn-outline" style="color:#dc2626;border-color:#fecaca;">Disconnect Office 365</button>
+                        </form>
+                    <?php else: ?>
+                        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:40px;height:40px;border-radius:8px;background:#9ca3af;display:flex;align-items:center;justify-content:center;color:white;font-size:20px;opacity:0.5;">&#127760;</div>
+                                <div>
+                                    <h4 style="margin:0;font-size:14px;color:#6b7280;">Not Connected</h4>
+                                    <p style="margin:2px 0 0;font-size:13px;color:#9ca3af;">Connect your Office 365 account to send emails from the CRM</p>
+                                </div>
+                            </div>
+                        </div>
+                        <?php if ($msAuthUrl): ?>
+                            <a href="<?php echo $msAuthUrl; ?>" class="btn btn-primary">Connect Office 365</a>
+                        <?php else: ?>
+                            <button class="btn btn-primary" disabled style="opacity:0.6;cursor:not-allowed;">Connect Office 365</button>
+                            <?php if (isSuperAdmin()): ?><div style="font-size:12px;color:#dc2626;margin-top:8px;">Client ID not configured. Enter your Azure App credentials in the Azure App Configuration section above and save.</div><?php else: ?><div style="font-size:12px;color:#6b7280;margin-top:8px;">Office 365 integration is available once your platform admin configures the Microsoft Azure app.</div><?php endif; ?>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div><?php if (isSuperAdmin()): ?>
         <div class="tab-pane" id="pane-tracking">
             <div class="card">
                 <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Tracking Codes & Pixels')); ?></h3></div>
@@ -470,6 +568,7 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
         </div>
+<?php endif; ?>
 
         <!-- Custom Fields (Handled dynamically) -->
         <div class="tab-pane" id="pane-custom_fields">
