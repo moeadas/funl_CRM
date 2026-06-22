@@ -316,15 +316,6 @@ $_userDir = ($_userLocale === 'ar') ? 'rtl' : 'ltr';
                 </a>
             </li>
 
-            <?php if (isSuperAdmin()): ?>
-            <li class="nav-item">
-                <a href="/pages/super-admin.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'super-admin.php' ? 'active' : ''; ?>">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <span><?php echo __('platform_admin'); ?></span>
-                </a>
-            </li>
-            <?php endif; ?>
-
             <?php if (hasRole('Admin')): ?>
                 <li><hr class="nav-divider"></li>
                 <li class="nav-item">
@@ -339,6 +330,14 @@ $_userDir = ($_userLocale === 'ar') ? 'rtl' : 'ltr';
                         <span><?php echo __('settings'); ?></span>
                     </a>
                 </li>
+                <?php if (isSuperAdmin()): ?>
+                <li class="nav-item">
+                    <a href="/pages/super-admin.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'super-admin.php' ? 'active' : ''; ?>">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span><?php echo __('platform_admin'); ?></span>
+                    </a>
+                </li>
+                <?php endif; ?>
             <?php endif; ?>
 
             <?php if ($_isAdminOrImpersonating && !empty($_switchableUsers)): ?>
