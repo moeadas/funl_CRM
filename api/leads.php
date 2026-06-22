@@ -529,7 +529,8 @@ function createLead($db, $data, $currentUser) {
 }
 
 function updateLead($db, $data, $currentUser) {
-    if (empty($data['lead_id'])) jsonError('Lead ID required', 400);
+    $leadId = intval($data["lead_id"] ?? $_GET["id"] ?? 0);
+    if (!$leadId) jsonError("Lead ID required", 400);
 
     // Only the contact person's name is required
     $fieldErrors = [];
@@ -544,7 +545,7 @@ function updateLead($db, $data, $currentUser) {
 
     // Get previous assigned_to before updating
     $prevStmt = $db->prepare("SELECT assigned_to FROM leads WHERE lead_id = ?");
-    $prevStmt->execute([$data['lead_id']]);
+    $prevStmt->execute([$leadId]);
     $prevLead = $prevStmt->fetch();
     $previousAssignedTo = $prevLead ? $prevLead['assigned_to'] : null;
 
@@ -598,10 +599,10 @@ function updateLead($db, $data, $currentUser) {
     ];
     // Append lead_id (WHERE clause) and company_id if applicable
     if ($companyId) {
-        $params[] = $data['lead_id'];
+        $params[] = $leadId;
         $params[] = $companyId;
     } else {
-        $params[] = $data['lead_id'];
+        $params[] = $leadId;
     }
     $stmt->execute($params);
 
@@ -612,17 +613,17 @@ function updateLead($db, $data, $currentUser) {
     }
 
     // Save custom field values
-    saveCustomFieldValues($data['lead_id'], $data);
+    saveCustomFieldValues($leadId, $data);
 
-    $leadName = $data['contact_person'] ?? $data['company_name'] ?? 'Lead #' . $data['lead_id'];
-    logActivity($currentUser['user_id'], 'Updated', 'Lead', $data['lead_id'], 'Updated lead: ' . $leadName);
+    $leadName = $data['contact_person'] ?? $data['company_name'] ?? 'Lead #' . $leadId;
+    logActivity($currentUser['user_id'], 'Updated', 'Lead', $leadId, 'Updated lead: ' . $leadName);
 
     // Send WhatsApp notification if assignment changed
     if ($newAssignedTo && $newAssignedTo != $previousAssignedTo) {
         TwilioHelper::notifyLeadAssignment(
             intval($newAssignedTo),
             $leadName,
-            intval($data['lead_id']),
+            intval($leadId),
             $currentUser['full_name'] ?? ''
         );
     }

@@ -24,7 +24,10 @@ if (!$plans) {
 
 $pageTitle = __('Create New Company');
 include __DIR__ . '/../includes/header.php';
+
 ?>
+<script src="/assets/js/phone-picker.js?v=2"></script>
+
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;">
@@ -108,7 +111,6 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </form>
 </div>
-<script src="/assets/js/phone-picker.js"></script>
 
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

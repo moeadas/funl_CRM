@@ -14,7 +14,10 @@ $plans = getActivePlans();
 $csrf_token = generateCSRFToken();
 $pageTitle = __('Create New Company');
 include '../includes/header.php';
+
 ?>
+<script src="/assets/js/phone-picker.js?v=2"></script>
+
 
 <style>
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
@@ -98,7 +101,6 @@ include '../includes/header.php';
         </div>
     </form>
 </div>
-<script src="/assets/js/phone-picker.js"></script>
 
 
 <?php include '../includes/footer.php'; ?>

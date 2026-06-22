@@ -9,12 +9,15 @@ $currentPage = 'contacts';
 $accountId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
 
+
 $db = Database::getInstance();
 $companyId = $_SESSION["company_id"] ?? null;
 
 // Fetch active users for assignment
 $users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId])->fetchAll();
 ?>
+<script src="/assets/js/phone-picker.js?v=2"></script>
+
 
 
 
@@ -184,7 +187,6 @@ function saveAccount() {
     .catch(function() { showNotification(__('Network error'), 'error'); });
 }
 </script>
-<script src="/assets/js/phone-picker.js"></script>
 
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

@@ -180,7 +180,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $csrfToken = generateCSRFToken();
 include __DIR__ . '/../includes/header.php';
+
 ?>
+<script src="/assets/js/phone-picker.js?v=2"></script>
+
 
 
 
@@ -778,7 +781,6 @@ function escapeHtml(text) {
     return text.toString().replace(/[&<>"']/g, m => map[m]);
 }
 </script>
-<script src="/assets/js/phone-picker.js"></script>
 
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

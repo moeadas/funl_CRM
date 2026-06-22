@@ -9,6 +9,8 @@ $currentPage = 'leads';
 $leadId = intval($_GET['id'] ?? 0);
 require_once __DIR__ . '/../includes/header.php';
 ?>
+<script src="/assets/js/phone-picker.js?v=2"></script>
+
 
 <div class="page-header">
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -385,6 +387,7 @@ function loadLead() {
                                     for (var i = 0; i < countrySelect.options.length; i++) {
                                         if (countrySelect.options[i].value === parsed.code) {
                                             countrySelect.selectedIndex = i;
+                                            if (typeof updatePhonePicker === 'function') updatePhonePicker(countrySelect);
                                             break;
                                         }
                                     }
@@ -427,6 +430,8 @@ function saveLead() {
     
     var payload = {
         csrf_token: CSRF_TOKEN,
+        lead_id: LEAD_ID || null,
+
         company_name: companyName,
         lead_type: document.getElementById('leadType').value,
         industry: document.getElementById('industry').value,
@@ -558,7 +563,6 @@ function escapeHtml(str) {
     });
 }
 </script>
-<script src="/assets/js/phone-picker.js"></script>
 
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
