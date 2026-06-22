@@ -13,20 +13,38 @@ class ResendEmailService {
     private $enabled;
     
     public function __construct() {
-        // Try database settings first (set via Settings UI), fall back to env var
-        $storedKey = getSetting('resend_api_key', '');
-        if ($storedKey) {
-            // Decrypt the stored key (encryptToken was used when saving)
-            $this->apiKey = function_exists('decryptToken') ? decryptToken($storedKey) : $storedKey;
+        // The Resend API key is a platform-wide setting, not per-company.
+        // Query directly from DB (getSetting is session-scoped by company_id).
+        $apiKeySetting = '';
+        $fromEmailSetting = '';
+        try {
+            $pdo = Database::getInstance()->getConnection();
+            $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('resend_api_key','resend_from_email') ORDER BY company_id ASC");
+            foreach ($stmt->fetchAll(PDO::FETCH_KEY_PAIR) as $k => $v) {
+                if ($k === 'resend_api_key') $apiKeySetting = $v;
+                if ($k === 'resend_from_email') $fromEmailSetting = $v;
+            }
+        } catch (\Exception $e) {
+            error_log('ResendEmailService: DB error loading settings: ' . $e->getMessage());
+        }
+        
+        if ($apiKeySetting) {
+            $this->apiKey = function_exists('decryptToken') ? decryptToken($apiKeySetting) : $apiKeySetting;
         } else {
             $this->apiKey = getenv('RESEND_API_KEY') ?: '';
         }
-        $this->fromEmail = getSetting('resend_from_email', '') ?: getenv('RESEND_FROM_EMAIL') ?: '';
+        $this->fromEmail = $fromEmailSetting ?: getenv('RESEND_FROM_EMAIL') ?: '';
         if (empty($this->fromEmail)) {
             // Build from app settings
             $appName = getSetting('app_name', 'White Label CRM');
             $companyEmail = getSetting('company_email', '');
             $this->fromEmail = $companyEmail ? "{$appName} <noreply@{$companyEmail}>" : 'White Label CRM <noreply@yourdomain.com>';
+        } else {
+            // Ensure proper "Name <email>" format for Resend API
+            if (strpos($this->fromEmail, '<') === false && filter_var($this->fromEmail, FILTER_VALIDATE_EMAIL)) {
+                $appName = getSetting('app_name', 'White Label CRM');
+                $this->fromEmail = "{$appName} <{$this->fromEmail}>";
+            }
         }
         $this->enabled = !empty($this->apiKey);
     }
