@@ -348,13 +348,31 @@ include '../includes/header.php';
 <?php endif; ?>
 
 <div class="grid grid-2">
-    <div class="card"><div class="card-header"><h3 class="card-title"><?php echo __('Leads by Status'); ?></h3></div><div class="card-body"><canvas id="statusChart" height="300"></canvas></div></div>
-    <div class="card"><div class="card-header"><h3 class="card-title"><?php echo __('Leads by Type'); ?></h3></div><div class="card-body"><canvas id="typeChart" height="300"></canvas></div></div>
+    <div class="card"><div class="card-header"><h3 class="card-title"><?php echo __('Leads by Status'); ?></h3></div><div class="card-body">
+        <?php if (empty($leadsByStatus)): ?>
+            <div class="empty-state"><?php echo __('No lead data available yet'); ?></div>
+        <?php else: ?>
+            <canvas id="statusChart" height="300"></canvas>
+        <?php endif; ?>
+    </div></div>
+    <div class="card"><div class="card-header"><h3 class="card-title"><?php echo __('Leads by Type'); ?></h3></div><div class="card-body">
+        <?php if (empty($leadsByType)): ?>
+            <div class="empty-state"><?php echo __('No lead type data available'); ?></div>
+        <?php else: ?>
+            <canvas id="typeChart" height="300"></canvas>
+        <?php endif; ?>
+    </div></div>
 </div>
 
 <div class="card">
     <div class="card-header"><h3 class="card-title"><?php echo __('Lead Generation Trend (Last 6 Months)'); ?></h3></div>
-    <div class="card-body"><canvas id="trendChart" height="100"></canvas></div>
+    <div class="card-body">
+        <?php if (empty($monthlyTrend)): ?>
+            <div class="empty-state"><?php echo __('No trend data available yet'); ?></div>
+        <?php else: ?>
+            <canvas id="trendChart" height="100"></canvas>
+        <?php endif; ?>
+    </div>
 </div>
 
 <div class="card">
@@ -373,6 +391,9 @@ include '../includes/header.php';
                             <td><div class="progress-bar"><div class="progress-fill" style="width:<?php echo $pct; ?>%"></div></div></td>
                         </tr>
                     <?php endforeach; ?>
+                <?php if (empty($leadsByCountry)): ?>
+                    <tr><td colspan="4" class="text-center text-muted" style="padding:24px;"><?php echo __('No country data available'); ?></td></tr>
+                <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -403,7 +424,10 @@ include '../includes/header.php';
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                </tbody>
+                    <?php if (empty($userPerformance)): ?>
+                        <tr><td colspan="6" class="text-center text-muted" style="padding:24px;"><?php echo __('No team performance data available'); ?></td></tr>
+                    <?php endif; ?>
+                    </tbody>
             </table>
         </div>
     </div>
