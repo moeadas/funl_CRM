@@ -11,12 +11,14 @@ requireRole('Sales Manager');
 $csrfToken = generateCSRFToken();
 $db = Database::getInstance()->getConnection();
 
+$companyId = intval($_SESSION['company_id'] ?? 0);
 $lists = $db->query("SELECT el.*, u.full_name as creator, 
     (SELECT COUNT(*) FROM email_list_members WHERE list_id = el.list_id AND status = 'Active') as active_count,
     (SELECT COUNT(*) FROM email_list_members WHERE list_id = el.list_id AND status = 'Unsubscribed') as unsub_count
     FROM email_lists el 
     LEFT JOIN users u ON el.created_by = u.user_id 
-    ORDER BY el.updated_at DESC")->fetchAll();
+    WHERE el.company_id = ?
+    ORDER BY el.updated_at DESC", [$companyId])->fetchAll();
 
 $totalMembers = array_sum(array_column($lists, 'active_count'));
 

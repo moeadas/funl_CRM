@@ -349,18 +349,46 @@ function loadLeadSourceSuggestions() {
     .catch(function() { /* non-fatal — hard-coded seeds are still there */ });
 }
 
+/**
+ * Load company users from the API and populate the Assigned To dropdown.
+ * API returns: {success: true, data: {users: [...]}}
+ * Uses innerHTML append (not +=) to preserve existing options.
+ */
 function loadUsers() {
     return fetch('/api/users.php?action=list', { credentials: 'same-origin' })
     .then(r => r.json())
     .then(data => {
-        // API returns {success: true, data: {users: [...]}}
-        var users = data.users || (data.data && data.data.users) || [];
-        if (data.success && users.length) {
-            var select = document.getElementById('assignedTo');
-            users.forEach(function(u) {
-                select.innerHTML += '<option value="' + u.user_id + '">' + escapeHtml(u.full_name || u.email) + '</option>';
-            });
+        // Handle multiple possible response shapes for robustness
+        var users = [];
+        if (data && data.success) {
+            users = data.users || (data.data && data.data.users) || [];
         }
+        var select = document.getElementById('assignedTo');
+        if (!select) return;
+        
+        // Preserve the "Unassigned" default option, append user options
+        var defaultOption = select.querySelector('option[value=""]');
+        select.innerHTML = '';
+        if (defaultOption) select.appendChild(defaultOption);
+        
+        users.forEach(function(u) {
+            var opt = document.createElement('option');
+            opt.value = u.user_id;
+            opt.textContent = u.full_name || u.email || u.username;
+            select.appendChild(opt);
+        });
+        
+        // If no users were loaded, show a helpful message
+        if (users.length === 0) {
+            var opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'No team members found';
+            opt.disabled = true;
+            select.appendChild(opt);
+        }
+    })
+    .catch(function(err) {
+        console.error('loadUsers error:', err);
     });
 }
 

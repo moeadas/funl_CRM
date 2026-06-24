@@ -6,11 +6,21 @@
  */
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/company-functions.php';
 
 startSecureSession();
 requireLogin();
 
 $userId = getCurrentUserId();
+
+// ─── Microsoft OAuth Credentials ───────────────────────────────
+// Try DB settings first (set by super admin in Settings → SMTP & Email),
+// then fall back to env vars / constants defined in config/database.php.
+// This allows configuring Office 365 without editing .env files.
+$msClientId     = getSetting('ms_client_id')     ?: (defined('MS_CLIENT_ID') ? MS_CLIENT_ID : '');
+$msClientSecret = getSetting('ms_client_secret') ?: (defined('MS_CLIENT_SECRET') ? MS_CLIENT_SECRET : '');
+$msTenantId     = getSetting('ms_tenant_id')     ?: (defined('MS_TENANT_ID') ? MS_TENANT_ID : 'common');
+$msRedirectUri  = (getenv('APP_URL') ?: 'https://app.funl.online') . '/api/microsoft-callback.php';
 
 // Check for errors from Microsoft
 if (isset($_GET['error'])) {
@@ -39,16 +49,16 @@ if (empty($code)) {
 }
 
 // Exchange code for tokens
-$tokenUrl = 'https://login.microsoftonline.com/' . MS_TENANT_ID . '/oauth2/v2.0/token';
+$tokenUrl = 'https://login.microsoftonline.com/' . $msTenantId . '/oauth2/v2.0/token';
 
 $postData = [
-    'client_id'     => MS_CLIENT_ID,
-    'client_secret' => MS_CLIENT_SECRET,
+    'client_id'     => $msClientId,
+    'client_secret' => $msClientSecret,
     'code'          => $code,
-    'redirect_uri'  => MS_REDIRECT_URI,
+    'redirect_uri'  => $msRedirectUri,
     'grant_type'    => 'authorization_code',
     'scope'         => 'https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access',
-];
+];;
 
 $ch = curl_init();
 curl_setopt_array($ch, [

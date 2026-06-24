@@ -13,13 +13,14 @@ $campaignId = (int)($_GET['id'] ?? 0);
 
 if (!$campaignId) { header('Location: email-campaigns.php'); exit; }
 
-$stmt = $db->prepare("SELECT c.*, el.name as list_name, u.full_name as creator FROM email_campaigns c LEFT JOIN email_lists el ON c.list_id = el.list_id LEFT JOIN users u ON c.created_by = u.user_id WHERE c.campaign_id = ?");
-$stmt->execute([$campaignId]);
+$companyId = intval($_SESSION['company_id'] ?? 0);
+$stmt = $db->prepare("SELECT c.*, el.name as list_name, u.full_name as creator FROM email_campaigns c LEFT JOIN email_lists el ON c.list_id = el.list_id LEFT JOIN users u ON c.created_by = u.user_id WHERE c.campaign_id = ? AND c.company_id = ?");
+$stmt->execute([$campaignId, $companyId]);
 $campaign = $stmt->fetch();
 
 if (!$campaign) { $_SESSION['error'] = 'Campaign not found'; header('Location: email-campaigns.php'); exit; }
 
-// Get send logs
+// Get send logs — scoped to this campaign only (campaigns are already company-scoped)
 $logs = $db->prepare("SELECT ecl.*, l.company_name, l.contact_person FROM email_campaign_log ecl LEFT JOIN leads l ON ecl.lead_id = l.lead_id WHERE ecl.campaign_id = ? ORDER BY ecl.sent_at DESC");
 $logs->execute([$campaignId]);
 $allLogs = $logs->fetchAll();

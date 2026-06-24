@@ -11,12 +11,14 @@ requireRole('Sales Manager');
 $csrfToken = generateCSRFToken();
 $db = Database::getInstance()->getConnection();
 
-// Get campaigns
+// Get campaigns — scoped to company_id to prevent cross-tenant data access
+$companyId = intval($_SESSION['company_id'] ?? 0);
 $campaigns = $db->query("SELECT c.*, u.full_name as creator, el.name as list_name 
     FROM email_campaigns c 
     LEFT JOIN users u ON c.created_by = u.user_id 
     LEFT JOIN email_lists el ON c.list_id = el.list_id 
-    ORDER BY c.updated_at DESC")->fetchAll();
+    WHERE c.company_id = ?
+    ORDER BY c.updated_at DESC", [$companyId])->fetchAll();
 
 // Stats
 $totalCampaigns = count($campaigns);

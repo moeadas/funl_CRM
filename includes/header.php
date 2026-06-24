@@ -231,12 +231,7 @@ if (!empty($_hiddenClasses)) {
                     <span><?php echo __('proposals'); ?></span>
                 </a>
             </li>
-            <li class="nav-item nav-tab-tickets">
-                <a href="/pages/tickets.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'tickets.php' ? 'active' : ''; ?>">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                    <span><?php echo __('support'); ?></span>
-                </a>
-            </li>
+            <!-- Support tab moved to Help Center section below -->
             <li class="nav-item nav-tab-interactions">
                 <a href="/pages/interactions.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'interactions.php' ? 'active' : ''; ?>">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -337,7 +332,7 @@ if (!empty($_hiddenClasses)) {
                     <span>Mini Guide</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item nav-tab-tickets">
                 <a href="/pages/tickets.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'tickets.php' ? 'active' : ''; ?>">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                     <span>Support</span>
@@ -416,6 +411,24 @@ if (!empty($_hiddenClasses)) {
 
     <!-- Main Content -->
     <main class="main-content">
+    
+    <!-- Flash Messages: display session error/success messages to users in a human-readable format -->
+    <?php if (!empty($_SESSION['error'])): ?>
+        <div class="alert alert-error" style="margin:0 0 16px 0;display:flex;align-items:flex-start;gap:10px;padding:14px 18px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div><strong>Error: </strong><?php echo htmlspecialchars($_SESSION['error']); ?></div>
+        </div>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+    
+    <?php if (!empty($_SESSION['success'])): ?>
+        <div class="alert alert-success" style="margin:0 0 16px 0;display:flex;align-items:flex-start;gap:10px;padding:14px 18px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg>
+            <div><?php echo htmlspecialchars($_SESSION['success']); ?></div>
+        </div>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+    
     <?php if (isImpersonating()): ?>
         <?php $_origAdmin = getOriginalAdmin(); ?>
         <div id="impersonationBanner" style="background:linear-gradient(135deg,#ff9500,#ff6b00);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:500;border-radius:8px;margin:0 0 16px 0;">

@@ -98,15 +98,15 @@ try {
     $calls = [];
 }
 
-// Get users for filter (admin/manager)
+// Get users for filter (admin/manager) — CRITICAL: scoped to company_id
 $allUsers = [];
 if ($isManager) {
     try {
-        $allUsers = $db->query("SELECT user_id, full_name FROM users WHERE status = 'Active' ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
+        $allUsers = $db->query("SELECT user_id, full_name FROM users WHERE status = 'Active' AND company_id = ? ORDER BY full_name", [intval($companyId)])->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {}
 }
 
-// Per-user breakdown for managers
+// Per-user breakdown for managers — CRITICAL: scoped to company_id
 $userBreakdown = [];
 if ($isManager) {
     try {
@@ -119,10 +119,10 @@ if ($isManager) {
                    COUNT(CASE WHEN vc.outcome = 'Positive' THEN 1 END) as positive_outcomes
             FROM users u
             LEFT JOIN voip_calls vc ON u.user_id = vc.user_id
-            WHERE u.status = 'Active' AND u.role IN ('Sales Rep','Sales Manager','Admin')
+            WHERE u.status = 'Active' AND u.company_id = ? AND u.role IN ('Sales Rep','Sales Manager','Admin')
             GROUP BY u.user_id, u.full_name
             ORDER BY total_calls DESC
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        ", [intval($companyId)])->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {}
 }
 
