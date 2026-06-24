@@ -15,14 +15,22 @@ $db = Database::getInstance();
 $isSalesRep = !hasRole('Sales Manager');
 $isManager = hasRole('Sales Manager');   // Sales Manager or Admin
 $currentUserId = getCurrentUserId();
+$companyId = intval($_SESSION['company_id'] ?? 0);
 
-// Role-based WHERE clause
+// Auto-recover company_id if session is stale
+if (!$companyId && !empty($_SESSION['user_id'])) {
+    $companyId = intval($db->query("SELECT company_id FROM users WHERE user_id = ?", [$_SESSION['user_id']])->fetchColumn());
+    if ($companyId) $_SESSION['company_id'] = $companyId;
+}
+
+// Role-based WHERE clause — CRITICAL: always include company_id filter to prevent cross-tenant data access
+$companyFilter = "AND (wm.lead_id IN (SELECT lead_id FROM leads WHERE company_id = $companyId) OR (wm.lead_id IS NULL AND wm.user_id IN (SELECT user_id FROM users WHERE company_id = $companyId)))";
 if ($isSalesRep) {
-    $repFilter = "AND (wm.user_id = $currentUserId OR wm.lead_id IN (SELECT lead_id FROM leads WHERE assigned_to = $currentUserId))";
-    $leadFilter = "AND l.assigned_to = $currentUserId";
+    $repFilter = "AND (wm.user_id = $currentUserId OR wm.lead_id IN (SELECT lead_id FROM leads WHERE assigned_to = $currentUserId AND company_id = $companyId)) $companyFilter";
+    $leadFilter = "AND l.assigned_to = $currentUserId AND l.company_id = $companyId";
 } else {
-    $repFilter = '';
-    $leadFilter = '';
+    $repFilter = $companyFilter;
+    $leadFilter = "AND l.company_id = $companyId";
 }
 
 // Stats (role-filtered)
@@ -83,7 +91,7 @@ try {
 $allUsers = [];
 if (!$isSalesRep) {
     try {
-        $allUsers = $db->query("SELECT user_id, full_name FROM users WHERE status = 'Active' ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
+        $allUsers = $db->query("SELECT user_id, full_name FROM users WHERE status = 'Active' AND company_id = ? ORDER BY full_name", [$companyId])->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) { /* skip */ }
 }
 

@@ -107,9 +107,9 @@ try {
         $whereClause .= " AND i.interaction_type = 'Follow-up'";
     }
     
-    // Count total (unfiltered for stats)
+    // Count total (unfiltered for stats) — always scope by company_id for security
     if ($leadId) {
-        $countAll = $db->query("SELECT COUNT(*) FROM interactions i WHERE i.lead_id = ?", [$leadId])->fetchColumn();
+        $countAll = $db->query("SELECT COUNT(*) FROM interactions i JOIN leads l ON i.lead_id = l.lead_id WHERE i.lead_id = ? AND l.company_id = ?", [$leadId, $companyId])->fetchColumn();
     } else {
         $countAll = $db->query(
             "SELECT COUNT(*) FROM interactions i JOIN leads l ON i.lead_id = l.lead_id WHERE l.company_id = ?",
@@ -128,10 +128,10 @@ try {
             FROM interactions i
             LEFT JOIN leads l ON i.lead_id = l.lead_id
             LEFT JOIN users u ON i.user_id = u.user_id
-            WHERE $whereClause
+            WHERE $whereClause AND l.company_id = ?
             ORDER BY i.interaction_date DESC, i.created_at DESC
             LIMIT $perPage OFFSET $offset
-        ", $params)->fetchAll();
+        ", array_merge($params, [$companyId]))->fetchAll();
     } else {
         $interactions = $db->query("
             SELECT i.*, l.company_name, l.contact_person, u.full_name as user_name
@@ -147,11 +147,12 @@ try {
     // Quick stats for the type filter chips
     if ($leadId) {
         $typeCounts = $db->query("
-            SELECT interaction_type, COUNT(*) as cnt
+            SELECT i.interaction_type, COUNT(*) as cnt
             FROM interactions i
-            WHERE i.lead_id = ?
-            GROUP BY interaction_type
-        ", [$leadId])->fetchAll();
+            JOIN leads l ON i.lead_id = l.lead_id
+            WHERE i.lead_id = ? AND l.company_id = ?
+            GROUP BY i.interaction_type
+        ", [$leadId, $companyId])->fetchAll();
     } else {
         $typeCounts = $db->query("
             SELECT interaction_type, COUNT(*) as cnt

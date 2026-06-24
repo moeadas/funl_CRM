@@ -139,15 +139,15 @@ require_once __DIR__ . '/../includes/header.php';
     <div>
         <h1 class="page-title"><?php echo htmlspecialchars($contact['first_name'] . ' ' . $contact['last_name']); ?></h1>
         <?php if ($contact['title']): ?>
-            <p class="text-muted" style="margin-top:4px;"><?php echo htmlspecialchars($contact['title']); ?></div>
-                <?php endif; ?>
-                <?php if (!empty($contact['account_name'])): ?>
-                    <div class="contact-title"><?php echo htmlspecialchars($contact['account_name']); ?></div>
-                <?php endif; ?>
-            </div>
-            <div class="contact-actions">
-                <a href="/pages/contacts.php" class="btn btn-outline"><?php echo htmlspecialchars(__('Back')); ?></a>
-                <button class="btn btn-primary" onclick="editContact(<?php echo $contactId; ?>)"><?php echo htmlspecialchars(__('Edit')); ?></button>
+            <p class="text-muted" style="margin-top:4px;"><?php echo htmlspecialchars($contact['title']); ?></p>
+        <?php endif; ?>
+        <?php if (!empty($contact['account_name'])): ?>
+            <p class="text-muted" style="margin-top:2px;"><?php echo htmlspecialchars($contact['account_name']); ?></p>
+        <?php endif; ?>
+    </div>
+    <div class="contact-actions">
+        <a href="/pages/contacts.php" class="btn btn-outline"><?php echo htmlspecialchars(__('Back')); ?></a>
+        <button class="btn btn-primary" onclick="editContact(<?php echo $contactId; ?>)"><?php echo htmlspecialchars(__('Edit')); ?></button>
     </div>
 </div>
 

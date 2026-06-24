@@ -294,10 +294,16 @@ include __DIR__ . '/../includes/header.php';
 
 <div class="page-header">
     <h1 class="page-title"><?php echo htmlspecialchars(__('Dashboard')); ?></h1>
-    <a href="/pages/leads.php?action=add" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <?php echo htmlspecialchars(__('Add New Lead')); ?>
-    </a>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="/pages/mini-guide.php" class="btn btn-outline btn-sm" title="Learn how to use the CRM">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Mini Guide
+        </a>
+        <a href="/pages/leads.php?action=add" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <?php echo htmlspecialchars(__('Add New Lead')); ?>
+        </a>
+    </div>
 </div>
 
 <!-- Stats Cards -->

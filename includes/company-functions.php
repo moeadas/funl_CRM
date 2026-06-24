@@ -190,10 +190,37 @@ function verifyEmailToken($token) {
             [$token]
         );
         
-        // Mark session as verified
+        // Mark session as verified IF the user is currently logged in
         if (!empty($_SESSION['user_id']) && $_SESSION['user_id'] == $verification['user_id']) {
             $_SESSION['email_verified'] = true;
         }
+        
+        // CRITICAL FIX: If the user is NOT logged in (clicked email link from inbox),
+        // we auto-login them so they don't see the "check your email" screen again.
+        // This reads the user's data and sets up the session automatically.
+        if (empty($_SESSION['user_id']) || $_SESSION['user_id'] != $verification['user_id']) {
+            $user = $db->query(
+                "SELECT user_id, username, email, full_name, role, status, company_id, is_super_admin, email_verified, language, must_change_password FROM users WHERE user_id = ?",
+                [$verification['user_id']]
+            )->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user && $user['status'] === 'Active') {
+                session_regenerate_id(true);
+                $_SESSION['user_id']        = $user['user_id'];
+                $_SESSION['username']       = $user['username'];
+                $_SESSION['email']          = $user['email'];
+                $_SESSION['full_name']      = $user['full_name'];
+                $_SESSION['role']           = $user['role'];
+                $_SESSION['is_super_admin'] = !empty($user['is_super_admin']);
+                $_SESSION['email_verified'] = !empty($user['email_verified']);
+                $_SESSION['language']       = $user['language'] ?? 'en';
+                if (!empty($user['company_id'])) {
+                    $_SESSION['company_id'] = $user['company_id'];
+                }
+                $_SESSION['must_change_password'] = !empty($user['must_change_password']);
+            }
+        }
+        
         return ['success' => true, 'message' => 'Email verified successfully!'];
         
     } catch (Exception $e) {
