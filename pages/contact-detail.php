@@ -95,7 +95,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-.contact-detail { max-width: 1200px; margin: 0 auto; }
+/* Removed: .contact-detail wrapper — now uses standard .main-content layout */
 .contact-header { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow-xs); }
 .contact-header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
 .contact-detail-name { font-size: 24px; font-weight: 700; color: var(--color-text); margin: 0; }
@@ -135,13 +135,11 @@ require_once __DIR__ . '/../includes/header.php';
 .empty-state { text-align: center; padding: 32px; color: var(--color-text-muted); font-size: 14px; }
 </style>
 
-<div class="contact-detail">
-    <div class="contact-header">
-        <div class="contact-header-top">
-            <div>
-                <h1 class="contact-detail-name"><?php echo htmlspecialchars($contact['first_name'] . ' ' . $contact['last_name']); ?></h1>
-                <?php if ($contact['title']): ?>
-                    <div class="contact-title"><?php echo htmlspecialchars($contact['title']); ?></div>
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><?php echo htmlspecialchars($contact['first_name'] . ' ' . $contact['last_name']); ?></h1>
+        <?php if ($contact['title']): ?>
+            <p class="text-muted" style="margin-top:4px;"><?php echo htmlspecialchars($contact['title']); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($contact['account_name'])): ?>
                     <div class="contact-title"><?php echo htmlspecialchars($contact['account_name']); ?></div>
@@ -150,10 +148,12 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="contact-actions">
                 <a href="/pages/contacts.php" class="btn btn-outline"><?php echo htmlspecialchars(__('Back')); ?></a>
                 <button class="btn btn-primary" onclick="editContact(<?php echo $contactId; ?>)"><?php echo htmlspecialchars(__('Edit')); ?></button>
-            </div>
-        </div>
+    </div>
+</div>
 
-        <div class="contact-meta">
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-body">
+        <div class="contact-meta"
             <?php if ($contact['email']): ?>
                 <div class="contact-meta-item">
                     <span>📧</span>
@@ -211,9 +211,10 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php echo __('Add Deal'); ?>
             </a>
         </div>
-    </div>
+        </div>
+</div>
 
-    <div class="contact-grid">
+<div class="contact-grid">
         <div class="contact-main">
             <!-- Contact Info -->
             <div class="card">

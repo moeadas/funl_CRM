@@ -159,14 +159,29 @@ function exportCSV($db, $scope, $companyId) {
             ORDER BY vc.created_at DESC
         ", [$companyId]);
 
-        // Create tar.gz archive
+        // Create tar.gz archive — only include non-empty CSV files (skip empty sheets)
         $tarFile = sys_get_temp_dir() . '/wl_crm_export_' . date('Y-m-d_His') . '.tar';
         $targzFile = $tarFile . '.gz';
 
         $phar = new PharData($tarFile);
+        $addedFiles = 0;
         foreach (glob($tmpDir . '/*.csv') as $csvFile) {
-            $phar->addFile($csvFile, basename($csvFile));
+            // Check if file has more than just the header row (at least 2 lines = header + data)
+            $lineCount = 0;
+            $fh = fopen($csvFile, 'r');
+            while (fgets($fh) !== false) { $lineCount++; if ($lineCount >= 2) break; }
+            fclose($fh);
+            if ($lineCount >= 2) {
+                $phar->addFile($csvFile, basename($csvFile));
+                $addedFiles++;
+            }
         }
+        
+        // If no files had data, create a single empty leads.csv with headers
+        if ($addedFiles === 0) {
+            $phar->addFile($tmpDir . '/leads.csv', 'leads.csv');
+        }
+        
         $phar->compress(Phar::GZ);
 
         // Remove the uncompressed tar

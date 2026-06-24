@@ -37,13 +37,26 @@ $salesReps = [];
 if ($isManager) {
     try {
         $db = Database::getInstance();
-        $salesReps = $db->query("SELECT user_id, full_name, role FROM users WHERE status = 'Active' ORDER BY full_name")->fetchAll();
+        $salesReps = $db->query("SELECT user_id, full_name, role FROM users WHERE status = 'Active' AND company_id = ? ORDER BY full_name", [$companyId])->fetchAll();
     } catch (Exception $e) { /* skip */ }
 }
 
 // Build WHERE clauses for leads and interactions based on filters
+// CRITICAL: Scope all queries to company_id to prevent cross-tenant data leakage
 $leadWhere = "1=1";
 $intWhere  = "1=1";
+
+// Add company_id filter for non-super-admins (super admins see all companies)
+if (!$isSuperAdmin && $companyId) {
+    $leadWhere .= " AND l.company_id = ?";
+    $leadParams[] = $companyId;
+    $intWhere .= " AND EXISTS (SELECT 1 FROM leads l WHERE l.lead_id = i.lead_id AND l.company_id = ?)";
+    $intParams[] = $companyId;
+} elseif (!$isSuperAdmin) {
+    // No company_id and not super admin = security error, return nothing
+    $leadWhere = "1=0";
+    $intWhere = "1=0";
+}
 $leadParams = [];
 $intParams  = [];
 

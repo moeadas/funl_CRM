@@ -211,6 +211,24 @@ require_once __DIR__ . '/../includes/header.php';
                 </h3>
             </div>
             <div class="card-body">
+                <!-- Reminder for users about recommended fields (not mandatory) -->
+                <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div style="font-size:13px;color:#92400e;line-height:1.5;">
+                        <strong>Reminder:</strong> For best results, include <strong>Name</strong> (contact_person), <strong>Phone</strong>, and <strong>Email</strong> columns in your file.
+                        These are not mandatory, but having them ensures your leads have proper contact information.
+                    </div>
+                </div>
+                
+                <!-- Download Template Button -->
+                <div style="margin-bottom:16px;">
+                    <button type="button" class="btn btn-outline" onclick="downloadTemplate()" style="display:inline-flex;align-items:center;gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download CSV Template
+                    </button>
+                    <small style="display:block;color:var(--color-text-muted);font-size:11px;margin-top:4px;">Pre-formatted template with all supported columns and a sample row.</small>
+                </div>
+                
                 <form id="importForm" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:14px;">
                     <input type="hidden" id="importCsrf" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
                     <div>
@@ -341,6 +359,24 @@ Globex,Jane Doe,jane@globex.com,,+44 20 7946,UK,London,Referral,Contacted,Met at
 </style>
 
 <script>
+
+/**
+ * Generate and download a CSV template with all supported columns + sample row
+ * Helps users format their import file correctly
+ */
+function downloadTemplate() {
+    var headers = ["company_name","contact_person","email","phone","mobile","country","city","address","website","industry","lead_source","lead_status","priority","title_position","notes"];
+    var sampleRow = ["Acme Corp","John Smith","john@acme.com","+1 5551234567","+1 5559876543","United States","New York","123 Main St","https://acme.com","Technology","Website","New Lead","Medium","CEO","Follow up next week"];
+    var csv = headers.join(",") + "\n" + sampleRow.map(function(v) { return /\"/.test(v) ? """ + v.replace(/\"/g, """") + """ : """ + v + """; }).join(",");
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "leads_import_template.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 function switchTab(name) {
     document.querySelectorAll('.ie-tab-pane').forEach(function(p) { p.style.display = 'none'; });
     document.querySelectorAll('.ie-tab').forEach(function(t) { t.classList.remove('active'); });

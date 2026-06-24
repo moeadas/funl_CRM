@@ -32,10 +32,14 @@ if (!$companyId) {
 }
 
 if ($action === 'list' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    if ($companyId) {
+    // CRITICAL: Scope to user's company only. Super admins see all users.
+    if (isSuperAdmin()) {
+        $users = $db->query("SELECT user_id, username, email, full_name, role, status FROM users WHERE status = 'Active' ORDER BY full_name")->fetchAll();
+    } elseif ($companyId) {
         $users = $db->query("SELECT user_id, username, email, full_name, role, status FROM users WHERE company_id = ? AND status = 'Active' ORDER BY full_name", [$companyId])->fetchAll();
     } else {
-        $users = $db->query("SELECT user_id, username, email, full_name, role, status FROM users WHERE status = 'Active' ORDER BY full_name")->fetchAll();
+        // No company_id = no users (security guard)
+        $users = [];
     }
     jsonSuccess('Users loaded', ['users' => $users]);
 }

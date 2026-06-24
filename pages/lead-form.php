@@ -353,9 +353,11 @@ function loadUsers() {
     return fetch('/api/users.php?action=list', { credentials: 'same-origin' })
     .then(r => r.json())
     .then(data => {
-        if (data.success && data.users) {
+        // API returns {success: true, data: {users: [...]}}
+        var users = data.users || (data.data && data.data.users) || [];
+        if (data.success && users.length) {
             var select = document.getElementById('assignedTo');
-            data.users.forEach(function(u) {
+            users.forEach(function(u) {
                 select.innerHTML += '<option value="' + u.user_id + '">' + escapeHtml(u.full_name || u.email) + '</option>';
             });
         }

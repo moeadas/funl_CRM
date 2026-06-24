@@ -251,10 +251,17 @@ function getLeadsList($db, $currentUser) {
         $where[] = 'l.converted_contact_id IS NULL';
     }
 
-    // Tenant isolation: scope by company_id
-    if (!empty($currentUser['company_id'])) {
+    // CRITICAL SECURITY: Tenant isolation — scope by company_id.
+    // Super admins have no company_id, so they see all leads (platform-wide).
+    // All other users MUST be filtered to their company only.
+    if (!empty($currentUser['is_super_admin'])) {
+        // Super admin: no company filter (can see all)
+    } elseif (!empty($currentUser['company_id'])) {
         $where[]  = 'l.company_id = ?';
         $params[] = $currentUser['company_id'];
+    } else {
+        // No company_id and not super admin = security error, return nothing
+        $where[] = '1=0';
     }
 
     if (!empty($_GET['status'])) {

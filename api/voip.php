@@ -473,11 +473,13 @@ function getCallStats() {
             $params = [$userId, $userId];
         } else {
             $companyId = $_SESSION['company_id'] ?? null;
+            // CRITICAL: If no company_id and not super admin, return empty (not all data)
             if ($companyId) {
                 $filter = "WHERE lead_id IN (SELECT lead_id FROM leads WHERE company_id = ?)";
                 $params = [$companyId];
             } else {
-                $filter = "WHERE 1=1";
+                // No company context = no data (super admins are handled by isSuperAdmin check elsewhere)
+                $filter = "WHERE 1=0";
                 $params = [];
             }
         }

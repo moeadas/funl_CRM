@@ -177,9 +177,10 @@ function verifyEmailToken($token) {
             return ['success' => false, 'message' => 'Invalid or expired verification link.'];
         }
         
-        // Update user
+        // Update user — set BOTH email_verified (boolean flag) and email_verified_at (timestamp)
+        // CRITICAL: email_verified must be set to 1 so authenticateUser() recognizes the verification
         $db->query(
-            "UPDATE users SET email_verified_at = NOW() WHERE user_id = ?",
+            "UPDATE users SET email_verified = 1, email_verified_at = NOW() WHERE user_id = ?",
             [$verification['user_id']]
         );
         
