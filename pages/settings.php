@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'save_settings') {
         $keysToSave = [
             'app_name', 'company_name', 'company_email', 'company_phone', 'company_website', 'company_address',
-            'timezone', 'date_format', 'records_per_page',
+            'timezone', 'date_format', 'records_per_page', 'hidden_tabs',
             'voip_enabled', 'voip_recording_enabled', 'twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number', 'twilio_twiml_app_sid',
             'whatsapp_enabled', 'whatsapp_from_number', 'whatsapp_sandbox_mode',
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption',
@@ -60,6 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Convert toggles to 1/0
                 if (in_array($key, ['voip_enabled', 'voip_recording_enabled', 'whatsapp_enabled', 'whatsapp_sandbox_mode'])) {
                     $value = ($value === 'on' || $value === '1') ? '1' : '0';
+                }
+                
+                // Handle hidden_tabs: convert array of checkboxes to comma-separated string
+                if ($key === 'hidden_tabs') {
+                    $tabsArray = $_POST['hidden_tabs'] ?? [];
+                    $value = is_array($tabsArray) ? implode(',', $tabsArray) : '';
                 }
 
                 // H-4 fix: encrypt sensitive fields on write. If the field is empty
@@ -212,6 +218,8 @@ include __DIR__ . '/../includes/header.php';
     <?php endif; ?>
     <div class="tab-link" data-tab="custom_fields" onclick="switchTab('custom_fields')"><?php echo htmlspecialchars(__('Custom Lead Fields')); ?></div>
     <div class="tab-link" data-tab="subscription" onclick="switchTab('subscription')"><?php echo htmlspecialchars(__('Subscription')); ?></div>
+    <div class="tab-link" data-tab="visibility" onclick="switchTab('visibility')"><?php echo htmlspecialchars(__("Tab Visibility")); ?></div>
+
 </div>
 
 <form method="POST" enctype="multipart/form-data" id="settingsForm" onsubmit="var p=document.getElementById('company_phone_full');if(p){var inp=document.getElementById('company_phone');if(inp)inp.value=p.value;}">
@@ -633,6 +641,52 @@ include __DIR__ . '/../includes/header.php';
                 <a href="/pages/billing.php" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:#667eea;color:white;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;">
                     Manage Subscription →
                 </a>
+            </div>
+        </div>
+        
+        <!-- Tab: Tab Visibility — Control which sidebar tabs are visible to users -->
+        <div class="tab-pane" id="pane-visibility">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Tab Visibility</h3></div>
+                <div class="card-body">
+                    <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;">
+                        Hide sidebar tabs that your team doesn't use. Hidden tabs remain accessible via direct URL but won't appear in the navigation menu.
+                    </p>
+                    <?php
+                    // Define all toggleable tabs with their labels
+                    $toggleableTabs = [
+                        'proposals' => 'Proposals',
+                        'pipeline' => 'Pipeline',
+                        'tickets' => 'Support',
+                        'interactions' => 'Interactions',
+                        'export' => 'Export Data',
+                        'email-campaigns' => 'Email Campaigns',
+                        'email-templates' => 'Templates',
+                        'email-lists' => 'Email Audiences',
+                        'webforms' => 'Web Forms',
+                        'voip-dashboard' => 'VoIP Calls',
+                        'whatsapp-dashboard' => 'WhatsApp',
+                        'products' => 'Products',
+                        'automation' => 'Automation',
+                        'documents' => 'Knowledge Hub',
+                    ];
+                    // Parse current hidden tabs from settings (stored as comma-separated string)
+                    $hiddenTabs = array_filter(array_map('trim', explode(',', $settings['hidden_tabs'] ?? '')));
+                    ?>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:12px;">
+                        <?php foreach ($toggleableTabs as $tabKey => $tabLabel): ?>
+                        <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;transition:all 0.15s;">
+                            <input type="checkbox" name="hidden_tabs[]" value="<?php echo $tabKey; ?>"
+                                <?php echo in_array($tabKey, $hiddenTabs) ? 'checked' : ''; ?>
+                                style="width:18px;height:18px;cursor:pointer;">
+                            <span style="font-size:14px;"><?php echo htmlspecialchars(__($tabLabel)); ?></span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <p style="font-size:12px;color:var(--color-text-muted);margin-top:14px;">
+                        Checked tabs will be hidden from the sidebar for all users in your company.
+                    </p>
+                </div>
             </div>
         </div>
         

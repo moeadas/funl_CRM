@@ -44,6 +44,15 @@ function requireLogin() {
         header('Location: /login.php');
         exit;
     }
+    // CRITICAL SECURITY: Non-super-admin users MUST have a company_id.
+    // Without it, queries fall through to unscoped SELECTs that leak data
+    // across all companies. This guard prevents that.
+    if (!isSuperAdmin() && empty($_SESSION['company_id'])) {
+        session_unset();
+        $_SESSION['error'] = 'Your account is not linked to a company. Please contact support.';
+        header('Location: /login.php');
+        exit;
+    }
     // Require email verification (skip for super admins)
     requireEmailVerified();
     // H-8: enforce password change for flagged users (skips super admins)

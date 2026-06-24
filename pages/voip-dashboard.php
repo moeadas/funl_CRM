@@ -54,12 +54,17 @@ try {
 }
 
 // ─── Role-based filters ───
+// CRITICAL: All queries MUST be scoped to the user's company_id to prevent data leakage
+$companyId = getCurrentCompanyId();
+
 if ($isSalesRep) {
-    $statsFilter = "AND (vc.user_id = $currentUserId OR vc.lead_id IN (SELECT lead_id FROM leads WHERE assigned_to = $currentUserId))";
-    $callFilter  = "AND (vc.user_id = $currentUserId OR vc.lead_id IN (SELECT lead_id FROM leads WHERE assigned_to = $currentUserId))";
+    // Sales Reps: only see calls they made or calls on leads assigned to them
+    $statsFilter = "AND (vc.user_id = $currentUserId OR vc.lead_id IN (SELECT lead_id FROM leads WHERE assigned_to = $currentUserId AND company_id = " . intval($companyId) . "))";
+    $callFilter  = "AND (vc.user_id = $currentUserId OR vc.lead_id IN (SELECT lead_id FROM leads WHERE assigned_to = $currentUserId AND company_id = " . intval($companyId) . "))";
 } else {
-    $statsFilter = '';
-    $callFilter  = '';
+    // Managers/Admins: see all calls within their company only
+    $statsFilter = "AND vc.lead_id IN (SELECT lead_id FROM leads WHERE company_id = " . intval($companyId) . ")";
+    $callFilter  = "AND vc.lead_id IN (SELECT lead_id FROM leads WHERE company_id = " . intval($companyId) . ")";
 }
 
 // ─── Stats ───

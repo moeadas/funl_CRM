@@ -34,7 +34,8 @@ if ($isSalesRep) {
         $stmt = $db->prepare("SELECT COUNT(*) as total FROM leads WHERE company_id = ?");
         $stmt->execute([$companyId]);
     } else {
-        $stmt = $db->query("SELECT COUNT(*) as total FROM leads");
+        // Only super admins reach this fallback — all others are blocked by requireLogin()
+    $stmt = $db->query("SELECT COUNT(*) as total FROM leads");
     }
 }
 $stats['total_leads'] = $stmt->fetch()['total'];
@@ -48,6 +49,7 @@ if ($isSalesRep) {
         $stmt = $db->prepare("SELECT lead_status, COUNT(*) as count FROM leads WHERE company_id = ? GROUP BY lead_status");
         $stmt->execute([$companyId]);
     } else {
+        // Super admin fallback — sees all companies
         $stmt = $db->query("SELECT lead_status, COUNT(*) as count FROM leads GROUP BY lead_status");
     }
 }
