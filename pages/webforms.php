@@ -113,7 +113,7 @@ function renderForms(forms) {
 
 function copyEmbedCode(formId) {
     const embedUrl = `${window.location.origin}/pages/form-embed.php?id=${formId}`;
-    const iframeCode = `<iframe src="${embedUrl}" width="100%" height="600" style="border:none; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08);"></iframe>`;
+    const iframeCode = `<iframe src="${embedUrl}" width="100%" height="600" style="border:none; background:transparent;"></iframe>`;
 
     navigator.clipboard.writeText(iframeCode)
         .then(() => {
