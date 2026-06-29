@@ -95,6 +95,11 @@ const USER_ROLE = <?= json_encode($userRole) ?>;
 const CSRF_TOKEN = <?= json_encode($_SESSION['csrf_token'] ?? '') ?>;
 const API = '/api/contacts.php';
 
+// UX: inline SVG action icons (replace emoji for accessibility + consistency).
+// aria-hidden on the SVG itself; the parent <button> carries the aria-label.
+const ICON_EDIT = '<svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+const ICON_TRASH = '<svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+
 let contacts = [];
 let accounts = [];
 
@@ -162,8 +167,8 @@ tbody.innerHTML = contacts.map(c => {
         <td>${tags || '-'}</td>
         <td><span class="status-badge ${statusClass}">${escapeHtml(__(c.contact_status || 'Active'))}</span></td>
         <td><div class="action-btns" onclick="event.stopPropagation()">
-        <button onclick="window.location.href='/pages/contact-form.php?id=${c.contact_id}'" title="${escapeHtml(__('Edit'))}">✏️</button>
-        <button onclick="deleteContact(${c.contact_id})" title="${escapeHtml(__('Delete'))}">🗑️</button>
+        <button class="icon-btn" onclick="window.location.href='/pages/contact-form.php?id=${c.contact_id}'" title="${escapeHtml(__('Edit'))}" aria-label="${escapeHtml(__('Edit'))}">${ICON_EDIT}</button>
+        <button class="icon-btn icon-btn-danger" onclick="deleteContact(${c.contact_id})" title="${escapeHtml(__('Delete'))}" aria-label="${escapeHtml(__('Delete'))}">${ICON_TRASH}</button>
         </div></td>
     </tr>`;
 }).join('');
@@ -215,7 +220,7 @@ if (!accounts.length) {
 }
 grid.innerHTML = accounts.map(a => `
     <div class="account-card" onclick="window.location.href='/pages/account-form.php?id=${a.account_id}'">
-        <button class="card-delete-btn" onclick="event.stopPropagation(); deleteAccount(${a.account_id})" title="${escapeHtml(__('Delete Account'))}">🗑️</button>
+        <button class="card-delete-btn icon-btn icon-btn-danger" onclick="event.stopPropagation(); deleteAccount(${a.account_id})" title="${escapeHtml(__('Delete Account'))}" aria-label="${escapeHtml(__('Delete Account'))}">${ICON_TRASH}</button>
         <div class="account-card-header">
         <div class="account-name">${escapeHtml(a.account_name)}</div>
         <div class="account-type">${escapeHtml(__(a.account_type || 'Customer'))}</div>

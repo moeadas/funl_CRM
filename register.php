@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         $rateDir = sys_get_temp_dir() . '/wlrm_rate';
         if (!is_dir($rateDir)) @mkdir($rateDir, 0755, true);
-        $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $clientIp = getClientIP(); // L-3: trusted-proxy-aware IP, not spoofable raw header
         $rateKey  = 'register_' . preg_replace('/[^a-f0-9.:]/i', '', $clientIp);
         $rateFile = $rateDir . '/' . $rateKey . '.json';
         $now = time();

@@ -53,7 +53,7 @@ function trackLeadSource($db, $companyId, $sourceValue) {
 // so we rely on IP-based limiting since there is no user/session.
 $rateDir = sys_get_temp_dir() . '/wlrm_rate';
 if (!is_dir($rateDir)) @mkdir($rateDir, 0755, true);
-$clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$clientIp = getClientIP(); // L-3: use trusted-proxy-aware IP, not spoofable raw header
 $rateKey  = 'formsubmit_' . preg_replace('/[^a-f0-9.:]/i', '', $clientIp);
 $rateFile = $rateDir . '/' . $rateKey . '.json';
 $now = time();
