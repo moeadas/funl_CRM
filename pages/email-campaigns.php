@@ -9,7 +9,7 @@ requireLogin();
 requireRole('Sales Manager');
 
 $csrfToken = generateCSRFToken();
-$db = Database::getInstance()->getConnection();
+$db = Database::getInstance();
 
 // Get campaigns — scoped to company_id to prevent cross-tenant data access
 $companyId = intval($_SESSION['company_id'] ?? 0);
