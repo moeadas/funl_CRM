@@ -9,7 +9,7 @@ requireLogin();
 requireRole('Sales Manager');
 
 $csrfToken = generateCSRFToken();
-$db = Database::getInstance()->getConnection();
+$db = Database::getInstance();
 
 $companyId = intval($_SESSION['company_id'] ?? 0);
 $lists = $db->query("SELECT el.*, u.full_name as creator, 
