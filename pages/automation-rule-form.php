@@ -24,8 +24,10 @@ if ($ruleId) {
     }
 }
 
-// Fetch active users for the dropdown
-$users = $db->query("SELECT user_id, full_name FROM users WHERE company_id = $companyId AND status = 'Active'")->fetchAll(PDO::FETCH_ASSOC);
+// Fetch active users for the dropdown (parameterized — H-1 fix)
+$usersStmt = $db->prepare("SELECT user_id, full_name FROM users WHERE company_id = ? AND status = 'Active'");
+$usersStmt->execute([$companyId]);
+$users = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $csrfToken = generateCSRFToken();
 $pageTitle = $ruleId ? __('Edit Automation Rule') : __('New Automation Rule');
@@ -116,9 +118,15 @@ include '../includes/header.php';
 </div>
 
 <script>
-const CSRF_TOKEN = '<?php echo $csrfToken; ?>';
-const USERS = <?php echo json_encode($users); ?>;
-const RULE_CONFIG = <?php echo $rule ? $rule['action_config'] : 'null'; ?>;
+const CSRF_TOKEN = <?php echo json_encode($csrfToken); ?>;
+const USERS = <?php echo json_encode($users, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+<?php
+// M-2 fix: decode the stored config and re-encode with JSON_HEX_* flags so it
+// cannot break out of this <script> block (prevents stored XSS). Falls back to
+// null if the stored value is not valid JSON.
+$ruleConfigDecoded = $rule ? json_decode($rule['action_config'] ?? 'null', true) : null;
+?>
+const RULE_CONFIG = <?php echo json_encode($ruleConfigDecoded, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
 const API = '/api/automation.php';
 
 document.addEventListener('DOMContentLoaded', function() {

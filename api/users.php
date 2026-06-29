@@ -13,6 +13,7 @@ requireLogin();
 $action = $_GET['action'] ?? '';
 $db = Database::getInstance();
 $currentUser = getCurrentUser();
+$userId = $currentUser['user_id'] ?? 0; // M-4 fix: was undefined, breaking the recovery branch below
 $companyId = $_SESSION["company_id"] ?? null;
 
 // Auto-recover company_id if session is stale

@@ -11,17 +11,82 @@ header('X-XSS-Protection: 1; mode=block');
 header('Referrer-Policy: strict-origin-when-crossorigin');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 }
+/**
+ * L-3 fix: only trust X-Forwarded-For / X-Real-IP when the direct peer
+ * (REMOTE_ADDR) is a known/trusted proxy. Otherwise an attacker can spoof
+ * these headers to forge their IP and bypass IP-based rate limiting on
+ * login, registration, password reset, and public webhooks.
+ *
+ * Configure trusted proxies via the TRUSTED_PROXIES env var (comma-separated
+ * IPs or CIDR ranges). When unset, ONLY REMOTE_ADDR is trusted (safe default).
+ * Loopback/private ranges are trusted as proxies by default since a typical
+ * Apache/nginx reverse proxy sits in front on the same host/LAN.
+ */
+function isTrustedProxy(string $remoteAddr): bool {
+    $trusted = getenv('TRUSTED_PROXIES');
+    if ($trusted !== false && trim($trusted) !== '') {
+        foreach (array_map('trim', explode(',', $trusted)) as $entry) {
+            if ($entry === '') continue;
+            if (ipInCidr($remoteAddr, $entry)) return true;
+        }
+        return false;
+    }
+    // Default: trust loopback + RFC1918 private ranges (same-host/LAN proxy).
+    $defaults = ['127.0.0.0/8', '::1/128', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'];
+    foreach ($defaults as $cidr) {
+        if (ipInCidr($remoteAddr, $cidr)) return true;
+    }
+    return false;
+}
+
+/**
+ * Check whether an IP is inside a CIDR range (supports a bare IP as /32 //128).
+ */
+function ipInCidr(string $ip, string $cidr): bool {
+    if (strpos($cidr, '/') === false) {
+        return $ip === $cidr; // exact match
+    }
+    [$subnet, $maskLen] = explode('/', $cidr, 2);
+    $maskLen = (int)$maskLen;
+    $ipBin = @inet_pton($ip);
+    $subnetBin = @inet_pton($subnet);
+    if ($ipBin === false || $subnetBin === false) return false;
+    if (strlen($ipBin) !== strlen($subnetBin)) return false; // mixed v4/v6
+    $bytes = intdiv($maskLen, 8);
+    $bits  = $maskLen % 8;
+    if ($bytes > 0 && strncmp($ipBin, $subnetBin, $bytes) !== 0) return false;
+    if ($bits === 0) return true;
+    $mask = chr(0xff << (8 - $bits) & 0xff);
+    return (($ipBin[$bytes] & $mask) === ($subnetBin[$bytes] & $mask));
+}
+
 function getClientIP(): string {
-$ip = '';
-if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-$ip = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
-} elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-$ip = trim($_SERVER['HTTP_X_REAL_IP']);
-} elseif (!empty($_SERVER['REMOTE_ADDR'])) {
-$ip = $_SERVER['REMOTE_ADDR'];
+    $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+    $ip = $remoteAddr;
+
+    // Only consult forwarding headers if the direct peer is a trusted proxy.
+    if ($remoteAddr !== '' && isTrustedProxy($remoteAddr)) {
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            // Take the left-most (original client) entry.
+            $candidate = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+            if (filter_var($candidate, FILTER_VALIDATE_IP)) $ip = $candidate;
+        } elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
+            $candidate = trim($_SERVER['HTTP_X_REAL_IP']);
+            if (filter_var($candidate, FILTER_VALIDATE_IP)) $ip = $candidate;
+        }
+    }
+
+    return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0';
 }
-return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0';
-}
+/**
+ * Simple file-based fixed-window rate limiter.
+ *
+ * L-8 NOTE: state is stored on the local filesystem (system temp dir), so it is
+ * PER-APP-SERVER. Correct for single-host shared hosting (the intended target).
+ * Behind a multi-node load balancer, replace the file store with a shared
+ * Redis/DB backend (or use sticky sessions) so limits are enforced globally.
+ * See TRUSTED_PROXIES / "Rate Limiting Backend" in config/.env.example.
+ */
 function rateLimit(string $key, int $maxAttempts, int $windowSeconds, ?string $ip = null): bool {
 $ip = $ip ?: getClientIP();
 $cacheDir = sys_get_temp_dir() . '/wlrm_rate';

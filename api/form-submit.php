@@ -53,7 +53,7 @@ function trackLeadSource($db, $companyId, $sourceValue) {
 // so we rely on IP-based limiting since there is no user/session.
 $rateDir = sys_get_temp_dir() . '/wlrm_rate';
 if (!is_dir($rateDir)) @mkdir($rateDir, 0755, true);
-$clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$clientIp = getClientIP(); // L-3: use trusted-proxy-aware IP, not spoofable raw header
 $rateKey  = 'formsubmit_' . preg_replace('/[^a-f0-9.:]/i', '', $clientIp);
 $rateFile = $rateDir . '/' . $rateKey . '.json';
 $now = time();
@@ -219,7 +219,13 @@ try {
             // user_id=0 doesn't exist.
             $taskOwner = (int)($form['created_by'] ?? 0);
             if (!$taskOwner) {
-                $taskOwner = (int)($lead['assigned_to'] ?? 0);
+                // L-4 fix: $lead was undefined here. Read the lead's current
+                // assigned_to (an earlier assign_user rule may have set it).
+                $assignedTo = $db->query(
+                    "SELECT assigned_to FROM leads WHERE lead_id = ?",
+                    [$leadId]
+                )->fetchColumn();
+                $taskOwner = (int)($assignedTo ?: 0);
             }
             if (!$taskOwner) {
                 $taskOwner = 1; // System user as last resort
