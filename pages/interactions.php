@@ -398,13 +398,13 @@ $followUpUrl = '?' . http_build_query(array_merge($baseQuery, ['follow_up' => '1
                     <?php if ($totalPages > 1): ?>
                     <div class="pagination" style="margin:0;padding:16px;border-top:1px solid var(--color-border-light);">
                         <?php if ($page > 1): ?>
-                            <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>">&laquo;</a>
+                            <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['page' => $page - 1])), ENT_QUOTES); ?>">&laquo;</a>
                         <?php endif; ?>
                         <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
-                            <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>" class="<?php echo $i === $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                            <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['page' => $i])), ENT_QUOTES); ?>" class="<?php echo $i === $page ? 'active' : ''; ?>"><?php echo (int)$i; ?></a>
                         <?php endfor; ?>
                         <?php if ($page < $totalPages): ?>
-                            <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>">&raquo;</a>
+                            <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['page' => $page + 1])), ENT_QUOTES); ?>">&raquo;</a>
                         <?php endif; ?>
                     </div>
                     <?php endif; ?>

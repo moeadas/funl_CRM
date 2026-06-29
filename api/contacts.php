@@ -323,7 +323,13 @@ if ($action === 'create_tag' && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     $tagName = sanitizeInput($input['tag_name'] ?? '');
-    $tagColor = sanitizeInput($input['tag_color'] ?? '#6b7280');
+    // M-3 fix: only accept a valid #RGB / #RRGGBB hex color, else fall back to
+    // the default. Prevents CSS/style injection when the color is later
+    // interpolated into a style="" attribute on the client.
+    $tagColor = $input['tag_color'] ?? '#6b7280';
+    if (!preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', (string)$tagColor)) {
+        $tagColor = '#6b7280';
+    }
     
     if (empty($tagName)) jsonError('Tag name required');
     
@@ -343,6 +349,16 @@ if ($action === 'delete_tag' && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     $tagId = (int)($input['tag_id'] ?? 0);
+
+    // H-3 fix: verify the tag belongs to this company BEFORE touching the
+    // tag map. Previously the map delete ran unconditionally, letting a user
+    // wipe another tenant's tag associations by guessing a tag_id.
+    $ownTag = $db->query(
+        "SELECT tag_id FROM contact_tags WHERE tag_id = ? AND company_id = ?",
+        [$tagId, $companyId]
+    )->fetch();
+    if (!$ownTag) jsonError('Tag not found');
+
     $db->query("DELETE FROM contact_tag_map WHERE tag_id = ?", [$tagId]);
     $db->query("DELETE FROM contact_tags WHERE tag_id = ? AND company_id = ?", [$tagId, $companyId]);
     jsonSuccess('Tag deleted');

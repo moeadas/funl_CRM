@@ -493,8 +493,13 @@ function verifyCSRFTokenWithExpiry(?string $token = null) {
 }
 
 /**
- * Verify CSRF token — works for both POST forms and JSON API requests
- * (backward-compatible: does NOT check expiry)
+ * Verify CSRF token — works for both POST forms and JSON API requests.
+ *
+ * M-7 fix: this now delegates to verifyCSRFTokenWithExpiry() so ALL CSRF
+ * checks enforce the same 2-hour expiry window. Previously this variant
+ * skipped the expiry check, meaning some endpoints accepted very old tokens.
+ * The CSRF token is auto-rotated every 2 hours by generateCSRFToken(), so
+ * legitimate sessions transparently pick up a fresh token on the next page load.
  */
 function verifyCSRFToken(?string $token = null) {
     if ($token === null) {
@@ -506,7 +511,7 @@ function verifyCSRFToken(?string $token = null) {
             $token = $data['csrf_token'] ?? null;
         }
     }
-    return isset($_SESSION['csrf_token']) && $token !== null && hash_equals($_SESSION['csrf_token'], $token);
+    return verifyCSRFTokenWithExpiry($token);
 }
 
 /**

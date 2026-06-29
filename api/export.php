@@ -246,7 +246,10 @@ function exportCSV($db, $scope, $companyId) {
             return;
         }
 
-        $filename = 'wl_crm_' . $scope . '_' . date('Y-m-d_His') . '.csv';
+        // M-6: scope comes from $_GET — restrict to a safe slug so it can't
+        // inject CR/LF into the Content-Disposition header.
+        $scopeSlug = preg_replace('/[^a-z0-9_-]/i', '', (string)$scope);
+        $filename = 'wl_crm_' . $scopeSlug . '_' . date('Y-m-d_His') . '.csv';
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Cache-Control: no-cache');

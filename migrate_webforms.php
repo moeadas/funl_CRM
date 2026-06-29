@@ -3,6 +3,7 @@
  * White Label CRM - Migration: Public Web Forms
  */
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/migration-guard.php'; // H-2: block unauthenticated web access
 
 $db = Database::getInstance();
 

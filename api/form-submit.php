@@ -219,7 +219,13 @@ try {
             // user_id=0 doesn't exist.
             $taskOwner = (int)($form['created_by'] ?? 0);
             if (!$taskOwner) {
-                $taskOwner = (int)($lead['assigned_to'] ?? 0);
+                // L-4 fix: $lead was undefined here. Read the lead's current
+                // assigned_to (an earlier assign_user rule may have set it).
+                $assignedTo = $db->query(
+                    "SELECT assigned_to FROM leads WHERE lead_id = ?",
+                    [$leadId]
+                )->fetchColumn();
+                $taskOwner = (int)($assignedTo ?: 0);
             }
             if (!$taskOwner) {
                 $taskOwner = 1; // System user as last resort

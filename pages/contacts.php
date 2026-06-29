@@ -146,9 +146,10 @@ if (!contacts.length) {
     return;
 }
 tbody.innerHTML = contacts.map(c => {
-    const tags = c.tags ? c.tags.map(t => 
-        `<span class="tag" style="background:${t.tag_color}20;color:${t.tag_color}">${escapeHtml(t.tag_name)}</span>`
-    ).join('') : '';
+    const tags = c.tags ? c.tags.map(t => {
+        const col = safeColor(t.tag_color);
+        return `<span class="tag" style="background:${col}20;color:${col}">${escapeHtml(t.tag_name)}</span>`;
+    }).join('') : '';
     const statusClass = 'status-' + (c.contact_status || 'active').toLowerCase().replace(' ', '-');
     return `<tr onclick="window.location.href='/pages/contact-detail.php?id=${c.contact_id}'" style="cursor:pointer">
         <td>
@@ -252,6 +253,11 @@ if (!str) return '';
 const div = document.createElement('div');
 div.textContent = str;
 return div.innerHTML;
+}
+// M-3 fix: only allow valid hex colors into inline style; neutralize anything
+// else (defends against CSS/style injection from legacy/invalid stored values).
+function safeColor(c) {
+    return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c || '') ? c : '#6b7280';
 }
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

@@ -83,8 +83,11 @@ if (isset($_GET['download'])) {
             // Update download count
             $db->query("UPDATE company_documents SET download_count = download_count + 1 WHERE document_id = ?", [$docId]);
             
+            // M-6 fix: strip CR/LF/quotes from the filename to prevent HTTP
+            // header injection / response splitting via a crafted stored name.
+            $safeName = preg_replace('/[\r\n"]+/', '', (string)$doc['file_name']);
             header('Content-Type: application/octet-stream');
-            header('Content-Disposition: attachment; filename="' . $doc['file_name'] . '"');
+            header('Content-Disposition: attachment; filename="' . $safeName . '"');
             header('Content-Length: ' . filesize($fullPath));
             readfile($fullPath);
             exit;
