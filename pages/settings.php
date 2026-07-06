@@ -49,7 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email_from_name', 'email_from_address', 'email_reply_to', 'email_batch_size', 'email_batch_delay',
             'resend_api_key', 'resend_from_email',
             'ms_client_id', 'ms_tenant_id', 'ms_client_secret',
-            'tracking_head_code', 'tracking_body_code', 'preloader_code'
+            'tracking_head_code', 'tracking_body_code', 'preloader_code',
+            // Theme / Color Scheme
+            'theme_sidebar_bg', 'theme_bg', 'theme_surface', 'theme_border',
+            'theme_accent', 'theme_accent_hover',
+            'theme_text', 'theme_text_secondary',
+            'theme_success', 'theme_warning', 'theme_danger', 'theme_info',
+            // Fonts
+            'theme_font_heading', 'theme_font_body', 'theme_font_mono',
+            'theme_font_heading_ar', 'theme_font_body_ar'
         ];
 
         $pdo->beginTransaction();
@@ -210,6 +218,7 @@ include __DIR__ . '/../includes/header.php';
 <div class="tabs-nav">
     <div class="tab-link active" data-tab="general" onclick="switchTab('general')"><?php echo htmlspecialchars(__('Company Profile')); ?></div>
     <div class="tab-link" data-tab="branding" onclick="switchTab('branding')"><?php echo htmlspecialchars(__('App Branding')); ?></div>
+    <div class="tab-link" data-tab="theme" onclick="switchTab('theme')"><?php echo htmlspecialchars(__('Color Scheme & Fonts')); ?></div>
     <div class="tab-link" data-tab="voip" onclick="switchTab('voip')"><?php echo htmlspecialchars(__('VoIP & WhatsApp')); ?></div>
     <div class="tab-link" data-tab="smtp" onclick="switchTab('smtp')"><?php echo htmlspecialchars(__('SMTP & Email')); ?></div>
     <div class="tab-link" data-tab="integration" onclick="switchTab('integration')"><?php echo htmlspecialchars(__('Email Integration')); ?></div>
@@ -313,7 +322,233 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Tab: VoIP -->
+    <!-- Tab: Color Scheme & Fonts -->
+    <div class="tab-pane" id="pane-theme">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Color Scheme')); ?></h3></div>
+            <div class="card-body">
+                <p class="text-muted" style="margin-bottom:20px;font-size:13px;"><?php echo htmlspecialchars(__('Customize the colors of your CRM. Changes apply instantly across the app.')); ?></p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Sidebar Background')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_sidebar_bg" value="<?php echo htmlspecialchars($settings['theme_sidebar_bg'] ?? '#FDF8F1'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_sidebar_bg_text" value="<?php echo htmlspecialchars($settings['theme_sidebar_bg'] ?? '#FDF8F1'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Main Background')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_bg" value="<?php echo htmlspecialchars($settings['theme_bg'] ?? '#FBF3EA'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_bg_text" value="<?php echo htmlspecialchars($settings['theme_bg'] ?? '#FBF3EA'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Card/Surface Background')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_surface" value="<?php echo htmlspecialchars($settings['theme_surface'] ?? '#FDF8F1'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_surface_text" value="<?php echo htmlspecialchars($settings['theme_surface'] ?? '#FDF8F1'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Border Color')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_border" value="<?php echo htmlspecialchars($settings['theme_border'] ?? '#EBDFCE'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_border_text" value="<?php echo htmlspecialchars($settings['theme_border'] ?? '#EBDFCE'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
+
+                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Accent Colors')); ?></h4>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Primary Accent (Buttons, Links)')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_accent" value="<?php echo htmlspecialchars($settings['theme_accent'] ?? '#E89BB8'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_accent_text" value="<?php echo htmlspecialchars($settings['theme_accent'] ?? '#E89BB8'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Accent Hover Color')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_accent_hover" value="<?php echo htmlspecialchars($settings['theme_accent_hover'] ?? '#D2729A'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_accent_hover_text" value="<?php echo htmlspecialchars($settings['theme_accent_hover'] ?? '#D2729A'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
+
+                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Text Colors')); ?></h4>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Primary Text')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_text" value="<?php echo htmlspecialchars($settings['theme_text'] ?? '#1F1714'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_text_text" value="<?php echo htmlspecialchars($settings['theme_text'] ?? '#1F1714'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Secondary Text')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_text_secondary" value="<?php echo htmlspecialchars($settings['theme_text_secondary'] ?? '#6F5C54'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_text_secondary_text" value="<?php echo htmlspecialchars($settings['theme_text_secondary'] ?? '#6F5C54'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
+
+                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Status Colors')); ?></h4>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Success')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_success" value="<?php echo htmlspecialchars($settings['theme_success'] ?? '#5E8259'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_success_text" value="<?php echo htmlspecialchars($settings['theme_success'] ?? '#5E8259'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Warning')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_warning" value="<?php echo htmlspecialchars($settings['theme_warning'] ?? '#9A7A2C'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_warning_text" value="<?php echo htmlspecialchars($settings['theme_warning'] ?? '#9A7A2C'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Danger')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_danger" value="<?php echo htmlspecialchars($settings['theme_danger'] ?? '#C97A47'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_danger_text" value="<?php echo htmlspecialchars($settings['theme_danger'] ?? '#C97A47'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Info')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_info" value="<?php echo htmlspecialchars($settings['theme_info'] ?? '#4F7787'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_info_text" value="<?php echo htmlspecialchars($settings['theme_info'] ?? '#4F7787'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
+
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <button type="button" class="btn btn-outline" onclick="resetThemeDefaults()"><?php echo htmlspecialchars(__('Reset to Defaults')); ?></button>
+                    <span class="text-muted" style="font-size:12px;"><?php echo htmlspecialchars(__('Click Save Changes below to apply.')); ?></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:20px;">
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Fonts')); ?></h3></div>
+            <div class="card-body">
+                <p class="text-muted" style="margin-bottom:20px;font-size:13px;"><?php echo htmlspecialchars(__('Choose fonts for headings and body text. Supports English and Arabic Google Fonts.')); ?></p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Heading / Title Font (English)')); ?></label>
+                        <select name="theme_font_heading" class="form-control font-select">
+                            <?php
+                            $headingFonts = ['Plus Jakarta Sans','Roboto','Open Sans','Poppins','Inter','Montserrat','Nunito','DM Sans','Manrope','Sora','Outfit','Space Grotesk','Fraunces','Playfair Display','Lora','Merriweather','PT Serif','Crimson Pro','Libre Baskerville','Source Serif Pro'];
+                            $currentHeadingFont = $settings['theme_font_heading'] ?? 'Plus Jakarta Sans';
+                            foreach ($headingFonts as $f) {
+                                $sel = ($f === $currentHeadingFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Body / Text Font (English)')); ?></label>
+                        <select name="theme_font_body" class="form-control font-select">
+                            <?php
+                            $bodyFonts = ['Plus Jakarta Sans','Open Sans','Inter','Roboto','DM Sans','Manrope','Nunito','Poppins','Montserrat','Outfit','Space Grotesk','Sora','Source Sans Pro','PT Sans','Fira Sans','Work Sans','Karla','Mulish','Hind','Asap'];
+                            $currentBodyFont = $settings['theme_font_body'] ?? 'Plus Jakarta Sans';
+                            foreach ($bodyFonts as $f) {
+                                $sel = ($f === $currentBodyFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Heading / Title Font (Arabic)')); ?></label>
+                        <select name="theme_font_heading_ar" class="form-control font-select">
+                            <?php
+                            $arabicHeadingFonts = ['Default (follows English)','Cairo','Tajawal','Almarai','IBM Plex Sans Arabic','Noto Sans Arabic','Readex Pro','El Messiri','Lateef','Amiri','Reem Kufi','Scheherazade New','Markazi Text','Vazirmatn'];
+                            $currentArHeadingFont = $settings['theme_font_heading_ar'] ?? 'Default (follows English)';
+                            foreach ($arabicHeadingFonts as $f) {
+                                $sel = ($f === $currentArHeadingFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Body / Text Font (Arabic)')); ?></label>
+                        <select name="theme_font_body_ar" class="form-control font-select">
+                            <?php
+                            $arabicBodyFonts = ['Default (follows English)','Cairo','Tajawal','Almarai','IBM Plex Sans Arabic','Noto Sans Arabic','Readex Pro','El Messiri','Lateef','Amiri','Reem Kufi','Scheherazade New','Markazi Text','Vazirmatn'];
+                            $currentArBodyFont = $settings['theme_font_body_ar'] ?? 'Default (follows English)';
+                            foreach ($arabicBodyFonts as $f) {
+                                $sel = ($f === $currentArBodyFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
+
+                <div class="form-group">
+                    <label class="form-label"><?php echo htmlspecialchars__('Monospace / Label Font'); ?></label>
+                    <select name="theme_font_mono" class="form-control font-select">
+                        <?php
+                        $monoFonts = ['JetBrains Mono','Fira Code','Source Code Pro','IBM Plex Mono','Roboto Mono','Space Mono','Ubuntu Mono','Cascadia Code','Inconsolata','PT Mono'];
+                        $currentMonoFont = $settings['theme_font_mono'] ?? 'JetBrains Mono';
+                        foreach ($monoFonts as $f) {
+                            $sel = ($f === $currentMonoFont) ? ' selected' : '';
+                            echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                        }
+                        ?>
+                    </select>
+                    <p class="text-muted" style="font-size:11px;margin-top:4px;"><?php echo htmlspecialchars__('Used for badges, labels, numbers, and code.'); ?></p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        function resetThemeDefaults() {
+            var defaults = {
+                theme_sidebar_bg: '#FDF8F1', theme_bg: '#FBF3EA', theme_surface: '#FDF8F1',
+                theme_border: '#EBDFCE', theme_accent: '#E89BB8', theme_accent_hover: '#D2729A',
+                theme_text: '#1F1714', theme_text_secondary: '#6F5C54',
+                theme_success: '#5E8259', theme_warning: '#9A7A2C', theme_danger: '#C97A47', theme_info: '#4F7787'
+            };
+            Object.keys(defaults).forEach(function(key) {
+                var el = document.querySelector('[name="' + key + '"]');
+                if (el) { el.value = defaults[key]; var txt = document.querySelector('[name="' + key + '_text"]'); if (txt) txt.value = defaults[key]; }
+            });
+        }
+        </script>
+
+    <!-- Tab: VoIP -->
     <div class="tab-pane" id="pane-voip">
         <div class="card">
             <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Twilio Integration settings')); ?></h3></div>

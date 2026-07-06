@@ -308,7 +308,7 @@ include __DIR__ . '/../includes/header.php';
 
 <!-- Stats Cards -->
 <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card bg-orange">
         <div class="stat-icon bg-gradient-primary">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
@@ -318,7 +318,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card bg-green">
         <div class="stat-icon bg-gradient-success">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
@@ -329,7 +329,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card bg-blue">
         <div class="stat-icon bg-gradient-info">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         </div>
@@ -339,7 +339,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <div class="stat-card clickable-card" onclick="window.location='/pages/leads.php?follow_up=1'" style="cursor:pointer;">
+    <div class="stat-card bg-yellow clickable-card" onclick="window.location='/pages/leads.php?follow_up=1'" style="cursor:pointer;">
         <div class="stat-icon bg-gradient-warning">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         </div>
@@ -390,7 +390,7 @@ include __DIR__ . '/../includes/header.php';
 
 <!-- Email Marketing Stats -->
 <div class="stats-grid" style="margin-bottom:24px;">
-    <div class="stat-card">
+    <div class="stat-card bg-orange">
         <div class="stat-icon icon-accent">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </div>
@@ -399,7 +399,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="stat-value"><?php echo number_format($emailStats['campaigns']); ?></div>
         </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card bg-green">
         <div class="stat-icon icon-success">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
@@ -408,8 +408,8 @@ include __DIR__ . '/../includes/header.php';
             <div class="stat-value"><?php echo number_format($emailStats['sent']); ?></div>
         </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon icon-info">
+    <div class="stat-card bg-blue">
+        3cdiv class="stat-icon icon-info">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
         <div class="stat-content">
@@ -417,7 +417,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="stat-value"><?php echo number_format($emailStats['opened']); ?></div>
         </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card bg-yellow">
         <div class="stat-icon icon-warning">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </div>

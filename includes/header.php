@@ -39,6 +39,11 @@ $_userDir = ($_userLocale === 'ar') ? 'rtl' : 'ltr';
     <link rel="icon" href="<?php echo $_companyFavicon; ?>">
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/modal-system.css">
+    <?php
+    // Theme override — dynamic colors and fonts from settings
+    require_once __DIR__ . '/theme-override.php';
+    if (!empty($_SESSION['company_id'])) { includeThemeOverride(Database::getInstance(), $_SESSION['company_id']); }
+    ?>
     <?php if ($_userLocale === 'ar'): ?>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/assets/css/rtl.css">
