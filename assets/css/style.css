@@ -1,40 +1,44 @@
 /* ============================================
-   FUNL CRM — Apple-Style Design
-   Clean, minimalist, performance-first
+   FUNL CRM — Teal Design System
+   Based on FunL brand (Default.html)
    ============================================ */
 
 /* ─── Font ─── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,500,600,700%7CRoboto:400,500,700');
 
-/* ─── Design Tokens ─── */
+/* ─── Design Tokens — FunL Teal Design System ─── */
 :root {
-    --color-bg:       #f5f5f7;
+    --color-bg:       #f0f7f9;
     --color-surface:  #ffffff;
-    --color-border:   #e8e8ed;
-    --color-border-light: #f0f0f5;
-    --color-text:     #1d1d1f;
-    --color-text-secondary: #86868b;
-    --color-text-tertiary: #aeaeb2;
-    --color-accent:   #0071e3;
-    --color-accent-hover: #0077ed;
-    --color-accent-bg: rgba(0, 113, 227, 0.06);
-    --color-success:  #34c759;
-    --color-warning:  #ff9f0a;
-    --color-danger:   #ff3b30;
-    --color-info:     #5ac8fa;
-    --font-family:    'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    --color-border:   #d4e3e8;
+    --color-border-light: #e8f0f3;
+    --color-text:     #1a2e35;
+    --color-text-secondary: #5a7a85;
+    --color-text-tertiary: #8aa5b0;
+    --color-accent:   #226d7a;
+    --color-accent-hover: #1a5760;
+    --color-accent-bg: rgba(34, 109, 122, 0.08);
+    --color-accent-light: #22b8d1;
+    --color-success:  #2eaa6a;
+    --color-warning:  #e8941a;
+    --color-danger:   #d64545;
+    --color-info:     #22b8d1;
+    --font-family:    'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    --font-heading:   'Roboto', 'Open Sans', Arial, sans-serif;
     --radius-sm:      8px;
     --radius-md:      12px;
     --radius-lg:      16px;
     --radius-xl:      20px;
-    --shadow-xs:      0 1px 2px rgba(0,0,0,0.04);
-    --shadow-sm:      0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md:      0 4px 12px rgba(0,0,0,0.06);
-    --shadow-lg:      0 8px 30px rgba(0,0,0,0.08);
-    --shadow-xl:      0 20px 60px rgba(0,0,0,0.12);
+    --shadow-xs:      0 1px 3px rgba(34, 109, 122, 0.06);
+    --shadow-sm:      0 2px 6px rgba(34, 109, 122, 0.08), 0 1px 2px rgba(34, 109, 122, 0.04);
+    --shadow-md:      0 4px 14px rgba(34, 109, 122, 0.10);
+    --shadow-lg:      0 8px 34px rgba(34, 109, 122, 0.12);
+    --shadow-xl:      0 20px 60px rgba(34, 109, 122, 0.15);
     --sidebar-width:  240px;
     --transition:     0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
+
+/* Accent light (cyan) — used for gradients and highlights */
 
 /* ─── Reset ─── */
 *, *::before, *::after {
@@ -59,6 +63,10 @@ body {
     min-height: 100vh;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+}
+
 a { color: var(--color-accent); text-decoration: none; }
 a:hover { color: var(--color-accent-hover); }
 
@@ -69,7 +77,7 @@ a:hover { color: var(--color-accent-hover); }
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    background: var(--color-bg);
+    background: linear-gradient(180deg, #b0e0e9 0%, var(--color-bg) 60%);
 }
 
 /* ─── Sidebar ─── */
@@ -93,6 +101,7 @@ a:hover { color: var(--color-accent-hover); }
     align-items: center;
     justify-content: center;
     border-bottom: 1px solid var(--color-border);
+    background: linear-gradient(180deg, var(--color-accent-bg) 0%, transparent 100%);
 }
 
 .sidebar-logo-img { height: 48px; width: auto; }
@@ -130,6 +139,8 @@ a:hover { color: var(--color-accent-hover); }
     background: var(--color-accent-bg);
     color: var(--color-accent);
     font-weight: 600;
+    border-left: 3px solid var(--color-accent);
+    padding-left: 9px;
 }
 
 .nav-link svg, .nav-link i {
@@ -207,10 +218,11 @@ a:hover { color: var(--color-accent-hover); }
 .page-header h1,
 .page-title {
     font-size: 22px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-text);
     letter-spacing: -0.3px;
     margin: 0;
+    font-family: var(--font-heading);
 }
 
 .page-subtitle {
@@ -303,7 +315,7 @@ a:hover { color: var(--color-accent-hover); }
 .form-control:focus {
     outline: none;
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+    box-shadow: 0 0 0 3px rgba(34, 109, 122, 0.15);
 }
 textarea.form-control { min-height: 80px; resize: vertical; }
 select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
@@ -794,7 +806,7 @@ select.filter-select {
 .webforms-page { max-width: 1200px; margin: 0 auto; padding: 0 32px 48px; }
 
 /* Drag placeholder */
-.task-placeholder { border: 2px dashed var(--color-accent); border-radius: 8px; background: rgba(0, 113, 227, 0.05); min-height: 80px; }
+.task-placeholder { border: 2px dashed var(--color-accent); border-radius: 8px; background: rgba(34, 109, 122, 0.05); min-height: 80px; }
 
 /* Items table (quotes) */
 .items-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
@@ -882,6 +894,7 @@ table.table tr:hover { background: var(--color-bg); }
     gap: 16px;
     box-shadow: var(--shadow-xs);
     transition: all var(--transition);
+    border-top: 3px solid var(--color-accent);
 }
 
 .stat-card:hover {
@@ -957,7 +970,7 @@ table.table tr:hover { background: var(--color-bg); }
 .btn-primary:hover {
     background: var(--color-accent-hover);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(0,113,227,0.2);
+    box-shadow: 0 2px 8px rgba(34, 109, 122, 0.2);
 }
 
 .btn-secondary {
@@ -1030,7 +1043,7 @@ table.table tr:hover { background: var(--color-bg); }
 
 .form-control:focus {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+    box-shadow: 0 0 0 3px rgba(34, 109, 122, 0.1);
 }
 
 .form-control::placeholder { color: var(--color-text-tertiary); }
@@ -1117,7 +1130,7 @@ textarea.form-control { resize: vertical; min-height: 88px; }
 }
 .th-sortable:hover {
     color: var(--color-accent);
-    background: rgba(0, 113, 227, 0.04);
+    background: rgba(34, 109, 122, 0.04);
 }
 .th-sort-active {
     color: var(--color-accent) !important;
@@ -1718,7 +1731,7 @@ textarea.form-control { resize: vertical; min-height: 88px; }
     color: #fff;
     border-color: var(--color-accent);
 }
-.profile-card:hover { box-shadow: 0 4px 16px rgba(0,113,227,0.2); }
+.profile-card:hover { box-shadow: 0 4px 16px rgba(34, 109, 122, 0.2); }
 
 .profile-avatar-large {
     width: 80px;
@@ -1954,7 +1967,7 @@ textarea.form-control { resize: vertical; min-height: 88px; }
 }
 .login-header { text-align: center; margin-bottom: 32px; }
 .login-logo { height: 64px; width: auto; margin-bottom: 16px; }
-.login-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.02em; }
+.login-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.02em; font-family: var(--font-heading); color: var(--color-accent); }
 .login-subtitle { font-size: 14px; color: var(--color-text-secondary); }
 .login-footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--color-border); text-align: center; font-size: 12px; color: var(--color-text-tertiary); }
 
@@ -2777,7 +2790,7 @@ textarea.form-control { resize: vertical; min-height: 88px; }
     align-items: center;
     justify-content: space-between;
     padding: 16px;
-    background: linear-gradient(135deg, #0071e3, #5856d6);
+    background: linear-gradient(135deg, #226d7a, #22b8d1);
     color: #fff;
 }
 .voip-caller-info {
@@ -2917,10 +2930,10 @@ textarea.form-control { resize: vertical; min-height: 88px; }
 }
 .comm-btn:active { transform: scale(0.97); }
 .comm-btn-call {
-    background: linear-gradient(135deg, #0071e3, #5856d6);
+    background: linear-gradient(135deg, #226d7a, #22b8d1);
     color: #fff;
 }
-.comm-btn-call:hover { box-shadow: 0 2px 10px rgba(0,113,227,0.35); filter: brightness(1.05); }
+.comm-btn-call:hover { box-shadow: 0 2px 10px rgba(34, 109, 122, 0.35); filter: brightness(1.05); }
 .comm-btn-call svg { stroke: #fff; }
 .comm-btn-wa {
     background: linear-gradient(135deg, #25D366, #128C7E);
@@ -3404,9 +3417,9 @@ textarea.form-control { resize: vertical; min-height: 88px; }
     flex-shrink: 0;
 }
 .voip-call-icon.outbound {
-    background: rgba(0, 113, 227, 0.1);
+    background: rgba(34, 109, 122, 0.1);
 }
-.voip-call-icon.outbound svg { stroke: #0071e3; }
+.voip-call-icon.outbound svg { stroke: #226d7a; }
 .voip-call-icon.inbound {
     background: rgba(52, 199, 89, 0.1);
 }
@@ -3441,8 +3454,8 @@ textarea.form-control { resize: vertical; min-height: 88px; }
     letter-spacing: 0.02em;
 }
 .voip-call-direction.outbound {
-    background: rgba(0, 113, 227, 0.1);
-    color: #0071e3;
+    background: rgba(34, 109, 122, 0.1);
+    color: #226d7a;
 }
 .voip-call-direction.inbound {
     background: rgba(52, 199, 89, 0.1);
@@ -3476,7 +3489,7 @@ textarea.form-control { resize: vertical; min-height: 88px; }
 .voip-call-status.completed { color: #34c759; }
 .voip-call-status.canceled { color: var(--color-text-tertiary); }
 .voip-call-status.failed, .voip-call-status.busy, .voip-call-status.no-answer { color: #ff3b30; }
-.voip-call-status.in-progress { color: #0071e3; }
+.voip-call-status.in-progress { color: #226d7a; }
 .voip-call-status.initiated, .voip-call-status.ringing { color: #ff9f0a; }
 
 .voip-call-notes {
@@ -3571,7 +3584,7 @@ textarea.form-control { resize: vertical; min-height: 88px; }
     font-weight: 500;
 }
 .wa-msg-status.sent { color: #86868b; }
-.wa-msg-status.delivered { color: #0071e3; }
+.wa-msg-status.delivered { color: #226d7a; }
 .wa-msg-status.read { color: #34c759; }
 .wa-msg-status.failed { color: #ff3b30; }
 .wa-msg-status.queued { color: #ff9f0a; }
