@@ -517,7 +517,7 @@ include __DIR__ . '/../includes/header.php';
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
 
                 <div class="form-group">
-                    <label class="form-label"><?php echo htmlspecialchars__('Monospace / Label Font'); ?></label>
+                    <label class="form-label"><?php echo htmlspecialchars(__('Monospace / Label Font')); ?></label>
                     <select name="theme_font_mono" class="form-control font-select">
                         <?php
                         $monoFonts = ['JetBrains Mono','Fira Code','Source Code Pro','IBM Plex Mono','Roboto Mono','Space Mono','Ubuntu Mono','Cascadia Code','Inconsolata','PT Mono'];
@@ -528,7 +528,7 @@ include __DIR__ . '/../includes/header.php';
                         }
                         ?>
                     </select>
-                    <p class="text-muted" style="font-size:11px;margin-top:4px;"><?php echo htmlspecialchars__('Used for badges, labels, numbers, and code.'); ?></p>
+                    <p class="text-muted" style="font-size:11px;margin-top:4px;"><?php echo htmlspecialchars(__('Used for badges, labels, numbers, and code.')); ?></p>
                 </div>
             </div>
         </div>
