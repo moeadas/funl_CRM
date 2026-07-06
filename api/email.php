@@ -98,8 +98,8 @@ if ($action === 'list') {
     jsonSuccess('Lists loaded', $stmt->fetchAll());
 }
 
-// ─── CREATE LIST ───
-if ($action === 'create_list' && $method === 'POST') {
+// ─── CREATE LIST (also handles list_save alias) ───
+if (($action === 'create_list' || $action === 'list_save') && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     if (empty($input['name'])) jsonError('List name is required');
@@ -119,8 +119,8 @@ if ($action === 'update_list' && $method === 'POST') {
     jsonSuccess('List updated');
 }
 
-// ─── DELETE LIST ───
-if ($action === 'delete_list' && $method === 'POST') {
+// ─── DELETE LIST (also handles list_delete alias) ───
+if (($action === 'delete_list' || $action === 'list_delete') && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     $listId = (int)($input['list_id'] ?? 0);
@@ -129,8 +129,8 @@ if ($action === 'delete_list' && $method === 'POST') {
     jsonSuccess('List deleted');
 }
 
-// ─── ADD LEADS TO LIST (from filter) ───
-if ($action === 'add_to_list' && $method === 'POST') {
+// ─── ADD LEADS TO LIST (from filter) (also handles list_populate alias) ───
+if (($action === 'add_to_list' || $action === 'list_populate') && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     $listId = (int)($input['list_id'] ?? 0);
@@ -242,8 +242,8 @@ if ($action === 'update_campaign' && $method === 'POST') {
     jsonSuccess('Campaign updated');
 }
 
-// ─── DELETE CAMPAIGN ───
-if ($action === 'delete_campaign' && $method === 'POST') {
+// ─── DELETE CAMPAIGN (also handles campaign_delete alias) ───
+if (($action === 'delete_campaign' || $action === 'campaign_delete') && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     $id = (int)($input['campaign_id'] ?? 0);
@@ -426,12 +426,96 @@ if ($action === 'update_template' && $method === 'POST') {
     jsonSuccess('Template updated');
 }
 
-if ($action === 'delete_template' && $method === 'POST') {
+if (($action === 'delete_template' || $action === 'template_delete') && $method === 'POST') {
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     $id = (int)($input['template_id'] ?? 0);
     $db->prepare("DELETE FROM email_templates WHERE template_id = ?")->execute([$id]);
     jsonSuccess('Template deleted');
+}
+
+// ─── CAMPAIGN SAVE (create or update, also handles campaign_save alias) ───
+if (($action === 'campaign_save') && $method === 'POST') {
+    requireCSRF();
+    $input = json_decode(file_get_contents('php://input'), true);
+    $campaignId = (int)($input['campaign_id'] ?? 0);
+
+    if ($campaignId > 0) {
+        // Update existing campaign
+        $stmt = $db->prepare("UPDATE email_campaigns SET name=?, subject=?, from_name=?, from_email=?, reply_to=?, template_id=?, list_id=?, scheduled_at=?, is_automated=?, trigger_type=?, trigger_status=?, trigger_interval=?, trigger_deal_stage=?, delay_value=?, delay_unit=?, updated_at=NOW() WHERE campaign_id=? AND company_id=? AND status IN ('Draft','Scheduled')");
+        $stmt->execute([
+            $input['name'] ?? 'New Campaign',
+            $input['subject'] ?? '',
+            $input['from_name'] ?? '',
+            $input['from_email'] ?? '',
+            $input['reply_to'] ?? '',
+            !empty($input['template_id']) ? (int)$input['template_id'] : null,
+            !empty($input['list_id']) ? (int)$input['list_id'] : null,
+            !empty($input['scheduled_at']) ? $input['scheduled_at'] : null,
+            !empty($input['is_automated']) ? 1 : 0,
+            $input['trigger_type'] ?? null,
+            $input['trigger_status'] ?? null,
+            $input['trigger_interval'] ?? null,
+            $input['trigger_deal_stage'] ?? null,
+            (int)($input['delay_value'] ?? 0),
+            $input['delay_unit'] ?? 'minutes',
+            $campaignId,
+            $companyId
+        ]);
+        jsonSuccess('Campaign updated', ['campaign_id' => $campaignId]);
+    } else {
+        // Create new campaign
+        $stmt = $db->prepare("INSERT INTO email_campaigns (company_id, name, subject, from_name, from_email, reply_to, template_id, list_id, scheduled_at, is_automated, trigger_type, trigger_status, trigger_interval, trigger_deal_stage, delay_value, delay_unit, content_json, content_html, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '{}', '', 'Draft', ?, NOW())");
+        $stmt->execute([
+            $companyId,
+            $input['name'] ?? 'New Campaign',
+            $input['subject'] ?? '',
+            $input['from_name'] ?? '',
+            $input['from_email'] ?? '',
+            $input['reply_to'] ?? '',
+            !empty($input['template_id']) ? (int)$input['template_id'] : null,
+            !empty($input['list_id']) ? (int)$input['list_id'] : null,
+            !empty($input['scheduled_at']) ? $input['scheduled_at'] : null,
+            !empty($input['is_automated']) ? 1 : 0,
+            $input['trigger_type'] ?? null,
+            $input['trigger_status'] ?? null,
+            $input['trigger_interval'] ?? null,
+            $input['trigger_deal_stage'] ?? null,
+            (int)($input['delay_value'] ?? 0),
+            $input['delay_unit'] ?? 'minutes',
+            $currentUser['user_id']
+        ]);
+        jsonSuccess('Campaign created', ['campaign_id' => $db->lastInsertId()]);
+    }
+}
+
+// ─── CAMPAIGN DUPLICATE ───
+if ($action === 'campaign_duplicate' && $method === 'POST') {
+    requireCSRF();
+    $input = json_decode(file_get_contents('php://input'), true);
+    $campaignId = (int)($input['campaign_id'] ?? 0);
+    if (!$campaignId) jsonError('Campaign ID required');
+
+    $stmt = $db->prepare("SELECT * FROM email_campaigns WHERE campaign_id = ? AND company_id = ?");
+    $stmt->execute([$campaignId, $companyId]);
+    $campaign = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$campaign) jsonError('Campaign not found');
+
+    $stmt = $db->prepare("INSERT INTO email_campaigns (company_id, name, subject, from_name, from_email, reply_to, template_id, list_id, content_json, content_html, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Draft', ?, NOW())");
+    $stmt->execute([
+        $companyId,
+        $campaign['name'] . ' (Copy)',
+        $campaign['subject'],
+        $campaign['from_name'],
+        $campaign['from_email'],
+        $campaign['reply_to'],
+        $campaign['template_id'],
+        $campaign['list_id'],
+        $campaign['content_json'],
+        $campaign['content_html'],
+        $currentUser['user_id']
+    ]);
+    jsonSuccess('Campaign duplicated', ['campaign_id' => $db->lastInsertId()]);
 }
 
 // ─── LEADS WITH EMAIL (for list building) ───
