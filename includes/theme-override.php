@@ -131,6 +131,7 @@ function includeThemeOverride($db, $companyId) {
         'theme_font_italic' => 'Fraunces',
         'theme_font_heading_ar' => 'Default (follows English)',
         'theme_font_body_ar' => 'Default (follows English)',
+        'theme_font_menu_ar' => 'Default (follows English)',
         'theme_fs_base' => '14',
         'theme_fs_h1' => '28',
         'theme_fs_h2' => '22',
@@ -161,6 +162,7 @@ function includeThemeOverride($db, $companyId) {
     $italicFont = $v['theme_font_italic'];
     $arHeadingFont = $v['theme_font_heading_ar'];
     $arBodyFont = $v['theme_font_body_ar'];
+    $arMenuFont = $v['theme_font_menu_ar'];
 
     if ($headingFont) $fontFamilies[] = "family=" . urlencode($headingFont) . ":wght@400;500;600;700;800";
     if ($bodyFont && $bodyFont !== $headingFont) $fontFamilies[] = "family=" . urlencode($bodyFont) . ":wght@400;500;600;700";
@@ -173,6 +175,9 @@ function includeThemeOverride($db, $companyId) {
         $fontFamilies[] = "family=" . urlencode($arHeadingFont) . ":wght@400;500;600;700";
     }
     if ($arBodyFont && strpos($arBodyFont, 'Default') === false && $arBodyFont !== $arHeadingFont) {
+    if ($arMenuFont && strpos($arMenuFont, 'Default') === false && $arMenuFont !== $arHeadingFont && $arMenuFont !== $arBodyFont) {
+        $fontFamilies[] = "family=" . urlencode($arMenuFont) . ":wght@400;500;600;700";
+    }
         $fontFamilies[] = "family=" . urlencode($arBodyFont) . ":wght@400;500;600;700";
     }
 
@@ -345,7 +350,12 @@ function includeThemeOverride($db, $companyId) {
         $css .= "html[lang=\"ar\"] h1,html[lang=\"ar\"] h2,html[lang=\"ar\"] h3,html[lang=\"ar\"] h4,html[lang=\"ar\"] h5,html[lang=\"ar\"] h6,html[lang=\"ar\"] .page-title,html[lang=\"ar\"] .card-title{font-family:'$arHeadingFont',sans-serif;}";
     }
     if ($arBodyFont && strpos($arBodyFont, 'Default') === false) {
-        $css .= "html[lang=\"ar\"] body,html[lang=\"ar\"] .form-control,html[lang=\"ar\"] .btn,html[lang=\"ar\"] .nav-link{font-family:'$arBodyFont',sans-serif;}";
+        $css .= "html[lang=\"ar\"] body,html[lang=\"ar\"] .form-control,html[lang=\"ar\"] .btn{font-family:'$arBodyFont',sans-serif;}";
+        if ($arMenuFont && strpos($arMenuFont, 'Default') === false) {
+            $css .= "html[lang=\"ar\"] .nav-link{font-family:'$arMenuFont',sans-serif;}";
+        } else {
+            $css .= "html[lang=\"ar\"] .nav-link{font-family:'$arBodyFont',sans-serif;}";
+        }
     }
 
     $output .= '<style id="theme-override">' . $css . '</style>';

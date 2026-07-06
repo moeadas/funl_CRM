@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'theme_sidebar_width', 'theme_card_radius', 'theme_input_radius', 'theme_btn_radius', 'theme_modal_radius',
             // Fonts
             'theme_font_heading', 'theme_font_body', 'theme_font_menu', 'theme_font_mono', 'theme_font_italic',
-            'theme_font_heading_ar', 'theme_font_body_ar',
+            'theme_font_heading_ar', 'theme_font_body_ar', 'theme_font_menu_ar',
             // Font Sizes
             'theme_fs_base', 'theme_fs_h1', 'theme_fs_h2', 'theme_fs_card_title', 'theme_fs_nav', 'theme_fs_table', 'theme_fs_badge',
             // Font Weights
@@ -679,6 +679,7 @@ include __DIR__ . '/../includes/header.php';
                 <div class="form-grid-3">
                     <?php $renderFontSelect('theme_font_heading_ar', 'Heading / Title Font (Arabic)', $arabicFonts, 'Default (follows English)'); ?>
                     <?php $renderFontSelect('theme_font_body_ar', 'Body / Text Font (Arabic)', $arabicFonts, 'Default (follows English)'); ?>
+                    <?php $renderFontSelect('theme_font_menu_ar', 'Menu / Nav Link Font (Arabic)', $arabicFonts, 'Default (follows English)'); ?>
                 </div>
 
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
@@ -775,7 +776,7 @@ include __DIR__ . '/../includes/header.php';
                 /* Fonts */
                 theme_font_heading: 'Plus Jakarta Sans', theme_font_body: 'Plus Jakarta Sans',
                 theme_font_menu: 'Plus Jakarta Sans', theme_font_mono: 'JetBrains Mono', theme_font_italic: 'Fraunces',
-                theme_font_heading_ar: 'Default (follows English)', theme_font_body_ar: 'Default (follows English)',
+                theme_font_heading_ar: 'Default (follows English)', theme_font_body_ar: 'Default (follows English)', theme_font_menu_ar: 'Default (follows English)',
                 /* Font Sizes */
                 theme_fs_base: '14', theme_fs_h1: '28', theme_fs_h2: '22', theme_fs_card_title: '16',
                 theme_fs_nav: '13', theme_fs_table: '13', theme_fs_badge: '11',
