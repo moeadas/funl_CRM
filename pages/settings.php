@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Layout
             'theme_sidebar_width', 'theme_card_radius', 'theme_input_radius', 'theme_btn_radius', 'theme_modal_radius',
             // Fonts
-            'theme_font_heading', 'theme_font_body', 'theme_font_mono', 'theme_font_italic',
+            'theme_font_heading', 'theme_font_body', 'theme_font_menu', 'theme_font_mono', 'theme_font_italic',
             'theme_font_heading_ar', 'theme_font_body_ar',
             // Font Sizes
             'theme_fs_base', 'theme_fs_h1', 'theme_fs_h2', 'theme_fs_card_title', 'theme_fs_nav', 'theme_fs_table', 'theme_fs_badge',
@@ -271,7 +271,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="card">
             <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Company Profile Details')); ?></h3></div>
             <div class="card-body">
-                    <div class="form-grid-2">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Company Name *')); ?></label>
                             <input type="text" name="company_name" class="form-control" value="<?php echo htmlspecialchars($settings['company_name'] ?? ''); ?>" required>
@@ -422,7 +422,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 1. Backgrounds & Surfaces -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Backgrounds & Surfaces')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_sidebar_bg', 'Sidebar Background', '#FDF8F1'); ?>
                     <?php $renderColorField('theme_bg', 'Main Content Background', '#FBF3EA'); ?>
                     <?php $renderColorField('theme_surface', 'Card/Surface Background', '#FDF8F1'); ?>
@@ -434,7 +434,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 2. Borders -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Borders')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_border', 'Primary Border Color', '#EBDFCE'); ?>
                     <?php $renderColorField('theme_border_light', 'Light Border Color', '#F0E6D8'); ?>
                     <?php $renderColorField('theme_table_row_border', 'Table Row Border', '#F0E6D8'); ?>
@@ -445,7 +445,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 3. Accent / CTA -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Accent / CTA')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_accent', 'Primary Accent (Buttons, Links, Active Nav)', '#E89BB8'); ?>
                     <?php $renderColorField('theme_accent_hover', 'Accent Hover Color', '#D2729A'); ?>
                     <?php $renderColorField('theme_accent_light', 'Accent Light/Focus Color', '#F5C2A0'); ?>
@@ -456,7 +456,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 4. Navigation -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Navigation')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_nav_text', 'Nav Link Text Color (Default)', '#6F5C54'); ?>
                     <?php $renderColorField('theme_nav_hover_text', 'Nav Link Hover Text Color', '#1F1714'); ?>
                     <?php $renderColorField('theme_nav_hover_bg', 'Nav Link Hover Background', '#F5EBDD'); ?>
@@ -469,7 +469,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 5. Text -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Text')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_text', 'Primary Text Color', '#1F1714'); ?>
                     <?php $renderColorField('theme_text_secondary', 'Secondary Text Color', '#6F5C54'); ?>
                     <?php $renderColorField('theme_text_tertiary', 'Tertiary/Muted Text Color', '#8F7C72'); ?>
@@ -483,7 +483,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 6. Buttons -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Buttons')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_btn_primary_bg', 'Primary Button Background', '#E89BB8'); ?>
                     <?php $renderColorField('theme_btn_primary_text', 'Primary Button Text Color', '#FFFFFF'); ?>
                     <?php $renderColorField('theme_btn_primary_hover', 'Primary Button Hover Background', '#D2729A'); ?>
@@ -504,7 +504,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 7. Cards -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Cards')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_card_bg', 'Card Background', '#FDF8F1'); ?>
                     <?php $renderColorField('theme_card_border', 'Card Border Color', '#EBDFCE'); ?>
                     <?php $renderColorField('theme_card_header_bg', 'Card Header Background', '#FDF8F1'); ?>
@@ -516,7 +516,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 8. Tables -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Tables')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_table_header_bg', 'Table Header Background', '#F8EFE2'); ?>
                     <?php $renderColorField('theme_table_header_text', 'Table Header Text Color', '#1F1714'); ?>
                     <?php $renderColorField('theme_table_row_border', 'Table Row Border Color', '#F0E6D8'); ?>
@@ -527,7 +527,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 9. Status Badges -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Status Badges')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_badge_active_bg', 'Active/Open - Background', '#D4EDDA'); ?>
                     <?php $renderColorField('theme_badge_active_text', 'Active/Open - Text', '#155724'); ?>
                     <?php $renderColorField('theme_badge_inactive_bg', 'Inactive/Closed - Background', '#F0E6D8'); ?>
@@ -552,7 +552,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 10. Priority Badges -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Priority Badges')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_pri_urgent_bg', 'Urgent - Background', '#F8D7DA'); ?>
                     <?php $renderColorField('theme_pri_urgent_text', 'Urgent - Text', '#721C24'); ?>
                     <?php $renderColorField('theme_pri_high_bg', 'High - Background', '#FFE5B4'); ?>
@@ -567,7 +567,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 11. Stat Cards -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Stat Cards (Dashboard)')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_stat_orange_bg', 'Orange Stat Card - Background', '#FFE5D0'); ?>
                     <?php $renderColorField('theme_stat_orange_text', 'Orange Stat Card - Text', '#9A4A00'); ?>
                     <?php $renderColorField('theme_stat_green_bg', 'Green Stat Card - Background', '#D4EDDA'); ?>
@@ -584,7 +584,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 12. Inputs -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Inputs')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_input_bg', 'Input Background', '#FFFFFF'); ?>
                     <?php $renderColorField('theme_input_border', 'Input Border Color', '#EBDFCE'); ?>
                     <?php $renderColorField('theme_input_text', 'Input Text Color', '#1F1714'); ?>
@@ -597,7 +597,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 13. Modals -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Modals')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_modal_bg', 'Modal Background', '#FDF8F1'); ?>
                     <?php $renderColorField('theme_modal_border', 'Modal Border Color', '#EBDFCE'); ?>
                 </div>
@@ -608,7 +608,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- 14. Sidebar -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Sidebar')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_sidebar_bg', 'Sidebar Background', '#FDF8F1'); ?>
                     <?php $renderColorField('theme_sidebar_border', 'Sidebar Border Color (Right)', '#EBDFCE'); ?>
                     <?php $renderColorField('theme_sidebar_logo_bg', 'Sidebar Logo Area Background', '#FDF8F1'); ?>
@@ -621,7 +621,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- General Status Colors -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('General Status Colors')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderColorField('theme_success', 'Success', '#5E8259'); ?>
                     <?php $renderColorField('theme_warning', 'Warning', '#9A7A2C'); ?>
                     <?php $renderColorField('theme_danger', 'Danger', '#C97A47'); ?>
@@ -632,7 +632,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- Layout Settings -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Layout Settings')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderNumberField('theme_sidebar_width', 'Sidebar Width', '260', 180, 400, 'px'); ?>
                     <?php $renderNumberField('theme_card_radius', 'Card Border Radius', '16', 0, 50, 'px'); ?>
                     <?php $renderNumberField('theme_input_radius', 'Input Border Radius', '10', 0, 50, 'px'); ?>
@@ -664,9 +664,10 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- English Fonts -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('English Fonts')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderFontSelect('theme_font_heading', 'Heading / Title Font', $headingFonts, 'Plus Jakarta Sans'); ?>
                     <?php $renderFontSelect('theme_font_body', 'Body / Text Font', $bodyFonts, 'Plus Jakarta Sans'); ?>
+                    <?php $renderFontSelect('theme_font_menu', 'Menu / Nav Link Font', $bodyFonts, 'Plus Jakarta Sans'); ?>
                     <?php $renderFontSelect('theme_font_mono', 'Monospace / Label Font', $monoFonts, 'JetBrains Mono'); ?>
                     <?php $renderFontSelect('theme_font_italic', 'Italic Accent Font (for em in headings)', $italicFonts, 'Fraunces'); ?>
                 </div>
@@ -675,7 +676,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- Arabic Fonts -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Arabic Fonts')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderFontSelect('theme_font_heading_ar', 'Heading / Title Font (Arabic)', $arabicFonts, 'Default (follows English)'); ?>
                     <?php $renderFontSelect('theme_font_body_ar', 'Body / Text Font (Arabic)', $arabicFonts, 'Default (follows English)'); ?>
                 </div>
@@ -684,7 +685,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- Font Size Settings -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Font Size Settings')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderNumberField('theme_fs_base', 'Base Body Font Size', '14', 10, 24, 'px'); ?>
                     <?php $renderNumberField('theme_fs_h1', 'Heading h1 Font Size', '28', 18, 48, 'px'); ?>
                     <?php $renderNumberField('theme_fs_h2', 'Heading h2 Font Size', '22', 14, 36, 'px'); ?>
@@ -698,7 +699,7 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- Font Weight Settings -->
                 <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Font Weight Settings')); ?></h4>
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <?php $renderWeightSelect('theme_fw_heading', 'Heading Font Weight', '700'); ?>
                     <?php $renderWeightSelect('theme_fw_body', 'Body Font Weight', '400'); ?>
                     <?php $renderWeightSelect('theme_fw_nav', 'Nav Link Font Weight', '500'); ?>
@@ -773,7 +774,7 @@ include __DIR__ . '/../includes/header.php';
                 theme_sidebar_width: '260', theme_card_radius: '16', theme_input_radius: '10', theme_btn_radius: '10', theme_modal_radius: '16',
                 /* Fonts */
                 theme_font_heading: 'Plus Jakarta Sans', theme_font_body: 'Plus Jakarta Sans',
-                theme_font_mono: 'JetBrains Mono', theme_font_italic: 'Fraunces',
+                theme_font_menu: 'Plus Jakarta Sans', theme_font_mono: 'JetBrains Mono', theme_font_italic: 'Fraunces',
                 theme_font_heading_ar: 'Default (follows English)', theme_font_body_ar: 'Default (follows English)',
                 /* Font Sizes */
                 theme_fs_base: '14', theme_fs_h1: '28', theme_fs_h2: '22', theme_fs_card_title: '16',
@@ -814,7 +815,7 @@ include __DIR__ . '/../includes/header.php';
                         <input type="checkbox" name="voip_recording_enabled" value="1" <?php echo ($settings['voip_recording_enabled'] ?? '0') === '1' ? 'checked' : ''; ?>>
                     </div>
 
-                    <div class="form-grid-2">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Twilio Account SID')); ?></label>
                             <input type="text" name="twilio_account_sid" class="form-control" value="<?php echo htmlspecialchars($settings['twilio_account_sid'] ?? ''); ?>" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxx">
@@ -863,7 +864,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="card">
             <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('SMTP Server & Email Marketing Settings')); ?></h3></div>
             <div class="card-body">
-                    <div class="form-grid-2">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('SMTP Host')); ?></label>
                             <input type="text" name="smtp_host" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_host'] ?? ''); ?>" placeholder="smtp.mailgun.org">
@@ -920,7 +921,7 @@ include __DIR__ . '/../includes/header.php';
                         <?php echo __('Resend handles verification emails, password resets, and other transactional emails. Get your API key at'); ?>
                         <a href="https://resend.com/api-keys" target="_blank" rel="noopener">resend.com/api-keys</a>
                     </p>
-                    <div class="form-grid-2">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Resend API Key')); ?></label>
                             <?php
@@ -958,7 +959,7 @@ include __DIR__ . '/../includes/header.php';
                     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;margin-bottom:20px;">
                         <h4 style="margin:0 0 8px;font-size:14px;color:#0369a1;">Microsoft Azure App Configuration</h4>
                         <p style="font-size:12px;color:#0369a1;margin:0 0 12px;">Required: Register an app in Azure Active Directory and enter the credentials below. See <a href="https://learn.microsoft.com/en-us/graph/auth-register-app-v2" target="_blank">Azure App Registration Guide</a>.</p>
-                        <div class="form-grid-2">
+                        <div class="form-grid-3">
                             <div class="form-group">
                                 <label class="form-label">Client ID</label>
                                 <input type="text" name="ms_client_id" class="form-control" value="<?php echo htmlspecialchars($settings['ms_client_id'] ?? ''); ?>" placeholder="Azure App Client ID">

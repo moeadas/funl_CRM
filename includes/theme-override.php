@@ -126,6 +126,7 @@ function includeThemeOverride($db, $companyId) {
         'theme_modal_radius' => '16',
         'theme_font_heading' => 'Plus Jakarta Sans',
         'theme_font_body' => 'Plus Jakarta Sans',
+        'theme_font_menu' => 'Plus Jakarta Sans',
         'theme_font_mono' => 'JetBrains Mono',
         'theme_font_italic' => 'Fraunces',
         'theme_font_heading_ar' => 'Default (follows English)',
@@ -155,6 +156,7 @@ function includeThemeOverride($db, $companyId) {
     $fontFamilies = [];
     $headingFont = $v['theme_font_heading'];
     $bodyFont = $v['theme_font_body'];
+    $menuFont = $v['theme_font_menu'];
     $monoFont = $v['theme_font_mono'];
     $italicFont = $v['theme_font_italic'];
     $arHeadingFont = $v['theme_font_heading_ar'];
@@ -162,6 +164,7 @@ function includeThemeOverride($db, $companyId) {
 
     if ($headingFont) $fontFamilies[] = "family=" . urlencode($headingFont) . ":wght@400;500;600;700;800";
     if ($bodyFont && $bodyFont !== $headingFont) $fontFamilies[] = "family=" . urlencode($bodyFont) . ":wght@400;500;600;700";
+    if ($menuFont && $menuFont !== $headingFont && $menuFont !== $bodyFont) $fontFamilies[] = "family=" . urlencode($menuFont) . ":wght@400;500;600;700";
     if ($monoFont) $fontFamilies[] = "family=" . urlencode($monoFont) . ":wght@400;500;600;700";
     if ($italicFont && $italicFont !== $headingFont && $italicFont !== $bodyFont) {
         $fontFamilies[] = "family=" . urlencode($italicFont) . ":ital,wght@0,400;0,600;1,400;1,600";
@@ -319,8 +322,9 @@ function includeThemeOverride($db, $companyId) {
 
     if ($bodyFamily) {
         $css .= "body{font-family:$bodyFamily;font-size:" . $v['theme_fs_base'] . "px;font-weight:" . $v['theme_fw_body'] . ";}";
-        $css .= ".form-control,.btn,.nav-link{font-family:$bodyFamily;}";
-        $css .= ".nav-link{font-size:" . $v['theme_fs_nav'] . "px;font-weight:" . $v['theme_fw_nav'] . ";}";
+        $css .= ".form-control,.btn{font-family:$bodyFamily;}";
+                $menuFamily = $menuFont ? "'$menuFont', -apple-system, sans-serif" : $bodyFamily;
+        $css .= ".nav-link{font-family:$menuFamily;font-size:" . $v['theme_fs_nav'] . "px;font-weight:" . $v['theme_fw_nav'] . ";}";
     }
     if ($headingFamily) {
         $css .= "h1,h2,h3,h4,h5,h6,.page-title,.card-title,.login-title{font-family:$headingFamily;font-weight:" . $v['theme_fw_heading'] . ";}";
