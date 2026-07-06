@@ -356,353 +356,210 @@ include __DIR__ . '/../includes/header.php';
     <!-- Tab: Color Scheme & Fonts -->
     <div class="tab-pane" id="pane-theme">
         <div class="card">
-            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Color Scheme & Fonts')); ?></h3></div>
+            <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Color Scheme')); ?></h3></div>
             <div class="card-body">
-                <p class="text-muted" style="margin-bottom:20px;font-size:13px;"><?php echo htmlspecialchars(__('Customize every color, font, and size of your CRM. Changes apply instantly across the app.')); ?></p>
+                <p class="text-muted" style="margin-bottom:20px;font-size:13px;"><?php echo htmlspecialchars(__('Customize the colors of your CRM. Changes apply instantly across the app.')); ?></p>
 
-                <?php
-                // Helper to render a color picker + hex text input
-                $renderColorField = function($name, $label, $default) use ($settings) {
-                    $val = $settings[$name] ?? $default;
-                    echo '<div class="form-group">';
-                    echo '<label class="form-label">' . htmlspecialchars(__($label)) . '</label>';
-                    echo '<div style="display:flex;gap:8px;align-items:center;">';
-                    echo '<input type="color" name="' . $name . '" value="' . htmlspecialchars($val) . '" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">';
-                    echo '<input type="text" name="' . $name . '_text" value="' . htmlspecialchars($val) . '" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">';
-                    echo '</div>';
-                    echo '</div>';
-                };
-                // Helper to render a text/rgba input (no color picker)
-                $renderTextField = function($name, $label, $default, $placeholder = '') use ($settings) {
-                    $val = $settings[$name] ?? $default;
-                    echo '<div class="form-group">';
-                    echo '<label class="form-label">' . htmlspecialchars(__($label)) . '</label>';
-                    echo '<input type="text" name="' . $name . '" value="' . htmlspecialchars($val) . '" class="form-control" style="max-width:200px;font-family:var(--font-mono,monospace);font-size:12px;" placeholder="' . htmlspecialchars($placeholder) . '">';
-                    echo '</div>';
-                };
-                // Helper to render a number input
-                $renderNumberField = function($name, $label, $default, $min = 0, $max = 999, $suffix = 'px') use ($settings) {
-                    $val = $settings[$name] ?? $default;
-                    echo '<div class="form-group">';
-                    echo '<label class="form-label">' . htmlspecialchars(__($label)) . '</label>';
-                    echo '<div style="display:flex;gap:8px;align-items:center;">';
-                    echo '<input type="number" name="' . $name . '" value="' . htmlspecialchars($val) . '" class="form-control" style="max-width:100px;" min="' . $min . '" max="' . $max . '">';
-                    echo '<span class="text-muted" style="font-size:12px;">' . $suffix . '</span>';
-                    echo '</div>';
-                    echo '</div>';
-                };
-                // Helper to render a font dropdown
-                $renderFontSelect = function($name, $label, $fonts, $default) use ($settings) {
-                    $current = $settings[$name] ?? $default;
-                    echo '<div class="form-group">';
-                    echo '<label class="form-label">' . htmlspecialchars(__($label)) . '</label>';
-                    echo '<select name="' . $name . '" class="form-control font-select">';
-                    foreach ($fonts as $f) {
-                        $sel = ($f === $current) ? ' selected' : '';
-                        echo '<option value="' . htmlspecialchars($f) . '"' . $sel . '>' . htmlspecialchars($f) . '</option>';
-                    }
-                    echo '</select>';
-                    echo '</div>';
-                };
-                // Helper to render a weight dropdown
-                $renderWeightSelect = function($name, $label, $default) use ($settings) {
-                    $current = $settings[$name] ?? $default;
-                    $weights = ['400' => '400 (Regular)', '500' => '500 (Medium)', '600' => '600 (Semibold)', '700' => '700 (Bold)', '800' => '800 (Extrabold)'];
-                    echo '<div class="form-group">';
-                    echo '<label class="form-label">' . htmlspecialchars(__($label)) . '</label>';
-                    echo '<select name="' . $name . '" class="form-control">';
-                    foreach ($weights as $w => $label2) {
-                        $sel = ($w === $current) ? ' selected' : '';
-                        echo '<option value="' . $w . '"' . $sel . '>' . htmlspecialchars($label2) . '</option>';
-                    }
-                    echo '</select>';
-                    echo '</div>';
-                };
-                ?>
-
-                <!-- 1. Backgrounds & Surfaces -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Backgrounds & Surfaces')); ?></h4>
                 <div class="form-grid-2">
-                    <?php $renderColorField('theme_sidebar_bg', 'Sidebar Background', '#FDF8F1'); ?>
-                    <?php $renderColorField('theme_bg', 'Main Content Background', '#FBF3EA'); ?>
-                    <?php $renderColorField('theme_surface', 'Card/Surface Background', '#FDF8F1'); ?>
-                    <?php $renderColorField('theme_input_bg', 'Input/Field Background', '#FFFFFF'); ?>
-                </div>
-                <?php $renderTextField('theme_modal_backdrop', 'Modal Backdrop Color (rgba)', 'rgba(31,23,20,0.5)', 'rgba(0,0,0,0.5)'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Sidebar Background')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_sidebar_bg" value="<?php echo htmlspecialchars($settings['theme_sidebar_bg'] ?? '#FDF8F1'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_sidebar_bg_text" value="<?php echo htmlspecialchars($settings['theme_sidebar_bg'] ?? '#FDF8F1'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
 
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Main Background')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_bg" value="<?php echo htmlspecialchars($settings['theme_bg'] ?? '#FBF3EA'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_bg_text" value="<?php echo htmlspecialchars($settings['theme_bg'] ?? '#FBF3EA'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
 
-                <!-- 2. Borders -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Borders')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_border', 'Primary Border Color', '#EBDFCE'); ?>
-                    <?php $renderColorField('theme_border_light', 'Light Border Color', '#F0E6D8'); ?>
-                    <?php $renderColorField('theme_table_row_border', 'Table Row Border', '#F0E6D8'); ?>
-                    <?php $renderColorField('theme_card_border', 'Card Border', '#EBDFCE'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Card/Surface Background')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_surface" value="<?php echo htmlspecialchars($settings['theme_surface'] ?? '#FDF8F1'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_surface_text" value="<?php echo htmlspecialchars($settings['theme_surface'] ?? '#FDF8F1'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Border Color')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_border" value="<?php echo htmlspecialchars($settings['theme_border'] ?? '#EBDFCE'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_border_text" value="<?php echo htmlspecialchars($settings['theme_border'] ?? '#EBDFCE'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
                 </div>
 
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
 
-                <!-- 3. Accent / CTA -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Accent / CTA')); ?></h4>
+                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Accent Colors')); ?></h4>
                 <div class="form-grid-2">
-                    <?php $renderColorField('theme_accent', 'Primary Accent (Buttons, Links, Active Nav)', '#E89BB8'); ?>
-                    <?php $renderColorField('theme_accent_hover', 'Accent Hover Color', '#D2729A'); ?>
-                    <?php $renderColorField('theme_accent_light', 'Accent Light/Focus Color', '#F5C2A0'); ?>
-                </div>
-                <?php $renderTextField('theme_accent_bg_tint', 'Accent Background Tint (rgba)', 'rgba(232,155,184,0.12)', 'rgba(232,155,184,0.12)'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Primary Accent (Buttons, Links)')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_accent" value="<?php echo htmlspecialchars($settings['theme_accent'] ?? '#E89BB8'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_accent_text" value="<?php echo htmlspecialchars($settings['theme_accent'] ?? '#E89BB8'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
 
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 4. Navigation -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Navigation')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_nav_text', 'Nav Link Text Color (Default)', '#6F5C54'); ?>
-                    <?php $renderColorField('theme_nav_hover_text', 'Nav Link Hover Text Color', '#1F1714'); ?>
-                    <?php $renderColorField('theme_nav_hover_bg', 'Nav Link Hover Background', '#F5EBDD'); ?>
-                    <?php $renderColorField('theme_nav_active_text', 'Nav Link Active Text Color', '#1F1714'); ?>
-                    <?php $renderColorField('theme_nav_active_bg', 'Nav Link Active Background', '#F5EBDD'); ?>
-                    <?php $renderColorField('theme_nav_active_border', 'Nav Link Active Border/Accent', '#E89BB8'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Accent Hover Color')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_accent_hover" value="<?php echo htmlspecialchars($settings['theme_accent_hover'] ?? '#D2729A'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_accent_hover_text" value="<?php echo htmlspecialchars($settings['theme_accent_hover'] ?? '#D2729A'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
                 </div>
 
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
 
-                <!-- 5. Text -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Text')); ?></h4>
+                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Text Colors')); ?></h4>
                 <div class="form-grid-2">
-                    <?php $renderColorField('theme_text', 'Primary Text Color', '#1F1714'); ?>
-                    <?php $renderColorField('theme_text_secondary', 'Secondary Text Color', '#6F5C54'); ?>
-                    <?php $renderColorField('theme_text_tertiary', 'Tertiary/Muted Text Color', '#8F7C72'); ?>
-                    <?php $renderColorField('theme_text_faint', 'Faint Text Color', '#B5A597'); ?>
-                    <?php $renderColorField('theme_heading_text', 'Heading Text Color', '#1F1714'); ?>
-                    <?php $renderColorField('theme_link_color', 'Link Color', '#E89BB8'); ?>
-                    <?php $renderColorField('theme_link_hover', 'Link Hover Color', '#D2729A'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Primary Text')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_text" value="<?php echo htmlspecialchars($settings['theme_text'] ?? '#1F1714'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_text_text" value="<?php echo htmlspecialchars($settings['theme_text'] ?? '#1F1714'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Secondary Text')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_text_secondary" value="<?php echo htmlspecialchars($settings['theme_text_secondary'] ?? '#6F5C54'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_text_secondary_text" value="<?php echo htmlspecialchars($settings['theme_text_secondary'] ?? '#6F5C54'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
                 </div>
 
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
 
-                <!-- 6. Buttons -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Buttons')); ?></h4>
+                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Status Colors')); ?></h4>
                 <div class="form-grid-2">
-                    <?php $renderColorField('theme_btn_primary_bg', 'Primary Button Background', '#E89BB8'); ?>
-                    <?php $renderColorField('theme_btn_primary_text', 'Primary Button Text Color', '#FFFFFF'); ?>
-                    <?php $renderColorField('theme_btn_primary_hover', 'Primary Button Hover Background', '#D2729A'); ?>
-                    <?php $renderColorField('theme_btn_outline_bg', 'Outline Button Background', '#FFFFFF'); ?>
-                    <?php $renderColorField('theme_btn_outline_border', 'Outline Button Border Color', '#EBDFCE'); ?>
-                    <?php $renderColorField('theme_btn_outline_hover', 'Outline Button Hover Background', '#F5EBDD'); ?>
-                    <?php $renderColorField('theme_btn_secondary_bg', 'Secondary Button Background', '#F5EBDD'); ?>
-                    <?php $renderColorField('theme_btn_secondary_hover', 'Secondary Button Hover Background', '#EBDFCE'); ?>
-                    <?php $renderColorField('theme_btn_danger_bg', 'Danger Button Background', '#C97A47'); ?>
-                    <?php $renderColorField('theme_btn_danger_text', 'Danger Button Text Color', '#FFFFFF'); ?>
-                    <?php $renderColorField('theme_btn_danger_border', 'Danger Button Border Color', '#C97A47'); ?>
-                    <?php $renderColorField('theme_btn_danger_hover', 'Danger Button Hover Background', '#B56A3D'); ?>
-                    <?php $renderColorField('theme_btn_dark_bg', 'Dark Button Background', '#1F1714'); ?>
-                    <?php $renderColorField('theme_btn_dark_hover', 'Dark Button Hover Background', '#3D2B24'); ?>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Success')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_success" value="<?php echo htmlspecialchars($settings['theme_success'] ?? '#5E8259'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_success_text" value="<?php echo htmlspecialchars($settings['theme_success'] ?? '#5E8259'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
 
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Warning')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_warning" value="<?php echo htmlspecialchars($settings['theme_warning'] ?? '#9A7A2C'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_warning_text" value="<?php echo htmlspecialchars($settings['theme_warning'] ?? '#9A7A2C'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
 
-                <!-- 7. Cards -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Cards')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_card_bg', 'Card Background', '#FDF8F1'); ?>
-                    <?php $renderColorField('theme_card_border', 'Card Border Color', '#EBDFCE'); ?>
-                    <?php $renderColorField('theme_card_header_bg', 'Card Header Background', '#FDF8F1'); ?>
-                    <?php $renderColorField('theme_card_header_border', 'Card Header Border Color', '#EBDFCE'); ?>
-                </div>
-                <?php $renderTextField('theme_card_hover_shadow', 'Card Hover Shadow (rgba)', 'rgba(31,23,20,0.08)', 'rgba(0,0,0,0.08)'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Danger')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_danger" value="<?php echo htmlspecialchars($settings['theme_danger'] ?? '#C97A47'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_danger_text" value="<?php echo htmlspecialchars($settings['theme_danger'] ?? '#C97A47'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
 
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 8. Tables -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Tables')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_table_header_bg', 'Table Header Background', '#F8EFE2'); ?>
-                    <?php $renderColorField('theme_table_header_text', 'Table Header Text Color', '#1F1714'); ?>
-                    <?php $renderColorField('theme_table_row_border', 'Table Row Border Color', '#F0E6D8'); ?>
-                    <?php $renderColorField('theme_table_hover_bg', 'Table Row Hover Background', '#F5EBDD'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 9. Status Badges -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Status Badges')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_badge_active_bg', 'Active/Open - Background', '#D4EDDA'); ?>
-                    <?php $renderColorField('theme_badge_active_text', 'Active/Open - Text', '#155724'); ?>
-                    <?php $renderColorField('theme_badge_inactive_bg', 'Inactive/Closed - Background', '#F0E6D8'); ?>
-                    <?php $renderColorField('theme_badge_inactive_text', 'Inactive/Closed - Text', '#6F5C54'); ?>
-                    <?php $renderColorField('theme_badge_dnc_bg', 'Do Not Contact - Background', '#F8D7DA'); ?>
-                    <?php $renderColorField('theme_badge_dnc_text', 'Do Not Contact - Text', '#721C24'); ?>
-                    <?php $renderColorField('theme_badge_prospect_bg', 'Prospect - Background', '#FFF3CD'); ?>
-                    <?php $renderColorField('theme_badge_prospect_text', 'Prospect - Text', '#856404'); ?>
-                    <?php $renderColorField('theme_badge_sent_bg', 'Sent - Background', '#D1ECF1'); ?>
-                    <?php $renderColorField('theme_badge_sent_text', 'Sent - Text', '#0C5460'); ?>
-                    <?php $renderColorField('theme_badge_accepted_bg', 'Accepted - Background', '#D4EDDA'); ?>
-                    <?php $renderColorField('theme_badge_accepted_text', 'Accepted - Text', '#155724'); ?>
-                    <?php $renderColorField('theme_badge_rejected_bg', 'Rejected - Background', '#F8D7DA'); ?>
-                    <?php $renderColorField('theme_badge_rejected_text', 'Rejected - Text', '#721C24'); ?>
-                    <?php $renderColorField('theme_badge_expired_bg', 'Expired - Background', '#E2E3E5'); ?>
-                    <?php $renderColorField('theme_badge_expired_text', 'Expired - Text', '#383D41'); ?>
-                    <?php $renderColorField('theme_badge_draft_bg', 'Draft - Background', '#F0E6D8'); ?>
-                    <?php $renderColorField('theme_badge_draft_text', 'Draft - Text', '#6F5C54'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 10. Priority Badges -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Priority Badges')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_pri_urgent_bg', 'Urgent - Background', '#F8D7DA'); ?>
-                    <?php $renderColorField('theme_pri_urgent_text', 'Urgent - Text', '#721C24'); ?>
-                    <?php $renderColorField('theme_pri_high_bg', 'High - Background', '#FFE5B4'); ?>
-                    <?php $renderColorField('theme_pri_high_text', 'High - Text', '#856404'); ?>
-                    <?php $renderColorField('theme_pri_medium_bg', 'Medium - Background', '#D1ECF1'); ?>
-                    <?php $renderColorField('theme_pri_medium_text', 'Medium - Text', '#0C5460'); ?>
-                    <?php $renderColorField('theme_pri_low_bg', 'Low - Background', '#D4EDDA'); ?>
-                    <?php $renderColorField('theme_pri_low_text', 'Low - Text', '#155724'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 11. Stat Cards -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Stat Cards (Dashboard)')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_stat_orange_bg', 'Orange Stat Card - Background', '#FFE5D0'); ?>
-                    <?php $renderColorField('theme_stat_orange_text', 'Orange Stat Card - Text', '#9A4A00'); ?>
-                    <?php $renderColorField('theme_stat_green_bg', 'Green Stat Card - Background', '#D4EDDA'); ?>
-                    <?php $renderColorField('theme_stat_green_text', 'Green Stat Card - Text', '#155724'); ?>
-                    <?php $renderColorField('theme_stat_blue_bg', 'Blue Stat Card - Background', '#D1ECF1'); ?>
-                    <?php $renderColorField('theme_stat_blue_text', 'Blue Stat Card - Text', '#0C5460'); ?>
-                    <?php $renderColorField('theme_stat_yellow_bg', 'Yellow Stat Card - Background', '#FFF3CD'); ?>
-                    <?php $renderColorField('theme_stat_yellow_text', 'Yellow Stat Card - Text', '#856404'); ?>
-                    <?php $renderColorField('theme_stat_purple_bg', 'Purple Stat Card - Background', '#E2D9F3'); ?>
-                    <?php $renderColorField('theme_stat_purple_text', 'Purple Stat Card - Text', '#4A2C7A'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 12. Inputs -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Inputs')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_input_bg', 'Input Background', '#FFFFFF'); ?>
-                    <?php $renderColorField('theme_input_border', 'Input Border Color', '#EBDFCE'); ?>
-                    <?php $renderColorField('theme_input_text', 'Input Text Color', '#1F1714'); ?>
-                    <?php $renderColorField('theme_input_focus_border', 'Input Focus Border Color', '#E89BB8'); ?>
-                    <?php $renderColorField('theme_placeholder_text', 'Placeholder Text Color', '#B5A597'); ?>
-                </div>
-                <?php $renderTextField('theme_input_focus_outline', 'Input Focus Outline (rgba)', 'rgba(232,155,184,0.25)', 'rgba(232,155,184,0.25)'); ?>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 13. Modals -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Modals')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_modal_bg', 'Modal Background', '#FDF8F1'); ?>
-                    <?php $renderColorField('theme_modal_border', 'Modal Border Color', '#EBDFCE'); ?>
-                </div>
-                <?php $renderTextField('theme_modal_backdrop', 'Modal Backdrop Color (rgba)', 'rgba(31,23,20,0.5)', 'rgba(0,0,0,0.5)'); ?>
-                <?php $renderNumberField('theme_modal_radius', 'Modal Border Radius', '16', 0, 50, 'px'); ?>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- 14. Sidebar -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Sidebar')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_sidebar_bg', 'Sidebar Background', '#FDF8F1'); ?>
-                    <?php $renderColorField('theme_sidebar_border', 'Sidebar Border Color (Right)', '#EBDFCE'); ?>
-                    <?php $renderColorField('theme_sidebar_logo_bg', 'Sidebar Logo Area Background', '#FDF8F1'); ?>
-                    <?php $renderColorField('theme_sidebar_footer_border', 'Sidebar Footer Border Color', '#EBDFCE'); ?>
-                    <?php $renderColorField('theme_sidebar_avatar_bg', 'Sidebar Avatar Background', '#E89BB8'); ?>
-                    <?php $renderColorField('theme_sidebar_avatar_text', 'Sidebar Avatar Text Color', '#FFFFFF'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- General Status Colors -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('General Status Colors')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderColorField('theme_success', 'Success', '#5E8259'); ?>
-                    <?php $renderColorField('theme_warning', 'Warning', '#9A7A2C'); ?>
-                    <?php $renderColorField('theme_danger', 'Danger', '#C97A47'); ?>
-                    <?php $renderColorField('theme_info', 'Info', '#4F7787'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- Layout Settings -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Layout Settings')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderNumberField('theme_sidebar_width', 'Sidebar Width', '260', 180, 400, 'px'); ?>
-                    <?php $renderNumberField('theme_card_radius', 'Card Border Radius', '16', 0, 50, 'px'); ?>
-                    <?php $renderNumberField('theme_input_radius', 'Input Border Radius', '10', 0, 50, 'px'); ?>
-                    <?php $renderNumberField('theme_btn_radius', 'Button Border Radius', '10', 0, 50, 'px'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Info')); ?></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="color" name="theme_info" value="<?php echo htmlspecialchars($settings['theme_info'] ?? '#4F7787'); ?>" class="color-picker" style="width:48px;height:40px;border:1px solid var(--color-border);border-radius:8px;cursor:pointer;">
+                            <input type="text" name="theme_info_text" value="<?php echo htmlspecialchars($settings['theme_info'] ?? '#4F7787'); ?>" class="form-control color-hex" style="max-width:120px;font-family:var(--font-mono,monospace);" oninput="this.previousElementSibling.value=this.value">
+                        </div>
+                    </div>
                 </div>
 
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
 
                 <div style="display:flex;gap:12px;align-items:center;">
-                    <button type="button" class="btn btn-outline" onclick="resetThemeDefaults()"><?php echo htmlspecialchars(__('Reset All to Defaults')); ?></button>
+                    <button type="button" class="btn btn-outline" onclick="resetThemeDefaults()"><?php echo htmlspecialchars(__('Reset to Defaults')); ?></button>
                     <span class="text-muted" style="font-size:12px;"><?php echo htmlspecialchars(__('Click Save Changes below to apply.')); ?></span>
                 </div>
             </div>
         </div>
 
-        <!-- Fonts Card -->
         <div class="card" style="margin-top:20px;">
             <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Fonts')); ?></h3></div>
             <div class="card-body">
-                <p class="text-muted" style="margin-bottom:20px;font-size:13px;"><?php echo htmlspecialchars(__('Choose fonts for headings, body text, labels, and italic accents. Supports English and Arabic Google Fonts.')); ?></p>
+                <p class="text-muted" style="margin-bottom:20px;font-size:13px;"><?php echo htmlspecialchars(__('Choose fonts for headings and body text. Supports English and Arabic Google Fonts.')); ?></p>
 
-                <?php
-                $headingFonts = ['Plus Jakarta Sans','Roboto','Open Sans','Poppins','Inter','Montserrat','Nunito','DM Sans','Manrope','Sora','Outfit','Space Grotesk','Fraunces','Playfair Display','Lora','Merriweather','PT Serif','Crimson Pro','Libre Baskerville','Source Serif Pro','Work Sans','Karla','Mulish','Hind','Asap','Archivo','Bricolage Grotesque','Instrument Sans'];
-                $bodyFonts = ['Plus Jakarta Sans','Open Sans','Inter','Roboto','DM Sans','Manrope','Nunito','Poppins','Montserrat','Outfit','Space Grotesk','Sora','Source Sans Pro','PT Sans','Fira Sans','Work Sans','Karla','Mulish','Hind','Asap','Archivo','Bricolage Grotesque','Instrument Sans'];
-                $monoFonts = ['JetBrains Mono','Fira Code','Source Code Pro','IBM Plex Mono','Roboto Mono','Space Mono','Ubuntu Mono','Cascadia Code','Inconsolata','PT Mono','DM Mono'];
-                $italicFonts = ['Fraunces','Playfair Display','Lora','Merriweather','PT Serif','Crimson Pro','Libre Baskerville','Source Serif Pro','EB Garamond','Spectral'];
-                $arabicFonts = ['Default (follows English)','Cairo','Tajawal','Almarai','IBM Plex Sans Arabic','Noto Sans Arabic','Readex Pro','El Messiri','Lateef','Amiri','Reem Kufi','Scheherazade New','Markazi Text','Vazirmatn','Noto Kufi Arabic','Dubai','Changa','Mada','Jomhuria','Lalezar'];
-                ?>
-
-                <!-- English Fonts -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('English Fonts')); ?></h4>
                 <div class="form-grid-2">
-                    <?php $renderFontSelect('theme_font_heading', 'Heading / Title Font', $headingFonts, 'Plus Jakarta Sans'); ?>
-                    <?php $renderFontSelect('theme_font_body', 'Body / Text Font', $bodyFonts, 'Plus Jakarta Sans'); ?>
-                    <?php $renderFontSelect('theme_font_mono', 'Monospace / Label Font', $monoFonts, 'JetBrains Mono'); ?>
-                    <?php $renderFontSelect('theme_font_italic', 'Italic Accent Font (for em in headings)', $italicFonts, 'Fraunces'); ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Heading / Title Font (English)')); ?></label>
+                        <select name="theme_font_heading" class="form-control font-select">
+                            <?php
+                            $headingFonts = ['Plus Jakarta Sans','Roboto','Open Sans','Poppins','Inter','Montserrat','Nunito','DM Sans','Manrope','Sora','Outfit','Space Grotesk','Fraunces','Playfair Display','Lora','Merriweather','PT Serif','Crimson Pro','Libre Baskerville','Source Serif Pro'];
+                            $currentHeadingFont = $settings['theme_font_heading'] ?? 'Plus Jakarta Sans';
+                            foreach ($headingFonts as $f) {
+                                $sel = ($f === $currentHeadingFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Body / Text Font (English)')); ?></label>
+                        <select name="theme_font_body" class="form-control font-select">
+                            <?php
+                            $bodyFonts = ['Plus Jakarta Sans','Open Sans','Inter','Roboto','DM Sans','Manrope','Nunito','Poppins','Montserrat','Outfit','Space Grotesk','Sora','Source Sans Pro','PT Sans','Fira Sans','Work Sans','Karla','Mulish','Hind','Asap'];
+                            $currentBodyFont = $settings['theme_font_body'] ?? 'Plus Jakarta Sans';
+                            foreach ($bodyFonts as $f) {
+                                $sel = ($f === $currentBodyFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Heading / Title Font (Arabic)')); ?></label>
+                        <select name="theme_font_heading_ar" class="form-control font-select">
+                            <?php
+                            $arabicHeadingFonts = ['Default (follows English)','Cairo','Tajawal','Almarai','IBM Plex Sans Arabic','Noto Sans Arabic','Readex Pro','El Messiri','Lateef','Amiri','Reem Kufi','Scheherazade New','Markazi Text','Vazirmatn'];
+                            $currentArHeadingFont = $settings['theme_font_heading_ar'] ?? 'Default (follows English)';
+                            foreach ($arabicHeadingFonts as $f) {
+                                $sel = ($f === $currentArHeadingFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><?php echo htmlspecialchars(__('Body / Text Font (Arabic)')); ?></label>
+                        <select name="theme_font_body_ar" class="form-control font-select">
+                            <?php
+                            $arabicBodyFonts = ['Default (follows English)','Cairo','Tajawal','Almarai','IBM Plex Sans Arabic','Noto Sans Arabic','Readex Pro','El Messiri','Lateef','Amiri','Reem Kufi','Scheherazade New','Markazi Text','Vazirmatn'];
+                            $currentArBodyFont = $settings['theme_font_body_ar'] ?? 'Default (follows English)';
+                            foreach ($arabicBodyFonts as $f) {
+                                $sel = ($f === $currentArBodyFont) ? ' selected' : '';
+                                echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
                 </div>
 
                 <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
 
-                <!-- Arabic Fonts -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Arabic Fonts')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderFontSelect('theme_font_heading_ar', 'Heading / Title Font (Arabic)', $arabicFonts, 'Default (follows English)'); ?>
-                    <?php $renderFontSelect('theme_font_body_ar', 'Body / Text Font (Arabic)', $arabicFonts, 'Default (follows English)'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- Font Size Settings -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Font Size Settings')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderNumberField('theme_fs_base', 'Base Body Font Size', '14', 10, 24, 'px'); ?>
-                    <?php $renderNumberField('theme_fs_h1', 'Heading h1 Font Size', '28', 18, 48, 'px'); ?>
-                    <?php $renderNumberField('theme_fs_h2', 'Heading h2 Font Size', '22', 14, 36, 'px'); ?>
-                    <?php $renderNumberField('theme_fs_card_title', 'Card Title Font Size', '16', 12, 28, 'px'); ?>
-                    <?php $renderNumberField('theme_fs_nav', 'Nav Link Font Size', '13', 10, 18, 'px'); ?>
-                    <?php $renderNumberField('theme_fs_table', 'Table Text Font Size', '13', 10, 18, 'px'); ?>
-                    <?php $renderNumberField('theme_fs_badge', 'Badge Font Size', '11', 8, 16, 'px'); ?>
-                </div>
-
-                <hr style="border:none;border-top:1px solid var(--color-border);margin:24px 0;">
-
-                <!-- Font Weight Settings -->
-                <h4 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--color-text);"><?php echo htmlspecialchars(__('Font Weight Settings')); ?></h4>
-                <div class="form-grid-2">
-                    <?php $renderWeightSelect('theme_fw_heading', 'Heading Font Weight', '700'); ?>
-                    <?php $renderWeightSelect('theme_fw_body', 'Body Font Weight', '400'); ?>
-                    <?php $renderWeightSelect('theme_fw_nav', 'Nav Link Font Weight', '500'); ?>
-                    <?php $renderWeightSelect('theme_fw_btn', 'Button Font Weight', '600'); ?>
+                <div class="form-group">
+                    <label class="form-label"><?php echo htmlspecialchars(__('Monospace / Label Font')); ?></label>
+                    <select name="theme_font_mono" class="form-control font-select">
+                        <?php
+                        $monoFonts = ['JetBrains Mono','Fira Code','Source Code Pro','IBM Plex Mono','Roboto Mono','Space Mono','Ubuntu Mono','Cascadia Code','Inconsolata','PT Mono'];
+                        $currentMonoFont = $settings['theme_font_mono'] ?? 'JetBrains Mono';
+                        foreach ($monoFonts as $f) {
+                            $sel = ($f === $currentMonoFont) ? ' selected' : '';
+                            echo "\u003coption value=\"" . htmlspecialchars($f) . "\"" . $sel . ">" . htmlspecialchars($f) . "\u003c/option>";
+                        }
+                        ?>
+                    </select>
+                    <p class="text-muted" style="font-size:11px;margin-top:4px;"><?php echo htmlspecialchars(__('Used for badges, labels, numbers, and code.')); ?></p>
                 </div>
             </div>
         </div>
@@ -710,89 +567,18 @@ include __DIR__ . '/../includes/header.php';
         <script>
         function resetThemeDefaults() {
             var defaults = {
-                /* Backgrounds */
                 theme_sidebar_bg: '#FDF8F1', theme_bg: '#FBF3EA', theme_surface: '#FDF8F1',
-                theme_input_bg: '#FFFFFF', theme_modal_backdrop: 'rgba(31,23,20,0.5)',
-                /* Borders */
-                theme_border: '#EBDFCE', theme_border_light: '#F0E6D8',
-                theme_table_row_border: '#F0E6D8', theme_card_border: '#EBDFCE',
-                /* Accent */
-                theme_accent: '#E89BB8', theme_accent_hover: '#D2729A', theme_accent_light: '#F5C2A0',
-                theme_accent_bg_tint: 'rgba(232,155,184,0.12)',
-                /* Navigation */
-                theme_nav_text: '#6F5C54', theme_nav_hover_text: '#1F1714', theme_nav_hover_bg: '#F5EBDD',
-                theme_nav_active_text: '#1F1714', theme_nav_active_bg: '#F5EBDD', theme_nav_active_border: '#E89BB8',
-                /* Text */
-                theme_text: '#1F1714', theme_text_secondary: '#6F5C54', theme_text_tertiary: '#8F7C72',
-                theme_text_faint: '#B5A597', theme_heading_text: '#1F1714',
-                theme_link_color: '#E89BB8', theme_link_hover: '#D2729A',
-                /* Buttons */
-                theme_btn_primary_bg: '#E89BB8', theme_btn_primary_text: '#FFFFFF', theme_btn_primary_hover: '#D2729A',
-                theme_btn_outline_bg: '#FFFFFF', theme_btn_outline_border: '#EBDFCE', theme_btn_outline_hover: '#F5EBDD',
-                theme_btn_secondary_bg: '#F5EBDD', theme_btn_secondary_hover: '#EBDFCE',
-                theme_btn_danger_bg: '#C97A47', theme_btn_danger_text: '#FFFFFF', theme_btn_danger_border: '#C97A47', theme_btn_danger_hover: '#B56A3D',
-                theme_btn_dark_bg: '#1F1714', theme_btn_dark_hover: '#3D2B24',
-                /* Cards */
-                theme_card_bg: '#FDF8F1', theme_card_border: '#EBDFCE', theme_card_hover_shadow: 'rgba(31,23,20,0.08)',
-                theme_card_header_bg: '#FDF8F1', theme_card_header_border: '#EBDFCE',
-                /* Tables */
-                theme_table_header_bg: '#F8EFE2', theme_table_header_text: '#1F1714', theme_table_hover_bg: '#F5EBDD',
-                /* Status Badges */
-                theme_badge_active_bg: '#D4EDDA', theme_badge_active_text: '#155724',
-                theme_badge_inactive_bg: '#F0E6D8', theme_badge_inactive_text: '#6F5C54',
-                theme_badge_dnc_bg: '#F8D7DA', theme_badge_dnc_text: '#721C24',
-                theme_badge_prospect_bg: '#FFF3CD', theme_badge_prospect_text: '#856404',
-                theme_badge_sent_bg: '#D1ECF1', theme_badge_sent_text: '#0C5460',
-                theme_badge_accepted_bg: '#D4EDDA', theme_badge_accepted_text: '#155724',
-                theme_badge_rejected_bg: '#F8D7DA', theme_badge_rejected_text: '#721C24',
-                theme_badge_expired_bg: '#E2E3E5', theme_badge_expired_text: '#383D41',
-                theme_badge_draft_bg: '#F0E6D8', theme_badge_draft_text: '#6F5C54',
-                /* Priority Badges */
-                theme_pri_urgent_bg: '#F8D7DA', theme_pri_urgent_text: '#721C24',
-                theme_pri_high_bg: '#FFE5B4', theme_pri_high_text: '#856404',
-                theme_pri_medium_bg: '#D1ECF1', theme_pri_medium_text: '#0C5460',
-                theme_pri_low_bg: '#D4EDDA', theme_pri_low_text: '#155724',
-                /* Stat Cards */
-                theme_stat_orange_bg: '#FFE5D0', theme_stat_orange_text: '#9A4A00',
-                theme_stat_green_bg: '#D4EDDA', theme_stat_green_text: '#155724',
-                theme_stat_blue_bg: '#D1ECF1', theme_stat_blue_text: '#0C5460',
-                theme_stat_yellow_bg: '#FFF3CD', theme_stat_yellow_text: '#856404',
-                theme_stat_purple_bg: '#E2D9F3', theme_stat_purple_text: '#4A2C7A',
-                /* Inputs */
-                theme_input_border: '#EBDFCE', theme_input_text: '#1F1714',
-                theme_input_focus_border: '#E89BB8', theme_input_focus_outline: 'rgba(232,155,184,0.25)',
-                theme_placeholder_text: '#B5A597',
-                /* Modals */
-                theme_modal_bg: '#FDF8F1', theme_modal_border: '#EBDFCE',
-                /* Sidebar */
-                theme_sidebar_border: '#EBDFCE', theme_sidebar_logo_bg: '#FDF8F1',
-                theme_sidebar_footer_border: '#EBDFCE', theme_sidebar_avatar_bg: '#E89BB8', theme_sidebar_avatar_text: '#FFFFFF',
-                /* Status Colors */
-                theme_success: '#5E8259', theme_warning: '#9A7A2C', theme_danger: '#C97A47', theme_info: '#4F7787',
-                /* Layout */
-                theme_sidebar_width: '260', theme_card_radius: '16', theme_input_radius: '10', theme_btn_radius: '10', theme_modal_radius: '16',
-                /* Fonts */
-                theme_font_heading: 'Plus Jakarta Sans', theme_font_body: 'Plus Jakarta Sans',
-                theme_font_mono: 'JetBrains Mono', theme_font_italic: 'Fraunces',
-                theme_font_heading_ar: 'Default (follows English)', theme_font_body_ar: 'Default (follows English)',
-                /* Font Sizes */
-                theme_fs_base: '14', theme_fs_h1: '28', theme_fs_h2: '22', theme_fs_card_title: '16',
-                theme_fs_nav: '13', theme_fs_table: '13', theme_fs_badge: '11',
-                /* Font Weights */
-                theme_fw_heading: '700', theme_fw_body: '400', theme_fw_nav: '500', theme_fw_btn: '600'
+                theme_border: '#EBDFCE', theme_accent: '#E89BB8', theme_accent_hover: '#D2729A',
+                theme_text: '#1F1714', theme_text_secondary: '#6F5C54',
+                theme_success: '#5E8259', theme_warning: '#9A7A2C', theme_danger: '#C97A47', theme_info: '#4F7787'
             };
             Object.keys(defaults).forEach(function(key) {
                 var el = document.querySelector('[name="' + key + '"]');
-                if (el) {
-                    el.value = defaults[key];
-                    var txt = document.querySelector('[name="' + key + '_text"]');
-                    if (txt) txt.value = defaults[key];
-                    // Trigger color picker sync
-                    if (el.type === 'color' && txt) { el.value = defaults[key]; }
-                }
+                if (el) { el.value = defaults[key]; var txt = document.querySelector('[name="' + key + '_text"]'); if (txt) txt.value = defaults[key]; }
             });
         }
         </script>
+
     <!-- Tab: VoIP -->
     <div class="tab-pane" id="pane-voip">
         <div class="card">
