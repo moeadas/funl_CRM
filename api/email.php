@@ -94,7 +94,9 @@ $action = $_GET['action'] ?? '';
 
 // ─── LIST ALL ───
 if ($action === 'list') {
-    $companyId = getCurrentCompanyId(); $stmt = $db->prepare("SELECT el.*, u.full_name as creator, (SELECT COUNT(*) FROM email_list_members WHERE list_id = el.list_id AND status = 'Active') as active_members FROM email_lists el LEFT JOIN users u ON el.created_by = u.user_id WHERE el.company_id = ? ORDER BY el.updated_at DESC");
+    $companyId = getCurrentCompanyId();
+    $stmt = $db->prepare("SELECT el.*, u.full_name as creator, (SELECT COUNT(*) FROM email_list_members WHERE list_id = el.list_id AND status = 'Active') as active_members FROM email_lists el LEFT JOIN users u ON el.created_by = u.user_id WHERE el.company_id = ? ORDER BY el.updated_at DESC");
+    $stmt->execute([$companyId]);
     jsonSuccess('Lists loaded', $stmt->fetchAll());
 }
 
@@ -103,8 +105,8 @@ if (($action === 'create_list' || $action === 'list_save') && $method === 'POST'
     requireCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     if (empty($input['name'])) jsonError('List name is required');
-    $stmt = $db->prepare("INSERT INTO email_lists (name, description, created_by) VALUES (?, ?, ?)");
-    $stmt->execute([$input['name'], $input['description'] ?? '', $currentUser['user_id']]);
+    $stmt = $db->prepare("INSERT INTO email_lists (name, description, created_by, company_id) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$input['name'], $input['description'] ?? '', $currentUser['user_id'], $currentUser['company_id'] ?? null]);
     jsonSuccess('List created', ['list_id' => $db->lastInsertId()]);
 }
 
