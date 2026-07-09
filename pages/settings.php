@@ -795,6 +795,8 @@ include __DIR__ . '/../includes/header.php';
             });
         }
         </script>
+    </div><!-- end pane-theme -->
+
     <!-- Tab: VoIP -->
     <div class="tab-pane" id="pane-voip">
         <div class="card">
