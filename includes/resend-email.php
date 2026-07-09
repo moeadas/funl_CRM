@@ -19,7 +19,7 @@ class ResendEmailService {
         $fromEmailSetting = '';
         try {
             $pdo = Database::getInstance()->getConnection();
-            $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('resend_api_key','resend_from_email') ORDER BY company_id ASC");
+            $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('resend_api_key','resend_from_email') AND setting_value != '' ORDER BY company_id ASC");
             foreach ($stmt->fetchAll(PDO::FETCH_KEY_PAIR) as $k => $v) {
                 if ($k === 'resend_api_key') $apiKeySetting = $v;
                 if ($k === 'resend_from_email') $fromEmailSetting = $v;
@@ -36,13 +36,22 @@ class ResendEmailService {
         $this->fromEmail = $fromEmailSetting ?: getenv('RESEND_FROM_EMAIL') ?: '';
         if (empty($this->fromEmail)) {
             // Build from app settings
-            $appName = getSetting('app_name', 'White Label CRM');
+            $appName = getSetting('app_name', 'FunL CRM');
+            $appName = trim($appName);
+            if (empty($appName)) $appName = 'FunL CRM';
             $companyEmail = getSetting('company_email', '');
-            $this->fromEmail = $companyEmail ? "{$appName} <noreply@{$companyEmail}>" : 'White Label CRM <noreply@yourdomain.com>';
+            if ($companyEmail && strpos($companyEmail, '@') !== false) {
+                $domain = explode('@', $companyEmail, 2)[1];
+                $this->fromEmail = "{$appName} <noreply@{$domain}>";
+            } else {
+                $this->fromEmail = 'White Label CRM <noreply@yourdomain.com>';
+            }
         } else {
             // Ensure proper "Name <email>" format for Resend API
             if (strpos($this->fromEmail, '<') === false && filter_var($this->fromEmail, FILTER_VALIDATE_EMAIL)) {
-                $appName = getSetting('app_name', 'White Label CRM');
+                $appName = getSetting('app_name', '');
+                $appName = trim($appName);
+                if (empty($appName)) $appName = 'FunL CRM';
                 $this->fromEmail = "{$appName} <{$this->fromEmail}>";
             }
         }

@@ -140,7 +140,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         'app_name' => 'White Label CRM',
                         'records_per_page' => '25',
                         'timezone' => 'UTC',
+                        'date_format' => 'Y-m-d',
                         'email_from_name' => $companyName,
+                        'smtp_encryption' => 'tls',
+                        'smtp_port' => '587',
+                        'voip_enabled' => '0',
+                        'voip_recording_enabled' => '0',
+                        'whatsapp_enabled' => '0',
+                        'whatsapp_sandbox_mode' => '0',
                     ];
                     foreach ($defaultSettings as $key => $value) {
                         $db->query(
