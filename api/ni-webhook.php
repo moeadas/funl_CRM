@@ -64,16 +64,26 @@ if ($merchantId && $configuredMerchant && $merchantId !== $configuredMerchant) {
     exit('Forbidden');
 }
 
-// Optional: Verify webhook signature (if ni_webhook_secret is configured)
-// NI typically signs with a header like X-Webhook-Signature
+// Verify webhook signature. When a secret is configured, a VALID signature is
+// REQUIRED — a missing or mismatched signature is rejected. This prevents
+// spoofed PAYMENT_SUCCESS events from activating subscriptions for free.
+// NI signs with a header like X-Webhook-Signature (or X-Signature).
 $webhookSig = $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? $_SERVER['HTTP_X_SIGNATURE'] ?? '';
-if ($expectedSecret && $webhookSig) {
+if (!empty($expectedSecret)) {
+    if (empty($webhookSig)) {
+        error_log('NI Webhook: secret configured but no signature header present — rejecting.');
+        http_response_code(401);
+        exit('Unauthorized');
+    }
     $expected = hash_hmac('sha256', $rawInput, $expectedSecret);
     if (!hash_equals($expected, $webhookSig)) {
         error_log('NI Webhook: Signature verification failed');
         http_response_code(401);
         exit('Unauthorized');
     }
+} else {
+    // No secret configured: log loudly. Merchant-ID check above is the only guard.
+    error_log('NI Webhook: WARNING — ni_webhook_secret not configured; accepting on merchantId match only. Configure a secret to secure this endpoint.');
 }
 
 // =====================================================================
