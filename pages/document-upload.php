@@ -48,7 +48,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'uploa
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'webp'];
 
-        if (in_array($ext, $allowed)) {
+        // Validate real MIME type (don't trust the client-supplied extension alone)
+        $allowedMime = [
+            'application/pdf', 'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain', 'image/jpeg', 'image/png', 'image/webp',
+        ];
+        $realMime = '';
+        if (class_exists('finfo')) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $realMime = $finfo->file($file['tmp_name']) ?: '';
+        }
+
+        if ($realMime && !in_array($realMime, $allowedMime, true)) {
+            $error = 'File content does not match an allowed type.';
+        } elseif (in_array($ext, $allowed)) {
             $fileName = uniqid() . '_' . preg_replace('/[^a-z0-9._-]/i', '_', basename($file['name']));
             $filePath = $uploadDir . $fileName;
 
