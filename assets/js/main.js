@@ -2,18 +2,27 @@
  * FUNL CRM — Main JavaScript (Vanilla, no jQuery)
  */
 
-// Override native browser dialogs to keep notifications in-app
+// Override native browser dialogs to keep notifications in-app.
 window.alert = function (message) {
-    showNotification(message, 'warning');
+    showNotification(message, 'info');
 };
 
-// M-1 fix: legacy code uses `if (!confirm(...)) return;` synchronously.
-// Returning false (the previous behavior) made destructive actions silently
-// no-op. We now log the prompt and return true so existing code proceeds;
-// new code should use showConfirm() for the in-app modal flow.
+// Native confirm() cannot be made truly async, so any remaining synchronous
+// confirm() calls are intercepted at the DOM level (see the submit + click
+// interceptors below) and routed through the showConfirm() modal instead.
+// This stub only exists as a safety net for confirm() calls that are NOT
+// wired through an interceptor. It returns false (safe default: do NOT
+// perform the action) and surfaces the intended prompt as an in-app modal so
+// the user can retry via a properly-wired control. It must never silently
+// auto-approve a destructive action.
 window.confirm = function (message) {
-    console.warn("Native confirm() called; using legacy pass-through. Prefer showConfirm() for new code. Message: " + message);
-    return true;
+    console.warn("Native confirm() intercepted; use data-confirm or showConfirm(). Message: " + message);
+    showConfirm(message, function () {
+        // Nothing to do here — the caller already returned false, so the
+        // original action was cancelled. The user must trigger it again;
+        // properly-wired controls (data-confirm / interceptors) will run it.
+    });
+    return false;
 };
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -78,6 +87,35 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+
+    // ─── Global button confirm interceptor (replaces inline onclick confirm) ───
+    // Catches <button onclick="return confirm('...')"> that submit a parent form
+    // but are NOT inside an onsubmit-guarded form (e.g. super-admin-company,
+    // billing "Cancel Subscription"). Without this, the window.confirm stub
+    // returns false and the button silently does nothing.
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('button, a');
+        if (!btn) return;
+        if (btn.dataset.confirmed === 'true') {
+            btn.dataset.confirmed = 'false';
+            return;
+        }
+        var onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr && /confirm\(/.test(onclickAttr) && !/confirmClearLeads|showConfirm/.test(onclickAttr)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            var message = 'Are you sure you want to proceed?';
+            var match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
+            if (match && match[1]) message = match[1];
+            showConfirm(message, function () {
+                btn.dataset.confirmed = 'true';
+                // Re-trigger: click the button so it submits its form / runs its handler.
+                var form = btn.closest('form');
+                if (form) { form.dataset.confirmed = 'true'; form.submit(); }
+                else { btn.click(); }
+            });
+        }
+    }, true);
 
     // ─── Form validation (data-validate) ───
     document.querySelectorAll('form[data-validate]').forEach(function (form) {
