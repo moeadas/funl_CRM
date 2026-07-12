@@ -54,33 +54,61 @@
 
 ### Step 3: Import Database Schema
 
-> ⚠️ **Important:** For multi-tenant SaaS deployment, use the **SaaS multi-tenant** schema — **not** `schema.sql` (which is the legacy single-tenant schema and will break per-company `settings` isolation).
+> ⚠️ **Important:** Use the consolidated `database/install.sql`. It applies the full schema chain — SaaS multi-tenant base, core CRM tables, all feature tables (proposals, payments, VoIP, WhatsApp, email stats), every column migration through v15, and indexes — **in the correct dependency order**. Do **not** import `schema.sql` alone (legacy single-tenant; breaks per-company `settings` isolation) and do not cherry-pick individual migrations for a fresh install.
 
-1. **Access phpMyAdmin**
-   - Go to Site Tools → MySQL → phpMyAdmin
-   - Select your database from the left sidebar
+**Option A — command line (recommended, guarantees correct SOURCE order):**
 
-2. **Import the SaaS Multi-Tenant Schema**
-   - Click "Import" tab
-   - Click "Choose File"
-   - Select **`database/apply_saas_mysql.sql`** (this creates the `companies` table, adds `company_id` to all shared tables, and sets up composite `UNIQUE(company_id, setting_key)` so per-tenant settings don't collide)
-   - Click "Go" at the bottom
-   - Wait for success message
+```bash
+cd /path/to/app
+mysql -u YOUR_DB_USER -p YOUR_DB_NAME < database/install.sql
+```
 
-3. **(Optional) Apply incremental migrations** — only if upgrading from a much older version:
-   - `database/migrate-v2-email-safe.sql`
-   - `database/migrate-v4-user-smtp.sql`
-   - `database/migrate-v5-oauth2.sql`
-   - `database/migrate-v6-region-nullable.sql`
-   - `database/migrate-v7-nullable-fields.sql`
-   - `database/migrate-v8-profile-name.sql`
-   - `database/migrate-v9-add-lead-columns.sql`
-   - `database/migrate-v10-add-indexes.sql`
-   - `database/migrate-v11-contact-status.sql`
+`install.sql` uses `SOURCE` with paths relative to the `database/` directory, so run it from the repo root (or `cd database && mysql ... < install.sql`). All statements are idempotent, so re-running is safe.
 
-4. **Immediately rotate the seeded admin password** (see H-8 below) — the default `admin / Admin@123` (or the bcrypt hash in the seed) is a known credential if the install guide is followed literally.
+**Option B — phpMyAdmin (SiteGround):** phpMyAdmin's importer does **not** support `SOURCE`. Either use Option A, or import each file below **in this exact order** via Import → Choose File → Go:
 
-### Step 4: Configure Database Connection
+1. `database/saas-migration.sql`
+2. `database/apply_saas_mysql.sql`
+3. `database/schema-v4-crm-tables.sql`
+4. `database/schema-v2-email.sql`
+5. `database/schema-v3-voip-whatsapp.sql`
+6. `database/003_voip_calls.sql`
+7. `database/migration_add_whatsapp_users.sql`
+8. `database/email-stats-migration.sql`
+9. `database/migrate-v2-email-safe.sql` → `migrate-v13-ni-payments.sql` (all v2–v13, skipping v10)
+10. `database/migrate-custom-fields-logo.sql`
+11. `database/migrate-v14-payment-methods.sql`  ← creates `payment_methods` (billing page depends on it)
+12. `database/migrate-v15-proposals.sql`  ← creates `proposals`
+13. `database/migrations/2026-06-14_lead_utm_sources.sql`
+14. `database/migrate-v10-add-indexes.sql`
+15. `database/migrations/2026-06-21_add_indexes.sql`
+
+**Verify** after import — these must all exist:
+```sql
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = DATABASE()
+  AND table_name IN ('companies','users','leads','contacts','deals',
+                     'proposals','payment_methods','payment_transactions',
+                     'quotes','products','voip_calls','whatsapp_messages');
+```
+
+**Immediately rotate the seeded admin password** — the default seeded credential is known if the guide is followed literally. Log in and change it before exposing the app.
+
+### Step 4: Set the Encryption Key (REQUIRED)
+
+The app encrypts sensitive tokens (SMTP passwords, OAuth tokens, Twilio auth tokens) at rest. **In production this key is mandatory** — without it, the app now refuses to store secrets (it will throw rather than silently base64-encode them).
+
+1. Generate a key:
+   ```bash
+   php -r "echo bin2hex(random_bytes(32));"
+   ```
+2. Copy `config/.env.example` to `config/.env` and set:
+   ```
+   APP_ENCRYPTION_KEY=<the 64-char value you generated>
+   ```
+   (Only for local SQLite dev may you skip this by setting `FUNL_STRICT_SECRETS=false`.)
+
+### Step 5: Configure Database Connection
 
 1. **Edit Configuration File**
    - Open File Manager
