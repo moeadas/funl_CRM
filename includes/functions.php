@@ -461,16 +461,24 @@ function encryptToken(string $plaintext, ?string $key = null) {
         $key = getenv('APP_ENCRYPTION_KEY');
     }
     if (empty($key)) {
-        // H-5: when FUNL_STRICT_SECRETS=true, refuse to silently base64-encode secrets
-        $strict = filter_var(getenv('FUNL_STRICT_SECRETS'), FILTER_VALIDATE_BOOLEAN);
+        // H-5: refuse to silently base64-encode secrets. Strict mode is now the
+        // DEFAULT — the reversible base64 fallback is only allowed when explicitly
+        // opted into for local dev (FUNL_STRICT_SECRETS=false OR USE_SQLITE sandbox).
+        $strictEnv = getenv('FUNL_STRICT_SECRETS');
+        $isSandbox = defined('USE_SQLITE') && USE_SQLITE;
+        // Default to strict unless it's the SQLite sandbox or strict is explicitly disabled.
+        $strict = ($strictEnv === false || $strictEnv === '')
+            ? !$isSandbox
+            : filter_var($strictEnv, FILTER_VALIDATE_BOOLEAN);
         if ($strict) {
             throw new \RuntimeException(
-                'APP_ENCRYPTION_KEY is not set but FUNL_STRICT_SECRETS=true. ' .
-                'Refusing to store secrets in reversible base64. Set APP_ENCRYPTION_KEY in .env.'
+                'APP_ENCRYPTION_KEY is not set. Refusing to store secrets in reversible base64. ' .
+                'Generate one with: php -r "echo bin2hex(random_bytes(32));" and set APP_ENCRYPTION_KEY in config/.env. ' .
+                '(For local SQLite dev only, set FUNL_STRICT_SECRETS=false.)'
             );
         }
-        error_log('encryptToken: No encryption key configured (set FUNL_STRICT_SECRETS=true to hard-fail)');
-        return base64_encode($plaintext); // Fallback (not encrypted!) — only for dev
+        error_log('encryptToken: No encryption key configured — using INSECURE base64 fallback (dev/sandbox only).');
+        return base64_encode($plaintext); // Fallback (not encrypted!) — dev/sandbox only
     }
     
     if (extension_loaded('sodium')) {
