@@ -106,6 +106,51 @@ class Database {
                 $this->connection = new PDO($dsn, null, null, $options);
                 // Enable foreign keys in SQLite
                 $this->connection->exec("PRAGMA foreign_keys = ON;");
+                // Register MySQL-compatible functions so raw PDO queries that
+                // bypass the mysqlToSQLite() translator (e.g. code using
+                // getConnection()->prepare("... NOW() ...")) still work in the
+                // SQLite sandbox. SQLite has no NOW()/CURDATE()/etc natively.
+                if (method_exists($this->connection, 'sqliteCreateFunction')) {
+                    $this->connection->sqliteCreateFunction('NOW', function () {
+                        return date('Y-m-d H:i:s');
+                    }, 0);
+                    $this->connection->sqliteCreateFunction('CURDATE', function () {
+                        return date('Y-m-d');
+                    }, 0);
+                    $this->connection->sqliteCreateFunction('CURTIME', function () {
+                        return date('H:i:s');
+                    }, 0);
+                    $this->connection->sqliteCreateFunction('UNIX_TIMESTAMP', function () {
+                        return time();
+                    }, 0);
+                    // IFNULL exists in SQLite, but register a 2-arg alias defensively.
+                    $this->connection->sqliteCreateFunction('IFNULL', function ($a, $b) {
+                        return $a ?? $b;
+                    }, 2);
+                    // DATE_FORMAT(date, fmt) — translate common MySQL format specifiers
+                    // to PHP date() and return the formatted string.
+                    $this->connection->sqliteCreateFunction('DATE_FORMAT', function ($date, $fmt) {
+                        if ($date === null) return null;
+                        $ts = strtotime($date);
+                        if ($ts === false) return $date;
+                        $map = [
+                            '%Y' => 'Y', '%y' => 'y', '%m' => 'm', '%c' => 'n',
+                            '%d' => 'd', '%e' => 'j', '%H' => 'H', '%h' => 'h',
+                            '%i' => 'i', '%s' => 's', '%p' => 'A', '%M' => 'F',
+                            '%b' => 'M', '%W' => 'l', '%a' => 'D', '%j' => 'z',
+                        ];
+                        return date(strtr($fmt, $map), $ts);
+                    }, 2);
+                    $this->connection->sqliteCreateFunction('YEAR', function ($d) {
+                        return $d ? (int)date('Y', strtotime($d)) : null;
+                    }, 1);
+                    $this->connection->sqliteCreateFunction('MONTH', function ($d) {
+                        return $d ? (int)date('n', strtotime($d)) : null;
+                    }, 1);
+                    $this->connection->sqliteCreateFunction('DATE', function ($d) {
+                        return $d ? date('Y-m-d', strtotime($d)) : null;
+                    }, 1);
+                }
             } else {
                 $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
                 $options = [
