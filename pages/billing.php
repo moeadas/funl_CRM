@@ -369,7 +369,7 @@ $csrfToken = generateCSRFToken();
                 <form method="POST" style="display:inline;">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                     <input type="hidden" name="action" value="cancel_subscription">
-                    <button class="btn btn-danger btn-sm" onclick="return confirm('Cancel subscription? You will keep access until the end of your current billing period.');">Cancel Subscription</button>
+                    <button class="btn btn-danger btn-sm" type="submit" data-confirm="Cancel subscription? You will keep access until the end of your current billing period.">Cancel Subscription</button>
                 </form>
                 <?php endif; ?>
             </div>
