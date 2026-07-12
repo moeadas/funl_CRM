@@ -122,18 +122,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $value = encryptToken($value);
                 }
 
-                // Check if setting exists
-                $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = ? AND (company_id = ? OR company_id IS NULL)");
-                $stmtCheck->execute([$key, $companyId]);
-                
-                if ($stmtCheck->fetch()) {
-                    // Update
-                    $stmtUpdate = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ? AND (company_id = ? OR company_id IS NULL)");
-                    $stmtUpdate->execute([$value, $key, $companyId]);
+                // XSS hardening: theme_* values are emitted into a <style> block
+                // by theme-override.php, so they must never contain markup or
+                // CSS-breaking characters. Invalid input is dropped (falls back
+                // to the built-in default at render time).
+                if (strpos($key, 'theme_') === 0 && $value !== '') {
+                    $value = trim($value);
+                    if (preg_match('/^theme_(sidebar_width|.*_radius)$/', $key) === 1
+                        || preg_match('/^theme_(fs|fw)_/', $key) === 1) {
+                        $value = (string)(int)$value; // numeric-only keys
+                    } elseif (strpos($key, 'theme_font_') === 0) {
+                        if (preg_match('/^[a-zA-Z0-9\- ()]{1,60}$/', $value) !== 1) {
+                            $value = '';
+                        }
+                    } else {
+                        // Color keys: hex, rgb()/rgba()/hsl()/hsla(), or a bare keyword
+                        if (preg_match('/^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla)\(\s*[\d.,%\s]+\)|transparent|inherit|currentColor|[a-zA-Z]{3,25})$/', $value) !== 1) {
+                            $value = '';
+                        }
+                    }
+                }
+
+                // Tenant-scoped upsert. Previously the WHERE clause included
+                // "OR company_id IS NULL", which let a tenant admin overwrite the
+                // GLOBAL default row shared by every other tenant. Now a company
+                // admin only ever touches their own company's row; global (NULL)
+                // rows are only written when no company context exists (super admin).
+                if ($companyId) {
+                    $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = ? AND company_id = ?");
+                    $stmtCheck->execute([$key, $companyId]);
+                    if ($stmtCheck->fetch()) {
+                        $stmtUpdate = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ? AND company_id = ?");
+                        $stmtUpdate->execute([$value, $key, $companyId]);
+                    } else {
+                        $stmtInsert = $pdo->prepare("INSERT INTO settings (company_id, setting_key, setting_value, setting_type) VALUES (?, ?, ?, 'text')");
+                        $stmtInsert->execute([$companyId, $key, $value]);
+                    }
                 } else {
-                    // Insert
-                    $stmtInsert = $pdo->prepare("INSERT INTO settings (company_id, setting_key, setting_value, setting_type) VALUES (?, ?, ?, 'text')");
-                    $stmtInsert->execute([$companyId, $key, $value]);
+                    $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = ? AND company_id IS NULL");
+                    $stmtCheck->execute([$key]);
+                    if ($stmtCheck->fetch()) {
+                        $stmtUpdate = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ? AND company_id IS NULL");
+                        $stmtUpdate->execute([$value, $key]);
+                    } else {
+                        $stmtInsert = $pdo->prepare("INSERT INTO settings (company_id, setting_key, setting_value, setting_type) VALUES (NULL, ?, ?, 'text')");
+                        $stmtInsert->execute([$key, $value]);
+                    }
                 }
             }
 
