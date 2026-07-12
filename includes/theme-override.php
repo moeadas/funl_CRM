@@ -145,10 +145,38 @@ function includeThemeOverride($db, $companyId) {
         'theme_fw_btn' => '600',
     ];
 
-    // Merge with saved values
+
+    // ── XSS hardening: sanitize every theme value before it is emitted into
+    //    <style>. Invalid values fall back to the safe default. ──
+    $isSafeCssColor = function($val) {
+        return (bool)preg_match(
+            '/^(#[0-9a-fA-F]{3,8}'
+            . '|(rgb|rgba|hsl|hsla)\(\s*[\d.,%\s]+\)'
+            . '|transparent|inherit|currentColor'
+            . '|[a-zA-Z]{3,25})$/',
+            $val
+        );
+    };
+    $sanitizeThemeValue = function($key, $val, $default) use ($isSafeCssColor) {
+        $val = trim((string)$val);
+        if ($val === '') return $default;
+        // Numeric-only keys (widths, radii, font sizes, font weights)
+        if (preg_match('/^theme_(sidebar_width|.*_radius|fs_|fw_)/', $key) === 1
+            || preg_match('/^theme_(fs|fw)_/', $key) === 1) {
+            return (string)(int)$val;
+        }
+        // Font family keys: letters, digits, spaces, hyphens, parentheses only
+        if (strpos($key, 'theme_font_') === 0) {
+            return preg_match('/^[a-zA-Z0-9\- ()]{1,60}$/', $val) === 1 ? $val : $default;
+        }
+        // Everything else is a color value
+        return $isSafeCssColor($val) ? $val : $default;
+    };
+
+    // Merge with saved values (sanitized)
     $v = [];
     foreach ($defaults as $k => $d) {
-        $v[$k] = $g($k, $d);
+        $v[$k] = $sanitizeThemeValue($k, $g($k, $d), $d);
     }
 
     $output = "";
@@ -175,10 +203,10 @@ function includeThemeOverride($db, $companyId) {
         $fontFamilies[] = "family=" . urlencode($arHeadingFont) . ":wght@400;500;600;700";
     }
     if ($arBodyFont && strpos($arBodyFont, 'Default') === false && $arBodyFont !== $arHeadingFont) {
+        $fontFamilies[] = "family=" . urlencode($arBodyFont) . ":wght@400;500;600;700";
+    }
     if ($arMenuFont && strpos($arMenuFont, 'Default') === false && $arMenuFont !== $arHeadingFont && $arMenuFont !== $arBodyFont) {
         $fontFamilies[] = "family=" . urlencode($arMenuFont) . ":wght@400;500;600;700";
-    }
-        $fontFamilies[] = "family=" . urlencode($arBodyFont) . ":wght@400;500;600;700";
     }
 
     if (!empty($fontFamilies)) {
@@ -351,11 +379,10 @@ function includeThemeOverride($db, $companyId) {
     }
     if ($arBodyFont && strpos($arBodyFont, 'Default') === false) {
         $css .= "html[lang=\"ar\"] body,html[lang=\"ar\"] .form-control,html[lang=\"ar\"] .btn{font-family:'$arBodyFont',sans-serif;}";
-        if ($arMenuFont && strpos($arMenuFont, 'Default') === false) {
-            $css .= "html[lang=\"ar\"] .nav-link{font-family:'$arMenuFont',sans-serif;}";
-        } else {
-            $css .= "html[lang=\"ar\"] .nav-link{font-family:'$arBodyFont',sans-serif;}";
-        }
+        $css .= "html[lang=\"ar\"] .nav-link{font-family:'$arBodyFont',sans-serif;}";
+    }
+    if ($arMenuFont && strpos($arMenuFont, 'Default') === false) {
+        $css .= "html[lang=\"ar\"] .nav-link{font-family:'$arMenuFont',sans-serif;}";
     }
 
     $output .= '<style id="theme-override">' . $css . '</style>';
