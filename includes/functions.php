@@ -39,9 +39,25 @@ function getAppName() {
     return getSetting('app_name', 'White Label CRM');
 }
 
+// Minimum byte size for an uploaded logo/favicon to be considered valid.
+// Guards against truncated/corrupt uploads (seen as 42-43 byte files) that
+// pass file_exists() but render as a broken image. Anything smaller falls
+// back to the bundled default asset.
+if (!defined('MIN_BRAND_ASSET_BYTES')) define('MIN_BRAND_ASSET_BYTES', 100);
+
+function isValidUploadedAsset($filename) {
+    if (!$filename) return false;
+    // Reject path traversal / non-simple filenames outright.
+    if (strpbrk($filename, "/\\") !== false) return false;
+    $path = __DIR__ . '/../uploads/' . $filename;
+    if (!is_file($path)) return false;
+    $size = @filesize($path);
+    return $size !== false && $size >= MIN_BRAND_ASSET_BYTES;
+}
+
 function getCompanyLogo() {
     $logo = getSetting('company_logo', '');
-    if ($logo && file_exists(__DIR__ . '/../uploads/' . $logo)) {
+    if (isValidUploadedAsset($logo)) {
         return '/uploads/' . htmlspecialchars($logo);
     }
     return '/assets/images/logo-default.png';
@@ -49,7 +65,7 @@ function getCompanyLogo() {
 
 function getCompanyFavicon() {
     $favicon = getSetting('company_favicon', '');
-    if ($favicon && file_exists(__DIR__ . '/../uploads/' . $favicon)) {
+    if (isValidUploadedAsset($favicon)) {
         return '/uploads/' . htmlspecialchars($favicon);
     }
     return '/assets/images/favicon.png';
