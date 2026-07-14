@@ -22,7 +22,7 @@ if (!$isSuperAdmin && !$companyId) {
     requireCompanyContext();
 }
 
-// ─── Statistics ──────────────────────────────────────────
+// ─── Statistics ─────────────────────────────────────
 $stats = [];
 
 // Total leads (scoped)
@@ -409,7 +409,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
     <div class="stat-card bg-blue">
-        3cdiv class="stat-icon icon-info">
+        <div class="stat-icon icon-info">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
         <div class="stat-content">
