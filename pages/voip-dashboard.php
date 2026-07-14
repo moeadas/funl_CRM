@@ -626,20 +626,22 @@ function fixWebhooks() {
 }
 
 function showSetupModal(loadingText) {
-    var modal = document.getElementById('setupModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'setupModal';
-        modal.className = 'modal';
-        modal.innerHTML = '<div class="modal-backdrop" onclick="hideSetupModal()"></div>' +
-            '<div class="modal-content" style="max-width:560px;">' +
-            '<div class="modal-header"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09"/></svg> ' + __('VoIP Setup') + '</h3><button type="button" class="btn-close" onclick="hideSetupModal()">&times;</button></div>' +
+    var overlay = document.getElementById('setupModal');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'setupModal';
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML =
+            '<div class="modal-md">' +
+            '<div class="modal-header"><h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:6px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09"/></svg>' + __('VoIP Setup') + '</h2><button type="button" class="modal-close" onclick="hideSetupModal()">&times;</button></div>' +
             '<div class="modal-body" id="setupBody"></div>' +
             '<div class="modal-footer"><button class="btn btn-outline" onclick="hideSetupModal()"><?php echo __("close"); ?></button></div>' +
             '</div>';
-        document.body.appendChild(modal);
+        // Close when the backdrop (overlay itself) is clicked
+        overlay.addEventListener('click', function(e){ if (e.target === overlay) hideSetupModal(); });
+        document.body.appendChild(overlay);
     }
-    modal.style.display = 'flex';
+    overlay.classList.add('active');
     document.getElementById('setupBody').innerHTML = '<div style="text-align:center;padding:20px;"><div style="width:24px;height:24px;border:3px solid #e8e8ed;border-top-color:#007aff;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;"></div><br><small>' + (loadingText || 'Loading...') + '</small></div>';
 }
 
@@ -649,8 +651,8 @@ function showSetupResult(html) {
 }
 
 function hideSetupModal() {
-    var modal = document.getElementById('setupModal');
-    if (modal) modal.style.display = 'none';
+    var overlay = document.getElementById('setupModal');
+    if (overlay) overlay.classList.remove('active');
 }
 </script>
 
