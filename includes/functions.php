@@ -3,6 +3,31 @@
  * White Label CRM - Helper Functions
  */
 
+/**
+ * Tenant-owned settings: keys that must NEVER inherit the platform-wide
+ * (company_id IS NULL) row.
+ *
+ * Branding and company-profile values belong to a single tenant. Inheriting the
+ * global row caused two real bugs:
+ *   1) A client's uploaded logo appeared on the platform admin's login screen
+ *      (and on other tenants' pages) — a tenant-isolation leak.
+ *   2) A brand-new company's setup form came pre-filled with whatever the
+ *      platform admin last saved (e.g. someone else's support email).
+ *
+ * Platform infrastructure keys (resend_*, ms_*, tracking_*) may still be global,
+ * since those are configured once by the super admin for the whole platform.
+ * When there is no company context (logged out), tenant keys resolve to their
+ * default — i.e. the bundled FUNL branding.
+ */
+function isTenantOwnedSetting($key) {
+    static $exact = [
+        'company_logo', 'company_favicon', 'app_name', 'company_name',
+        'company_email', 'company_phone', 'company_website', 'company_address',
+        'preloader_code',
+    ];
+    return in_array($key, $exact, true) || strpos($key, 'theme_') === 0;
+}
+
 // Load branding from settings
 function getSetting($key, $default = '') {
     // M-8 fix: cache is keyed by the (company_id, impersonation state) tuple so
@@ -12,22 +37,33 @@ function getSetting($key, $default = '') {
     $companyId = $_SESSION['company_id'] ?? null;
     $impersonating = !empty($_SESSION['impersonate_original_user_id']);
     $cacheKey = ($companyId ?? 'global') . '|' . ($impersonating ? '1' : '0');
-    static $cache = [];   // [cacheKey => [key => value]]
+    static $cache = [];   // [cacheKey => ['own' => [...], 'global' => [...]]]
     if (!isset($cache[$cacheKey])) {
+        $own = [];
+        $global = [];
         try {
             $db = Database::getInstance()->getConnection();
+            // Platform-wide rows (used only for non-tenant-owned keys).
+            $global = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL")
+                         ->fetchAll(PDO::FETCH_KEY_PAIR);
             if ($companyId) {
-                $stmt = $db->prepare("SELECT setting_key, setting_value FROM settings WHERE company_id = ? OR company_id IS NULL ORDER BY company_id ASC");
+                $stmt = $db->prepare("SELECT setting_key, setting_value FROM settings WHERE company_id = ?");
                 $stmt->execute([$companyId]);
-            } else {
-                $stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL");
+                $own = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             }
-            $cache[$cacheKey] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         } catch (Exception $e) {
-            $cache[$cacheKey] = [];
+            $own = [];
+            $global = [];
         }
+        $cache[$cacheKey] = ['own' => $own, 'global' => $global];
     }
-    return $cache[$cacheKey][$key] ?? $default;
+
+    // Tenant-owned keys resolve ONLY against this company's own row.
+    if (isTenantOwnedSetting($key)) {
+        return $cache[$cacheKey]['own'][$key] ?? $default;
+    }
+    // Everything else: company override first, then platform-wide default.
+    return $cache[$cacheKey]['own'][$key] ?? ($cache[$cacheKey]['global'][$key] ?? $default);
 }
 
 // Alias for backward compatibility
@@ -36,7 +72,10 @@ function getSettingValue($key, $default = '') {
 }
 
 function getAppName() {
-    return getSetting('app_name', 'White Label CRM');
+    // Platform default comes from APP_NAME (config/.env) so the logged-out and
+    // unbranded experience shows the platform's own (FUNL) name rather than the
+    // generic product name. A company's own app_name still overrides it.
+    return getSetting('app_name', defined('APP_NAME') ? APP_NAME : 'White Label CRM');
 }
 
 // Minimum byte size for an uploaded logo/favicon to be considered valid.
