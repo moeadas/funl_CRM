@@ -25,6 +25,25 @@ window.confirm = function (message) {
     return false;
 };
 
+/**
+ * Mobile sidebar toggle.
+ *
+ * header.php wires both the burger button and the sidebar backdrop to
+ * onclick="toggleMobileSidebar()", but the function was never defined — every
+ * tap threw "toggleMobileSidebar is not defined" and the menu never opened.
+ */
+function toggleMobileSidebar() {
+    var sidebar = document.getElementById('sidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    if (!sidebar) return;
+    var open = sidebar.classList.toggle('active');
+    if (backdrop) backdrop.classList.toggle('active', open);
+    // Prevent the page behind the drawer from scrolling while it's open.
+    document.body.style.overflow = open ? 'hidden' : '';
+}
+// Expose for inline onclick handlers.
+window.toggleMobileSidebar = toggleMobileSidebar;
+
 document.addEventListener('DOMContentLoaded', function () {
     // ─── Mobile sidebar ───
     const sidebar = document.getElementById('sidebar');
@@ -32,6 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sidebar && sidebar.classList.contains('active')) {
             if (!e.target.closest('.sidebar') && !e.target.closest('.mobile-menu-toggle')) {
                 sidebar.classList.remove('active');
+                var bd = document.getElementById('sidebarBackdrop');
+                if (bd) bd.classList.remove('active');
+                document.body.style.overflow = '';
             }
         }
     });
