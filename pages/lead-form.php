@@ -265,6 +265,29 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
+
+    <?php
+    // Custom Fields.
+    // Defined per-company under Settings > Custom Lead Fields. api/leads.php
+    // already saves them (saveCustomFieldValues) and lead-detail.php already
+    // displays them — but this form never rendered any inputs, so nothing was
+    // ever submitted, nothing was stored, and the feature looked broken.
+    $leadCustomFields = getActiveCustomFields();
+    if (!empty($leadCustomFields)):
+    ?>
+    <div class="card" id="customFieldsCard">
+        <div class="card-header" style="padding: 18px 24px;">
+            <h3 class="card-title" style="margin:0;"><?php echo htmlspecialchars(__('Custom Fields')); ?></h3>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+            <div class="row-3">
+                <?php foreach ($leadCustomFields as $leadCustomField): ?>
+                    <?php echo renderCustomFieldInput($leadCustomField); ?>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script>
@@ -341,7 +364,7 @@ function loadLeadSourceSuggestions() {
             var opt = document.createElement('option');
             opt.value = val;
             if (item.use_count > 1) {
-                opt.label = '\u00d7' + item.use_count;
+                opt.label = '×' + item.use_count;
             }
             dl.appendChild(opt);
         });
@@ -396,6 +419,18 @@ function loadLead() {
     fetch('/api/leads.php?action=detail&id=' + LEAD_ID, { credentials: 'same-origin' })
     .then(r => r.json())
     .then(data => {
+        // Custom fields come back under data.custom_fields.
+        var cfs = (data && data.data && data.data.custom_fields) || [];
+        cfs.forEach(function (cf) {
+            var el = document.querySelector('#customFieldsCard [name="custom_' + cf.field_name + '"]');
+            if (!el) return;
+            if (el.type === 'checkbox') {
+                el.checked = (cf.field_value === '1' || cf.field_value === 1);
+            } else if (cf.field_value !== null && cf.field_value !== undefined) {
+                el.value = cf.field_value;
+            }
+        });
+
         var l = (data && data.data && data.data.lead) || (data && data.lead) || null;
         if (l) {
             var fields = ['companyName','leadType','industry','companySize','contactPerson','titlePosition','email','phone','mobile','country','city','leadSource','leadStatus','priority','notes'];
@@ -485,7 +520,13 @@ function saveLead() {
         utm_content: document.getElementById('utmContent')?.value || null,
         utm_term: document.getElementById('utmTerm')?.value || null,
     };
-    
+
+    // Custom fields: renderCustomFieldInput() emits name="custom_<field_name>",
+    // which is exactly the key saveCustomFieldValues() reads server-side.
+    document.querySelectorAll('#customFieldsCard [name^="custom_"]').forEach(function (el) {
+        payload[el.name] = (el.type === 'checkbox') ? (el.checked ? '1' : '0') : el.value;
+    });
+
     if (LEAD_ID) {
         fetch('/api/leads.php?action=update&id=' + LEAD_ID, {
             method: 'PUT',
