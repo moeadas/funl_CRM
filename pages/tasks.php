@@ -115,7 +115,12 @@ function renderCard(task) {
         <div class="task-card-header">
             <a href="/pages/task-form.php?id=${task.task_id}" class="task-title" style="text-decoration:none;">${escapeHtml(task.title)}</a>
             <div class="task-actions" onclick="event.stopPropagation()">
-                <button onclick="deleteTask(${task.task_id})" title="${escapeHtml(__('Delete'))}">&times;</button>
+                <!-- Editing was only reachable by clicking the task title, which
+                     wasn't discoverable. Surface it as an explicit action. -->
+                <button onclick="editTask(${task.task_id})" title="${escapeHtml(__('Edit'))}" aria-label="${escapeHtml(__('Edit'))}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button onclick="deleteTask(${task.task_id})" title="${escapeHtml(__('Delete'))}" aria-label="${escapeHtml(__('Delete'))}">&times;</button>
             </div>
         </div>
         <div class="task-meta">
@@ -131,6 +136,10 @@ function renderCard(task) {
             ${leadLink ? `<div class="task-meta-row">${leadLink}</div>` : ''}
         </div>
     </div>`;
+}
+
+function editTask(taskId) {
+    window.location.href = '/pages/task-form.php?id=' + taskId;
 }
 
 function escapeHtml(str) {

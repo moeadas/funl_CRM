@@ -50,7 +50,16 @@ $companyName = getSetting('company_name') ?: 'Our Company';
 $companyEmail = getSetting('company_email') ?: '';
 $companyPhone = getSetting('company_phone') ?: '';
 $companyAddress = getSetting('company_address') ?: '';
-$logoUrl = getSetting('company_logo') ?: '';
+// getSetting('company_logo') returns only the stored FILENAME (e.g.
+// "logo_38_1783007642.png"). Emitting that straight into src="" resolved
+// relative to /pages/, so the proposal logo always 404'd — hence "proposal not
+// showing uploaded logos". getCompanyLogo() returns the correct /uploads/ URL.
+//
+// Only use it when this company actually has its own valid upload: a proposal
+// goes to the tenant's customer, so falling back to the platform's default logo
+// would brand their document with ours. With no logo we keep the original
+// behaviour and show the company name instead.
+$logoUrl = isValidUploadedAsset(getSetting('company_logo')) ? getCompanyLogo() : '';
 
 // Calculate total
 $total = 0;
