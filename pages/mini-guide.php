@@ -28,10 +28,10 @@ $phases = [
         'subtitle' => 'Get your CRM ready in minutes',
         'steps' => [
             ['Configure Company Profile', 'Go to Settings → Company Profile. Enter your company name, email, phone, website, and address. This information appears on proposals and emails.', '/pages/settings.php'],
+            ['Add Team Members (New Users)', 'Go to Users → + Add User. Enter their full name and work email, set a role — Sales Rep (sees only their own leads), Sales Manager (sees the whole team and Reports), or Admin (full access incl. Settings) — then save. They receive a verification email and set their own password from that link. You can deactivate or change a role any time from the same page.', '/pages/users.php'],
             ['Customize Branding', 'Upload your company logo and set a custom app name in Settings → App Branding. This personalizes the CRM for your team.', '/pages/settings.php'],
             ['Set Up Email (SMTP)', 'Configure SMTP in Settings → SMTP & Email so the CRM can send campaigns and notifications. Enter your SMTP host, port, username, and password.', '/pages/settings.php'],
-            ['Add Team Members', 'Go to Users → Add User. Enter their name, email, and assign a role (Sales Rep, Sales Manager, Admin). They\'ll get a verification email.', '/pages/users.php'],
-            ['Create Custom Fields', 'In Settings → Custom Lead Fields, add any extra fields you need (e.g., industry, budget, preferred contact time).', '/pages/settings.php'],
+            ['Create Custom Fields', 'In Settings → Custom Lead Fields, add any extra fields you need (e.g., industry, budget, preferred contact time). They appear in a Custom Fields section on every lead.', '/pages/settings.php'],
         ],
     ],
     [
@@ -72,7 +72,6 @@ $phases = [
             ['Manage Pipeline', 'Go to Pipeline to see all deals by stage. Drag deals between stages to update their status.', '/pages/deals.php'],
             ['Create Proposals', 'In Proposals, create professional proposals with line items, taxes, and discounts. Send them to clients directly.', '/pages/proposals.php'],
             ['Send Quotes', 'Use Quotes to generate pricing quotes with PDF download. Share with clients for approval.', '/pages/quotes.php'],
-            ['Manage Products', 'Add your products/services in the Products page. They\'re available as line items in proposals and quotes.', '/pages/products.php'],
         ],
     ],
     [
