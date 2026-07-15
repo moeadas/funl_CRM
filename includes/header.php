@@ -176,8 +176,16 @@ $_userDir = ($_userLocale === 'ar') ? 'rtl' : 'ltr';
 <?php
 // Tab Visibility System: hide sidebar tabs based on company settings
 // Setting stored as comma-separated string in settings table (hidden_tabs key)
+// These values are interpolated straight into a <style> block below, so they
+// must be strictly sanitised: settings.php stores hidden_tabs as a raw
+// implode() of the posted checkbox values without validating them against the
+// allowlist, so a crafted POST could otherwise break out of </style> and inject
+// script on every page. Only ever emit simple CSS-class-safe tokens.
 $_hiddenTabs = array_filter(array_map('trim', explode(',', getSetting('hidden_tabs'))));
-$_hiddenClasses = array_map(function($k) { return 'nav-tab-' . trim($k); }, $_hiddenTabs);
+$_hiddenTabs = array_filter($_hiddenTabs, function ($k) {
+    return preg_match('/^[a-z0-9_-]{1,40}$/i', $k) === 1;
+});
+$_hiddenClasses = array_map(function($k) { return 'nav-tab-' . $k; }, $_hiddenTabs);
 if (!empty($_hiddenClasses)) {
     echo '<style>' . implode(',', array_map(function($c) { return 'li.' . $c; }, $_hiddenClasses)) . '{display:none !important;}</style>';
 }
@@ -304,12 +312,9 @@ if (!empty($_hiddenClasses)) {
 
             <li><hr class="nav-divider"></li>
             <li class="nav-section-label"><?php echo __('business'); ?></li>
-            <li class="nav-item nav-tab-products">
-                <a href="/pages/products.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'products.php' ? 'active' : ''; ?>">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                    <span><?php echo __('products'); ?></span>
-                </a>
-            </li>
+            <?php /* Products removed from navigation by request. The page and its
+                     tables are intentionally left in place so existing quotes and
+                     proposals that reference a product still resolve correctly. */ ?>
             <li class="nav-item nav-tab-automation">
                 <a href="/pages/automation.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'automation.php' ? 'active' : ''; ?>">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
