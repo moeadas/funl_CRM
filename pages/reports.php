@@ -42,9 +42,18 @@ if ($isManager) {
 }
 
 // Build WHERE clauses for leads and interactions based on filters
+
 // CRITICAL: Scope all queries to company_id to prevent cross-tenant data leakage
 $leadWhere = "1=1";
 $intWhere  = "1=1";
+
+// NOTE: these MUST be initialised before the filters below append to them.
+// They used to be reset to [] *after* the company_id filter ran, which threw
+// away the company_id parameter while leaving its "?" placeholder in the WHERE
+// clause. Every report query then failed with "Invalid parameter number", the
+// try/catch swallowed it, and the whole page rendered zeros.
+$leadParams = [];
+$intParams  = [];
 
 // Add company_id filter for non-super-admins (super admins see all companies)
 if (!$isSuperAdmin && $companyId) {
@@ -57,8 +66,6 @@ if (!$isSuperAdmin && $companyId) {
     $leadWhere = "1=0";
     $intWhere = "1=0";
 }
-$leadParams = [];
-$intParams  = [];
 
 if ($filterRepId) {
     $leadWhere .= " AND l.assigned_to = ?";
