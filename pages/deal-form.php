@@ -39,7 +39,10 @@ $stages = $db->query("SELECT stage_name, stage_label, probability FROM deal_stag
 
 <div style="max-width:1000px;">
     <div class="card">
-        <h3 class="card-title"><?php echo htmlspecialchars(__('Deal Information')); ?></h3>
+        <div class="card-header" style="padding: 18px 24px;">
+            <h3 class="card-title" style="margin:0;"><?php echo htmlspecialchars(__('Deal Information')); ?></h3>
+        </div>
+        <div class="card-body" style="padding: 24px;">
         <div class="form-group">
             <label class="form-label"><?php echo htmlspecialchars(__('Deal Name *')); ?></label>
             <input type="text" id="dealName" class="form-control" placeholder="<?php echo htmlspecialchars(__('Deal Name')); ?>" required>
@@ -69,10 +72,14 @@ $stages = $db->query("SELECT stage_name, stage_label, probability FROM deal_stag
                 </select>
             </div>
         </div>
+        </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title"><?php echo htmlspecialchars(__('Pipeline Stage & Probability')); ?></h3>
+        <div class="card-header" style="padding: 18px 24px;">
+            <h3 class="card-title" style="margin:0;"><?php echo htmlspecialchars(__('Pipeline Stage & Probability')); ?></h3>
+        </div>
+        <div class="card-body" style="padding: 24px;">
         <div class="row-3">
             <div class="form-group">
                 <label class="form-label"><?php echo htmlspecialchars(__('Stage')); ?></label>
@@ -91,10 +98,14 @@ $stages = $db->query("SELECT stage_name, stage_label, probability FROM deal_stag
                 <input type="date" id="dealCloseDate" class="form-control">
             </div>
         </div>
+        </div>
     </div>
 
     <div class="card">
-        <h3 class="card-title"><?php echo htmlspecialchars(__('CRM Links & Ownership')); ?></h3>
+        <div class="card-header" style="padding: 18px 24px;">
+            <h3 class="card-title" style="margin:0;"><?php echo htmlspecialchars(__('CRM Links & Ownership')); ?></h3>
+        </div>
+        <div class="card-body" style="padding: 24px;">
         <div class="row-3">
             <div class="form-group">
                 <label class="form-label"><?php echo htmlspecialchars(__('Account Link')); ?></label>
@@ -127,6 +138,7 @@ $stages = $db->query("SELECT stage_name, stage_label, probability FROM deal_stag
         <div style="margin-top:16px;">
             <label class="form-label"><?php echo htmlspecialchars(__('Deal Description')); ?></label>
             <textarea id="dealDescription" class="form-control" placeholder="<?php echo htmlspecialchars(__('Deal Description')); ?>"></textarea>
+        </div>
         </div>
     </div>
 </div>
