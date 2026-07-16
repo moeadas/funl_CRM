@@ -6,6 +6,7 @@
  * Data is scoped to the user's company_id to prevent cross-tenant access.
  */
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
 startSecureSession();
 requireLogin();
 
@@ -46,7 +47,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
-const CSRF_TOKEN = "";
+const CSRF_TOKEN = <?php echo json_encode(generateCSRFToken()); ?>;
 let currentPage = 1;
 
 /**
@@ -83,8 +84,36 @@ function renderProposals(proposals) {
             <a href="/pages/proposal-view.php?id=${p.proposal_id}" class="btn btn-sm btn-outline" title="${window.__('View')}">👁</a>
             <a href="/pages/proposal-view.php?id=${p.proposal_id}&print=1" target="_blank" class="btn btn-sm btn-outline" title="${window.__('Download PDF')}">⬇</a>
             <a href="/pages/proposal-form.php?id=${p.proposal_id}" class="btn btn-sm btn-outline">${window.__('Edit')}</a>
+            ${(p.lead_id || p.contact_id) ? `<button type="button" class="btn btn-sm btn-outline" onclick="sendProposal(${p.proposal_id}, this)" title="${window.__('Send to linked lead/contact')}">${window.__('Send')}</button>` : `<button type="button" class="btn btn-sm btn-outline" disabled title="${window.__('Link this proposal to a lead or contact first')}" style="opacity:.5;cursor:not-allowed;">${window.__('Send')}</button>`}
         </td>
     </tr>`).join("");
+}
+
+// Email the proposal to the lead/contact it is linked to. The API mints a share
+// token and sends a link to the public view (proposal-view.php needs a login, so
+// a recipient could never open it).
+function sendProposal(proposalId, btn) {
+    if (!confirm(window.__('Send this proposal to the linked lead/contact by email?'))) return;
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = window.__('Sending...');
+    fetch('/api/proposals.php?action=send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csrf_token: CSRF_TOKEN, proposal_id: proposalId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (typeof showNotification === 'function') showNotification(data.message, data.success ? 'success' : 'error');
+        else alert(data.message);
+        if (data.success) loadProposals();
+        else { btn.disabled = false; btn.textContent = original; }
+    })
+    .catch(function () {
+        btn.disabled = false;
+        btn.textContent = original;
+        alert(window.__('Could not send the proposal.'));
+    });
 }
 
 loadProposals();
