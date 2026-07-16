@@ -58,13 +58,14 @@ $tasks = $db->query("
     LIMIT 10
 ", [$contactId, $companyId])->fetchAll();
 
-// Get deals for this contact — scoped to company_id
-$deals = $db->query("
-    SELECT d.*, s.stage_label, s.color as stage_color
-    FROM deals d
-    LEFT JOIN deal_stages s ON d.stage = s.stage_name AND s.company_id = d.company_id
-    WHERE d.contact_id = ? AND d.company_id = ?
-    ORDER BY d.created_at DESC
+// Get proposals for this contact — scoped to company_id.
+// Replaces the old Deals list: proposals are what actually get created and sent
+// to a contact, so this is the record the user wants to see here.
+$proposals = $db->query("
+    SELECT p.*
+    FROM proposals p
+    WHERE p.contact_id = ? AND p.company_id = ?
+    ORDER BY p.created_at DESC
     LIMIT 10
 ", [$contactId, $companyId])->fetchAll();
 
@@ -119,9 +120,9 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="stat-label"><?php echo htmlspecialchars(__('Tasks')); ?></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background:#d1fae5;color:#059669;">🎯</div>
-        <div class="stat-value"><?php echo count($deals); ?></div>
-        <div class="stat-label"><?php echo htmlspecialchars(__('Deals')); ?></div>
+        <div class="stat-icon" style="background:#d1fae5;color:#059669;">🧾</div>
+        <div class="stat-value"><?php echo count($proposals); ?></div>
+        <div class="stat-label"><?php echo htmlspecialchars(__('Proposals')); ?></div>
     </div>
     <div class="stat-card">
         <div class="stat-icon" style="background:#fce7f3;color:#db2777;">📄</div>
@@ -294,19 +295,43 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <!-- Deals -->
+    <!-- Proposals -->
     <div class="card">
-        <div class="card-header"><h3 class="card-title"><?php echo htmlspecialchars(__('Deals')); ?> (<?php echo count($deals); ?>)</h3></div>
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <h3 class="card-title"><?php echo htmlspecialchars(__('Proposals')); ?> (<?php echo count($proposals); ?>)</h3>
+            <a href="/pages/proposal-form.php?contact_id=<?php echo (int)$contactId; ?>" class="btn btn-primary btn-sm">+ <?php echo htmlspecialchars(__('New')); ?></a>
+        </div>
         <div class="card-body">
-            <?php if (empty($deals)): ?>
-                <div class="empty-state"><?php echo htmlspecialchars(__('No deals')); ?></div>
+            <?php if (empty($proposals)): ?>
+                <div class="empty-state"><?php echo htmlspecialchars(__('No proposals yet')); ?></div>
             <?php else: ?>
-                <?php foreach ($deals as $deal): ?>
+                <?php
+                $propBadge = [
+                    'Draft'    => ['#f0e6d8', '#6f5c54'],
+                    'Sent'     => ['#d1ecf1', '#0c5460'],
+                    'Accepted' => ['#d4edda', '#155724'],
+                    'Rejected' => ['#f8d7da', '#721c24'],
+                    'Expired'  => ['#e2e3e5', '#383d41'],
+                ];
+                ?>
+                <?php foreach ($proposals as $proposal): ?>
+                    <?php $pb = $propBadge[$proposal['status']] ?? ['#e5e7eb', '#6b7280']; ?>
                     <div style="padding:12px;border-radius:var(--radius-sm);background:var(--color-bg-secondary);margin-bottom:8px;">
-                        <div style="font-weight:600;font-size:14px;margin-bottom:4px;"><?php echo htmlspecialchars($deal['deal_name']); ?></div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+                            <a href="/pages/proposal-view.php?id=<?php echo (int)$proposal['proposal_id']; ?>" style="font-weight:600;font-size:14px;color:inherit;text-decoration:none;">
+                                <?php echo htmlspecialchars($proposal['estimate_number'] ?: __('Proposal')); ?>
+                            </a>
+                            <span class="badge" style="background:<?php echo $pb[0]; ?>;color:<?php echo $pb[1]; ?>;"><?php echo htmlspecialchars(__($proposal['status'])); ?></span>
+                        </div>
                         <div style="font-size:12px;color:var(--color-text-secondary);">
-                            <span class="badge" style="background:<?php echo $deal['stage_color'] ?? '#e5e7eb'; ?>20;color:<?php echo $deal['stage_color'] ?? '#6b7280'; ?>"><?php echo htmlspecialchars(__($deal['stage_label'] ?? $deal['stage'])); ?></span>
-                            <?php if ($deal['deal_value']): ?> • $<?php echo number_format($deal['deal_value'], 2); ?><?php endif; ?>
+                            <?php if (!empty($proposal['total'])): ?><?php echo number_format((float)$proposal['total'], 2); ?> • <?php endif; ?>
+                            <?php echo htmlspecialchars($proposal['proposal_date'] ? date('M j, Y', strtotime($proposal['proposal_date'])) : ''); ?>
+                        </div>
+                        <div style="margin-top:8px;display:flex;gap:6px;">
+                            <a href="/pages/proposal-form.php?id=<?php echo (int)$proposal['proposal_id']; ?>" class="btn btn-xs btn-outline"><?php echo htmlspecialchars(__('Edit')); ?></a>
+                            <?php if (!empty($contact['email'])): ?>
+                            <button type="button" class="btn btn-xs btn-outline" onclick="sendProposal(<?php echo (int)$proposal['proposal_id']; ?>, this)"><?php echo htmlspecialchars(__('Send')); ?></button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -318,7 +343,39 @@ require_once __DIR__ . '/../includes/header.php';
 </div><!-- /grid-3 -->
 
 <script>
+const PROPOSAL_CSRF = <?php echo json_encode(generateCSRFToken()); ?>;
+
 function editContact(contactId) {
     window.location.href = '/pages/contact-form.php?id=' + contactId;
+}
+
+// Email the proposal to this contact. The API mints a share token and sends a
+// link to the public view, because pages/proposal-view.php requires a login and
+// a contact could never open it.
+function sendProposal(proposalId, btn) {
+    if (!confirm(<?php echo json_encode(__('Send this proposal to the contact by email?')); ?>)) return;
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = <?php echo json_encode(__('Sending...')); ?>;
+    fetch('/api/proposals.php?action=send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csrf_token: PROPOSAL_CSRF, proposal_id: proposalId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (typeof showNotification === 'function') {
+            showNotification(data.message, data.success ? 'success' : 'error');
+        } else {
+            alert(data.message);
+        }
+        if (data.success) { setTimeout(function () { window.location.reload(); }, 900); }
+        else { btn.disabled = false; btn.textContent = original; }
+    })
+    .catch(function () {
+        btn.disabled = false;
+        btn.textContent = original;
+        alert(<?php echo json_encode(__('Could not send the proposal.')); ?>);
+    });
 }
 </script>
