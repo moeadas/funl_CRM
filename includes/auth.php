@@ -233,6 +233,18 @@ function requireActiveSubscription(): void {
                 http_response_code(403);
                 die(json_encode(['success' => false, 'message' => 'Account suspended. Contact support.']));
             }
+            // The redirect target must be reachable, or it redirects to itself.
+            // billing.php calls requireLogin() -> requireActiveSubscription(),
+            // which sent it straight back here: a suspended user got
+            // ERR_TOO_MANY_REDIRECTS instead of the "Account Suspended" notice
+            // billing.php already renders for ?suspended=1. Logout must stay
+            // reachable too, otherwise a suspended user cannot even sign out.
+            // (The subscription branch below already does exactly this.)
+            $isBilling = strpos($current, '/pages/billing.php') !== false;
+            $isLogout  = strpos($current, '/logout.php') !== false;
+            if ($isBilling || $isLogout) {
+                return;
+            }
             header('Location: /pages/billing.php?suspended=1');
             exit;
         }
