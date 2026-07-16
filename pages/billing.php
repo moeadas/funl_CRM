@@ -61,17 +61,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             case 'switch_to_yearly':
                 $db->query("UPDATE companies SET billing_cycle = 'yearly', updated_at = NOW() WHERE company_id = ?", [$companyId]);
-                $success = 'Switched to yearly billing. You will be charged the yearly rate next cycle.';
+                // This only records the preference -- no charge is taken and no
+                // invoice is raised here. Say that plainly rather than implying
+                // billing changed.
+                $success = 'Billing cycle set to yearly. Nothing has been charged now — the yearly rate applies from your next renewal.';
                 $company = getCompany($companyId);
                 break;
             case 'switch_to_monthly':
                 $db->query("UPDATE companies SET billing_cycle = 'monthly', updated_at = NOW() WHERE company_id = ?", [$companyId]);
-                $success = 'Switched to monthly billing.';
+                $success = 'Billing cycle set to monthly. Nothing has been charged now — the monthly rate applies from your next renewal.';
                 $company = getCompany($companyId);
                 break;
         }
     }
 }
+
+// Must be generated BEFORE the start_subscription auto-submit block below, which
+// embeds it in a form. It used to be defined further down, so $csrfToken was
+// undefined there and the auto-checkout form posted an EMPTY token -- create_order
+// then rejected it as "Invalid CSRF token" and subscribing from registration
+// could never work.
+$csrfToken = generateCSRFToken();
 
 $returnStatus = $_GET['status'] ?? null;
 $sessionId = $_GET['session_id'] ?? null;
@@ -97,18 +107,49 @@ if ($startSubscription === '1' && !empty($_SESSION['pending_subscription'])) {
     }
 }
 
-$csrfToken = generateCSRFToken();
+// Resolve the price for the CURRENT billing cycle.
+// `companies` only denormalises plan_price_monthly and has no yearly column, so
+// the card always printed the MONTHLY figure next to a "/yearly" label. Switching
+// cycle therefore looked like it did nothing -- the number never moved. Read the
+// real price from `plans` instead.
+$currentCycle   = $company['billing_cycle'] ?? 'monthly';
+$currentPlanRow = null;
+foreach ($plans as $__p) {
+    if (($__p['plan_key'] ?? '') === ($company['plan_id'] ?? '')) { $currentPlanRow = $__p; break; }
+}
+$currentPrice = $currentPlanRow
+    ? (float)($currentCycle === 'yearly' ? $currentPlanRow['yearly_price'] : $currentPlanRow['monthly_price'])
+    : (float)($company['plan_price_monthly'] ?? 0);
+$cycleLabel = ($currentCycle === 'yearly') ? 'year' : 'month';
+
+// Is the payment gateway actually usable? Without credentials every plan button
+// dies with "Failed to create checkout session", so say so up front rather than
+// letting the user discover it by clicking.
+$niSettings   = function_exists('getNIGatewaySettings') ? getNIGatewaySettings() : [];
+// ni_payment.php refuses unless ni_enabled === '1'. Checking only the credentials
+// here meant billing said "ready", sent the user to checkout, and only the final
+// page revealed payments were switched off. Check the same condition it does.
+$gatewayHasCreds = !empty($niSettings['ni_api_username']) && !empty($niSettings['ni_merchant_id']);
+$gatewayEnabled  = (($niSettings['ni_enabled'] ?? '0') === '1');
+$gatewayReady    = $gatewayHasCreds && $gatewayEnabled;
+
+// Surface an error passed back by the checkout API redirect.
+$checkoutError = trim($_GET['error'] ?? '');
+
+// This page used to be a standalone HTML document with its own <head>, its own
+// CSS reset and its own font stack. That is why it looked nothing like the rest
+// of the app and dropped the user out of it entirely -- there was no sidebar and
+// no way back except the browser Back button. It now renders inside the normal
+// app chrome like every other page.
+$pageTitle   = 'Manage Subscription';
+$currentPage = 'billing';
+require_once __DIR__ . '/../includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Subscription — FunL CRM</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; color: #333; }
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+<style>
+        /* Page-scoped styles. The global `* { }` reset and the `body { }` font /
+           background rules that used to live here were removed: they would now
+           fight the app theme instead of styling a standalone page. */
+        .container { max-width: 1100px; margin: 0 auto; padding: 0; }
         h1 { font-size: 24px; margin-bottom: 4px; }
         h2 { font-size: 16px; color: #666; margin-bottom: 16px; text-transform: uppercase; letter-spacing: .5px; }
         .subtitle { color: #666; margin-bottom: 30px; }
@@ -208,8 +249,34 @@ $csrfToken = generateCSRFToken();
         @keyframes spin { to { transform: rotate(360deg); } }
         .checkout-msg { color: white; font-size: 16px; font-weight: 600; }
     </style>
-</head>
-<body>
+<?php if ($checkoutError): ?>
+    <div class="alert alert-error">
+        <strong>Checkout could not start</strong> &mdash; <?= htmlspecialchars($checkoutError) ?>
+    </div>
+<?php endif; ?>
+<?php if (!$gatewayReady): ?>
+    <div class="alert alert-warning">
+        <?php if (!$gatewayHasCreds): ?>
+            <strong>Payments are not set up yet</strong> &mdash; the payment gateway has no credentials configured,
+            so subscribing and plan changes cannot be completed.
+            <?php if (isSuperAdmin()): ?>
+                Add the merchant ID, API username and password under
+                <a href="/pages/super-admin.php">Super Admin &rsaquo; Platform Settings</a>.
+            <?php else: ?>
+                Please contact support.
+            <?php endif; ?>
+        <?php else: ?>
+            <strong>Payments are switched off</strong> &mdash; credentials are configured, but the gateway is disabled,
+            so checkout will not complete.
+            <?php if (isSuperAdmin()): ?>
+                Tick <em>Enable NI Gateway</em> under
+                <a href="/pages/super-admin.php">Super Admin &rsaquo; Platform Settings</a> and save.
+            <?php else: ?>
+                Please contact support.
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
 <?php if ($suspended): ?>
     <div class="container" style="margin-top: 60px;">
         <div class="alert alert-error">
@@ -321,8 +388,8 @@ $csrfToken = generateCSRFToken();
                 <div>
                     <div class="plan-name"><?= htmlspecialchars($company['plan_name'] ?: 'No Plan') ?></div>
                     <div class="plan-price">
-                        <strong>$<?= number_format((float)$company['plan_price_monthly'], 2) ?></strong>
-                        <span>/<?= htmlspecialchars($company['billing_cycle'] ?? 'month') ?></span>
+                        <strong>$<?= number_format($currentPrice, 2) ?></strong>
+                        <span>/<?= htmlspecialchars($cycleLabel) ?></span>
                     </div>
                 </div>
                 <div>
@@ -566,5 +633,4 @@ $csrfToken = generateCSRFToken();
     }
     </script>
 <?php endif; ?>
-</body>
-</html>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
