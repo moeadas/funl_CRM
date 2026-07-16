@@ -37,22 +37,33 @@ function niGatewayRequest($method, $endpoint, $body = null) {
     $apiPasswordRaw = $settings['ni_api_password'] ?? '';
     $apiVersion = $settings['ni_api_version'] ?? '100';
     
-    // Decrypt stored password (H-4 fix).
-    // If the stored value was never encrypted (legacy/plaintext), decryptToken
-    // returns garbage (the raw value encrypted as AES). In that case, use the
-    // raw value directly since that's what the gateway expects.
+    // Decrypt stored password.
+    //
+    // The previous test was `strlen($decrypted) === strlen($apiPasswordRaw)`, which
+    // could never be true: a stored secret is ALWAYS longer than its plaintext
+    // (base64/ciphertext expansion). So the check always failed and the ELSE branch
+    // sent the still-encoded blob to the gateway as the password -- the gateway
+    // answered "Invalid Credentials" and the credentials looked wrong when they
+    // were fine. (decryptToken() also returns '' and never false, so that guard was
+    // dead code.)
+    //
+    // A real gateway password is printable ASCII. If decoding yields printable
+    // text, it decoded correctly -- use it. If it yields binary noise, the stored
+    // value was legacy plaintext that merely happened to be base64-decodable, so
+    // keep the raw value.
     $decrypted = decryptToken($apiPasswordRaw);
-    if ($decrypted !== false && $decrypted !== '' && strlen($decrypted) === strlen($apiPasswordRaw)) {
-        $apiPassword = $decrypted; // properly encrypted value
-    } else {
-        $apiPassword = $apiPasswordRaw; // legacy plaintext fallback
+    $apiPassword = $apiPasswordRaw;
+    if (is_string($decrypted) && $decrypted !== '' && preg_match('/^[\x20-\x7E]+$/', $decrypted) === 1) {
+        $apiPassword = $decrypted;
     }
     
     if (empty($apiUsername) || empty($apiPassword)) {
         return ['success' => false, 'error' => 'NI Gateway not configured. Ask super admin to set credentials in super-admin settings.'];
     }
     
-    $url = $baseUrl . '/rest/version/' . $apiVersion . '/merchant/' . $merchantId . $endpoint;
+    // Operators paste the gateway URL with or without a trailing slash; without
+    // this the path became "/api//rest/version/...".
+    $url = rtrim($baseUrl, '/') . '/rest/version/' . $apiVersion . '/merchant/' . $merchantId . $endpoint;
     
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -101,7 +112,7 @@ function niGatewayRequest($method, $endpoint, $body = null) {
     ];
 }
 
-// ─── Actions ─────────────────────────────────────────────────────────────────
+// ─── Actions ──────────────────────────────────────────────────────────
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -116,7 +127,7 @@ if (in_array($action, ['create_session', 'process_payment', 'verify_payment', 'c
 
 try {
     switch ($action) {
-        // ── Create Checkout Session ──────────────────────────────────────────
+        // ── Create Checkout Session ───────────────────────────────────────────
         // POST /api/ni-checkout.php?action=create_session
         // Body: { amount, currency, order_id, description, return_url, company_id }
         case 'create_session':
@@ -217,7 +228,7 @@ try {
             ]);
             break;
             
-        // ── Verify Payment (after return from checkout) ──────────────────────
+        // ── Verify Payment (after return from checkout) ────────────────────
         // GET /api/ni-checkout.php?action=verify_payment&session_id=xxx
         case 'verify_payment':
             $sessionId = sanitizeInput($_GET['session_id'] ?? '');
@@ -295,7 +306,7 @@ try {
             }
             break;
             
-        // ── Get Session (for client-side checkout.js) ───────────────────────
+        // ── Get Session (for client-side checkout.js) ───────────────────
         // GET /api/ni-checkout.php?action=get_session&session_id=xxx
         case 'get_session':
             $sessionId = sanitizeInput($_GET['session_id'] ?? '');
@@ -321,15 +332,22 @@ try {
             ]);
             break;
             
-        // ── Health Check ─────────────────────────────────────────────────────
+        // ── Health Check ──────────────────────────────────────────────────
         case 'health':
             // Try to create a test session to verify connectivity + credentials
             $result = niGatewayRequest('POST', '/session', ['apiOperation' => 'CREATE_CHECKOUT_SESSION']);
+            $niCfg = getNIGatewaySettings();
+            // 'configured' only ever meant "a username string exists" -- it says
+            // nothing about whether the gateway accepted us. Callers must judge on
+            // 'success'. Report the real reason on failure.
             echo json_encode([
                 'success' => $result['success'],
-                'configured' => !empty(getNIGatewaySettings()['ni_api_username']),
-                'settings' => !empty(getNIGatewaySettings()['ni_api_username']),
-                'gateway_result' => $result['success'] ? 'OK' : ($result['data']['error']['explanation'] ?? 'Unknown error'),
+                'configured' => !empty($niCfg['ni_api_username']) && !empty($niCfg['ni_merchant_id']),
+                'settings' => !empty($niCfg['ni_api_username']),
+                'error' => $result['success'] ? null
+                    : ($result['error'] ?? ($result['data']['error']['explanation'] ?? 'Unknown error')),
+                'gateway_result' => $result['success'] ? 'OK'
+                    : ($result['data']['error']['explanation'] ?? ($result['error'] ?? 'Unknown error')),
             ]);
             break;
             
@@ -367,10 +385,13 @@ try {
             ]);
             
             if (!$result['success']) {
+                // Same shape mismatch as create_order: local failures live at
+                // $result['error'], gateway failures at data.error.explanation.
                 echo json_encode([
                     'success' => false,
-                    'error' => 'Failed to create checkout session',
-                    'gateway_error' => $result['data']['error']['explanation'] ?? 'Unknown error',
+                    'error' => $result['error']
+                        ?? ($result['data']['error']['explanation'] ?? 'Failed to create checkout session'),
+                    'gateway_error' => $result['data']['error']['explanation'] ?? ($result['error'] ?? 'Unknown error'),
                 ]);
                 break;
             }
@@ -396,10 +417,23 @@ try {
             ]);
             break;
         
-        // ── Create Order + Redirect to hosted checkout ──────────────────────────
+        // ── Create Order + Redirect to hosted checkout ─────────────────────────
         case 'create_order':
             try {
             requireCSRF();
+            // ni-payment.php refuses to render unless ni_enabled === '1'. Without
+            // this check we happily created a gateway session and a pending
+            // transaction row, then dumped the user on a "Payments Not Enabled"
+            // screen -- work done, money not taken, and no explanation.
+            $__ni = getNIGatewaySettings();
+            if ((($__ni['ni_enabled'] ?? '0') !== '1')) {
+                $msg = 'Online payments are switched off. A super admin must tick "Enable NI Gateway" in Platform Settings.';
+                $wantsJson = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false)
+                          || (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest');
+                if ($wantsJson) { echo json_encode(['success' => false, 'error' => $msg]); }
+                else { header('Location: /pages/billing.php?error=' . urlencode($msg)); }
+                exit;
+            }
             $db = Database::getInstance();
             $planKey = $_POST['plan_key'] ?? $_GET['plan_key'] ?? '';
             $billingCycle = $_POST['billing_cycle'] ?? $_GET['billing_cycle'] ?? 'monthly';
@@ -435,8 +469,21 @@ try {
             ]);
             
             if (!$result['success']) {
-                $err = $result['data']['error']['explanation'] ?? 'Failed to create checkout session';
-                if (isApiRequest()) {
+                // niGatewayRequest() reports its own failures at $result['error']
+                // (e.g. "NI Gateway not configured"), while the gateway's own
+                // failures arrive at $result['data']['error']['explanation'].
+                // Only the latter was read, so every local failure -- including
+                // "not configured" -- was replaced by the useless generic text.
+                $err = $result['error']
+                    ?? ($result['data']['error']['explanation'] ?? 'Failed to create checkout session');
+
+                // isApiRequest() returns true for ANY url containing "/api/", so a
+                // normal browser form post to this endpoint was mis-detected and
+                // the raw JSON got rendered as the page. Decide on what the client
+                // actually asked for instead.
+                $wantsJson = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false)
+                          || (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest');
+                if ($wantsJson) {
                     echo json_encode(['success' => false, 'error' => $err]);
                 } else {
                     header('Location: /pages/billing.php?error=' . urlencode($err));
@@ -457,7 +504,9 @@ try {
             $returnUrl = urlencode('https://app.funl.online/pages/billing.php?status=success&session_id=' . $niSessionId);
             $redirectUrl = 'https://app.funl.online/pages/ni-payment.php?session_id=' . urlencode($niSessionId) . '&order_id=' . urlencode($orderId) . '&return_url=' . $returnUrl;
             
-            if (isApiRequest()) {
+            $wantsJson = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false)
+                      || (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest');
+            if ($wantsJson) {
                 echo json_encode([
                     'success' => true,
                     'redirect' => $redirectUrl,
