@@ -50,11 +50,25 @@ if (!$sessionId) {
     exit;
 }
 
-// Determine which checkout.js URL to use based on gateway URL
-$isTest = (strpos($gatewayUrl, 'test-') !== false) || (strpos($gatewayUrl, 'mtf') !== false);
-$checkoutJsUrl = $isTest
-    ? 'https://test-gateway.mastercard.com/static/checkout/checkout.min.js'
-    : 'https://gateway.mastercard.com/static/checkout/checkout.min.js';
+// Work out which checkout.js to load.
+//
+// This used to switch on $gatewayUrl, which is read from $_GET['gateway_url'] --
+// a parameter api/ni-checkout.php NEVER sends. So it was always '', $isTest was
+// always false, and the page loaded the PRODUCTION script for a TEST session.
+// Worse, https://gateway.mastercard.com/static/checkout/checkout.min.js does not
+// exist at all, so Checkout was never defined and the form could never load
+// ("Failed to load payment form") no matter how good the credentials were.
+//
+// Derive it from the gateway that is actually configured: the checkout script is
+// served by the same host as the API, minus the trailing /api path.
+$niBase = rtrim((string)($settings['ni_gateway_url'] ?? ''), '/');
+if ($niBase === '' && $gatewayUrl !== '') {
+    $niBase = rtrim($gatewayUrl, '/');   // honour an explicit override if ever passed
+}
+$niHost = preg_replace('#/api$#', '', $niBase);
+$checkoutJsUrl = ($niHost !== '' && preg_match('#^https://[a-z0-9.\-]+$#i', $niHost) === 1)
+    ? $niHost . '/static/checkout/checkout.min.js'
+    : 'https://test-gateway.mastercard.com/static/checkout/checkout.min.js';
 ?>
 <!DOCTYPE html>
 <html lang="en">
