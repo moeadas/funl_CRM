@@ -62,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     'company_name' => $companyName,
                     'company_email' => $email,
                     'company_phone' => $phone,
-                    'app_name' => 'White Label CRM',
                     'records_per_page' => '25',
                     'timezone' => 'UTC',
                     'email_from_name' => $companyName,
@@ -872,12 +871,24 @@ function editPlan(plan) {
                             'cancelled' => ['bg' => '#e2e3e5', 'color' => '#383d41'],
                             'suspended' => ['bg' => '#f8d7da', 'color' => '#721c24'],
                         ];
-                        $subStatus = $company['subscription_status'];
-                        $colors = $statusColors[$subStatus] ?? $statusColors['active'];
+                        // A company has TWO independent states: the platform-admin
+                        // account status (companies.status) and the billing state
+                        // (companies.subscription_status). This badge only ever showed
+                        // the billing state, so suspending a company updated the DB and
+                        // locked its users out, but the screen still said "Trial"/"Active"
+                        // -- it looked like the button did nothing. An admin-set
+                        // suspension/cancellation now takes precedence in the badge.
+                        $acctStatus  = $company['status'] ?? 'active';
+                        $subStatus   = $company['subscription_status'];
+                        $shownStatus = ($acctStatus !== 'active') ? $acctStatus : $subStatus;
+                        $colors = $statusColors[$shownStatus] ?? $statusColors['active'];
                         ?>
                         <span class="badge" style="background:<?php echo $colors['bg']; ?>;color:<?php echo $colors['color']; ?>;">
-                            <?php echo ucfirst($subStatus); ?>
+                            <?php echo ucfirst($shownStatus); ?>
                         </span>
+                        <?php if ($acctStatus !== 'active' && $subStatus && $subStatus !== $acctStatus): ?>
+                            <span class="badge" style="background:#e2e3e5;color:#383d41;" title="<?php echo __('Billing state'); ?>"><?php echo ucfirst($subStatus); ?></span>
+                        <?php endif; ?>
                     </td>
                     <td><?php echo $company['user_count']; ?> / <?php echo $company['plan_user_limit']; ?></td>
                     <td><?php echo $company['lead_count']; ?></td>
@@ -886,6 +897,7 @@ function editPlan(plan) {
                         <a href="/pages/super-admin-user-new.php?company_id=<?php echo $company['company_id']; ?>" class="btn btn-sm btn-outline">
                             <?php echo __('Add User'); ?>
                         </a>
+                        <?php if ($acctStatus === 'active'): ?>
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Suspend this company? Users will lose access.');">
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <input type="hidden" name="action" value="update_company_status">
@@ -893,6 +905,15 @@ function editPlan(plan) {
                             <input type="hidden" name="status" value="suspended">
                             <button type="submit" class="btn btn-sm btn-warning" title="<?php echo __('Suspend'); ?>"><?php echo __('Suspend'); ?></button>
                         </form>
+                        <?php else: ?>
+                        <form method="POST" style="display:inline;" onsubmit="return confirm('Reactivate this company? Its users will regain access.');">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                            <input type="hidden" name="action" value="update_company_status">
+                            <input type="hidden" name="company_id" value="<?php echo $company['company_id']; ?>">
+                            <input type="hidden" name="status" value="active">
+                            <button type="submit" class="btn btn-sm btn-success" title="<?php echo __('Reactivate'); ?>"><?php echo __('Reactivate'); ?></button>
+                        </form>
+                        <?php endif; ?>
                         <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this company and ALL its data? This cannot be undone.');">
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <input type="hidden" name="action" value="delete_company">
@@ -928,10 +949,15 @@ function testNIGateway() {
     .then(data => {
         btn.disabled = false;
         btn.textContent = 'Test Connection';
-        if (data.configured) {
-            alert('\u2713 NI Gateway is configured and reachable.');
+        // 'configured' only means a username string exists -- it does NOT mean the
+        // gateway accepted the credentials. Reporting on it made this button say
+        // "reachable" while real checkouts failed with Invalid Credentials.
+        if (data.success) {
+            alert('\u2713 NI Gateway reachable and credentials accepted.');
+        } else if (!data.configured) {
+            alert('\u2717 NI Gateway not configured. Enter merchant ID, API username and password, then Save before testing.');
         } else {
-            alert('\u2717 NI Gateway not configured or not reachable: ' + (data.error || 'Check credentials'));
+            alert('\u2717 Gateway rejected the request: ' + (data.error || data.gateway_result || 'Check credentials') + '\n\nNote: save the settings before testing — the test uses the stored values, not what is typed on screen.');
         }
     })
     .catch(err => {

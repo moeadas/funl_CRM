@@ -234,16 +234,19 @@ if (!$selectedPlan && !empty($plans)) {
     <link rel="icon" type="image/png" href="<?php echo getCompanyFavicon(); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         /* ───────────────────────────────────────────────
            Modern Registration Page
            App design tokens (matches /assets/css/style.css)
            ─────────────────────────────────────────────── */
+        /* Inherit the tenant's theme rather than redefining it. This page used to
+           hardcode a grey background and force the Inter webfont, so a company
+           that had themed the app still got a stock-looking register page. */
         body {
-            background: #f5f5f7;
-            font-family: 'Inter', var(--font-family);
+            background: var(--color-bg, #f5f5f7);
+            font-family: var(--font-family);
+            color: var(--color-text);
             -webkit-font-smoothing: antialiased;
         }
 
@@ -251,10 +254,10 @@ if (!$selectedPlan && !empty($plans)) {
         .reg-nav {
             position: sticky;
             top: 0;
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--color-surface, rgba(255, 255, 255, 0.9));
             backdrop-filter: saturate(180%) blur(20px);
             -webkit-backdrop-filter: saturate(180%) blur(20px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.06));
             z-index: 50;
         }
         .reg-nav-inner {
@@ -382,17 +385,17 @@ if (!$selectedPlan && !empty($plans)) {
             margin-bottom: 20px;
         }
         .reg-plan-save {
-            background: linear-gradient(135deg, #e8f4fd 0%, #f0e8fd 100%);
+            background: var(--color-accent-bg-tint, linear-gradient(135deg, #e8f4fd 0%, #f0e8fd 100%));
             border-radius: 10px;
             padding: 12px 14px;
             font-size: 13px;
-            color: #1d4d80;
+            color: var(--color-accent-hover, #1d4d80);
             line-height: 1.4;
             display: flex;
             align-items: flex-start;
             gap: 8px;
         }
-        .reg-plan-save strong { color: #0d3a6e; }
+        .reg-plan-save strong { color: var(--color-accent-hover, #0d3a6e); }
 
         .reg-divider {
             border: none;
@@ -470,7 +473,7 @@ if (!$selectedPlan && !empty($plans)) {
             background: var(--color-surface);
         }
         .reg-plan-card:hover .reg-plan-card-inner {
-            border-color: #c4c4c8;
+            border-color: var(--color-border, #c4c4c8);
         }
         .reg-plan-card input:checked + .reg-plan-card-inner {
             border-color: var(--color-accent);
@@ -520,7 +523,7 @@ if (!$selectedPlan && !empty($plans)) {
             background: var(--color-surface);
         }
         .reg-mode-card:hover .reg-mode-card-inner {
-            border-color: #c4c4c8;
+            border-color: var(--color-border, #c4c4c8);
         }
         .reg-mode-card input:checked + .reg-mode-card-inner {
             border-color: var(--color-accent);
@@ -617,7 +620,7 @@ if (!$selectedPlan && !empty($plans)) {
             box-shadow: 0 6px 20px rgba(0, 113, 227, 0.32);
         }
         .reg-submit:active { transform: translateY(0); }
-        .reg-submit:disabled { background: #a0a0a0; cursor: not-allowed; transform: none; box-shadow: none; }
+        .reg-submit:disabled { background: var(--color-text-faint, #a0a0a0); cursor: not-allowed; transform: none; box-shadow: none; }
 
         .reg-form-footer {
             text-align: center;
@@ -629,9 +632,9 @@ if (!$selectedPlan && !empty($plans)) {
         .reg-form-footer a { color: var(--color-accent); text-decoration: none; }
 
         .reg-alert {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
+            background: var(--color-badge-dnc-bg, #fef2f2);
+            border: 1px solid var(--color-border, #fecaca);
+            color: var(--color-badge-dnc-text, #b91c1c);
             padding: 12px 16px;
             border-radius: 8px;
             font-size: 14px;
@@ -640,7 +643,7 @@ if (!$selectedPlan && !empty($plans)) {
         .reg-alert-info {
             background: var(--color-accent-bg);
             border: 1px solid rgba(0, 113, 227, 0.2);
-            color: #0c4a8a;
+            color: var(--color-link-color, #0c4a8a);
             padding: 14px 18px;
             border-radius: 10px;
             font-size: 14px;
@@ -667,7 +670,7 @@ if (!$selectedPlan && !empty($plans)) {
         .reg-redirect {
             background: var(--color-accent-bg);
             border: 1px solid rgba(0, 113, 227, 0.15);
-            color: #0c4a8a;
+            color: var(--color-link-color, #0c4a8a);
             padding: 14px 18px;
             border-radius: 10px;
             font-size: 14px;
@@ -700,7 +703,7 @@ if (!$selectedPlan && !empty($plans)) {
 <!-- Sticky Nav -->
 <nav class="reg-nav">
     <div class="reg-nav-inner">
-        <a href="https://funl.online" class="reg-nav-logo">
+        <a href="/login.php" class="reg-nav-logo">
             <img src="<?php echo getCompanyLogo(); ?>" alt="<?php echo htmlspecialchars(getAppName()); ?>">
             <span><?php echo htmlspecialchars(getAppName()); ?></span>
         </a>

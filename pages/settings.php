@@ -21,17 +21,41 @@ $companyId = $_SESSION['company_id'] ?? null;
 $success = '';
 $error = '';
 
-// Load current settings
-$settingsQuery = $companyId 
-    ? "SELECT setting_key, setting_value FROM settings WHERE company_id = ? OR company_id IS NULL"
-    : "SELECT setting_key, setting_value FROM settings";
-$stmt = $pdo->prepare($settingsQuery);
-if ($companyId) {
-    $stmt->execute([$companyId]);
-} else {
-    $stmt->execute();
-}
-$settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+// Load current settings.
+//
+// Branding and company-profile keys are tenant-owned: they must never fall back
+// to the platform-wide (company_id IS NULL) row. The old query merged that row
+// in for every key, so a brand-new company opened Settings and found the
+// PLATFORM ADMIN's saved company email, name and logo already filled in -- the
+// same root cause as the branding leak fixed in getSetting(). Non-branding keys
+// (timezone, date format, batch sizes...) may still inherit a platform default.
+//
+// With no company context the caller is the platform admin editing the platform
+// defaults, so only the global rows are relevant. The old query selected EVERY
+// row from EVERY tenant here and let whichever came last win.
+$loadSettings = function () use ($pdo, $companyId) {
+    $out = [];
+    if ($companyId) {
+        $stmtGlobal = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL");
+        $stmtGlobal->execute();
+        foreach ($stmtGlobal->fetchAll(PDO::FETCH_KEY_PAIR) as $k => $v) {
+            if (!isTenantOwnedSetting($k)) {
+                $out[$k] = $v;
+            }
+        }
+        $stmtOwn = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE company_id = ?");
+        $stmtOwn->execute([$companyId]);
+        foreach ($stmtOwn->fetchAll(PDO::FETCH_KEY_PAIR) as $k => $v) {
+            $out[$k] = $v;
+        }
+    } else {
+        $stmtGlobal = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE company_id IS NULL");
+        $stmtGlobal->execute();
+        $out = $stmtGlobal->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+    return $out;
+};
+$settings = $loadSettings();
 
 // Handle POST updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -193,10 +217,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         
                         // Save in database
-                        $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = 'company_logo' AND (company_id = ? OR company_id IS NULL)");
+                        $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = 'company_logo' AND company_id <=> ?");
                         $stmtCheck->execute([$companyId]);
                         if ($stmtCheck->fetch()) {
-                            $stmtUpdate = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'company_logo' AND (company_id = ? OR company_id IS NULL)");
+                            $stmtUpdate = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'company_logo' AND company_id <=> ?");
                             $stmtUpdate->execute([$newLogoName, $companyId]);
                         } else {
                             $stmtInsert = $pdo->prepare("INSERT INTO settings (company_id, setting_key, setting_value, setting_type) VALUES (?, 'company_logo', ?, 'text')");
@@ -223,10 +247,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         
                         // Save in database
-                        $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = 'company_favicon' AND (company_id = ? OR company_id IS NULL)");
+                        $stmtCheck = $pdo->prepare("SELECT 1 FROM settings WHERE setting_key = 'company_favicon' AND company_id <=> ?");
                         $stmtCheck->execute([$companyId]);
                         if ($stmtCheck->fetch()) {
-                            $stmtUpdate = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'company_favicon' AND (company_id = ? OR company_id IS NULL)");
+                            $stmtUpdate = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'company_favicon' AND company_id <=> ?");
                             $stmtUpdate->execute([$newFavName, $companyId]);
                         } else {
                             $stmtInsert = $pdo->prepare("INSERT INTO settings (company_id, setting_key, setting_value, setting_type) VALUES (?, 'company_favicon', ?, 'text')");
@@ -240,14 +264,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
             $success = 'Settings saved successfully!';
             
-            // Reload settings
-            $stmt = $pdo->prepare($settingsQuery);
-            if ($companyId) {
-                $stmt->execute([$companyId]);
-            } else {
-                $stmt->execute();
-            }
-            $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            // Reload settings through the same tenant-scoped loader.
+            $settings = $loadSettings();
             
             logActivity(getCurrentUserId(), 'Update Settings', 'Settings', 1, 'Updated company application settings');
         } catch (Exception $e) {
@@ -308,26 +326,26 @@ include __DIR__ . '/../includes/header.php';
                     <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Company Name *')); ?></label>
-                            <input type="text" name="company_name" class="form-control" value="<?php echo htmlspecialchars($settings['company_name'] ?? ''); ?>" required>
+                            <input type="text" name="company_name" class="form-control" value="<?php echo htmlspecialchars($settings['company_name'] ?? ''); ?>" required placeholder="<?php echo htmlspecialchars(__('e.g. Acme Marketing Ltd')); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('App Branding Title')); ?></label>
-                            <input type="text" name="app_name" class="form-control" value="<?php echo htmlspecialchars($settings['app_name'] ?? 'White Label CRM'); ?>">
+                            <input type="text" name="app_name" class="form-control" value="<?php echo htmlspecialchars($settings['app_name'] ?? ''); ?>" placeholder="<?php echo htmlspecialchars(__('e.g. Acme CRM - shown in the sidebar and browser tab')); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Company Email *')); ?></label>
-                            <input type="email" name="company_email" class="form-control" value="<?php echo htmlspecialchars($settings['company_email'] ?? ''); ?>" required>
+                            <input type="email" name="company_email" class="form-control" value="<?php echo htmlspecialchars($settings['company_email'] ?? ''); ?>" required placeholder="<?php echo htmlspecialchars(__('e.g. hello@acme.com')); ?>">
                         </div>
                         <div class="form-group">
                             <?php echo renderPhonePicker(['id' => 'company_phone', 'label' => __('Support Phone'), 'value' => $settings['company_phone'] ?? '']); ?>
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Company Website')); ?></label>
-                            <input type="url" name="company_website" class="form-control" value="<?php echo htmlspecialchars($settings['company_website'] ?? ''); ?>">
+                            <input type="url" name="company_website" class="form-control" value="<?php echo htmlspecialchars($settings['company_website'] ?? ''); ?>" placeholder="<?php echo htmlspecialchars(__('e.g. https://www.acme.com')); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Default Records per Page')); ?></label>
-                            <input type="number" name="records_per_page" class="form-control" value="<?php echo htmlspecialchars($settings['records_per_page'] ?? '25'); ?>" min="5" max="100">
+                            <input type="number" name="records_per_page" class="form-control" value="<?php echo htmlspecialchars($settings['records_per_page'] ?? '25'); ?>" min="5" max="100" placeholder="<?php echo htmlspecialchars(__('e.g. 25')); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Timezone')); ?></label>
@@ -351,7 +369,7 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                     <div class="form-group" style="margin-top:16px;">
                         <label class="form-label"><?php echo htmlspecialchars(__('Company Address')); ?></label>
-                        <textarea name="company_address" class="form-control" rows="3"><?php echo htmlspecialchars($settings['company_address'] ?? ''); ?></textarea>
+                        <textarea name="company_address" class="form-control" rows="3" placeholder="<?php echo htmlspecialchars(__('e.g. 12 High Street, London, W1A 1AA, United Kingdom')); ?>"><?php echo htmlspecialchars($settings['company_address'] ?? ''); ?></textarea>
                     </div>
                 </div>
             </div>
@@ -940,11 +958,11 @@ include __DIR__ . '/../includes/header.php';
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Marketing Batch Size')); ?></label>
-                            <input type="number" name="email_batch_size" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_size'] ?? ''); ?>">
+                            <input type="number" name="email_batch_size" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_size'] ?? ''); ?>" placeholder="<?php echo htmlspecialchars(__('e.g. 50')); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo htmlspecialchars(__('Delay Between Batches (seconds)')); ?></label>
-                            <input type="number" name="email_batch_delay" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_delay'] ?? ''); ?>">
+                            <input type="number" name="email_batch_delay" class="form-control" value="<?php echo htmlspecialchars($settings['email_batch_delay'] ?? ''); ?>" placeholder="<?php echo htmlspecialchars(__('e.g. 5')); ?>">
                         </div>
                     </div>
                 </div>
